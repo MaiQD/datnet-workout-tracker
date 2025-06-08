@@ -1,14 +1,17 @@
 # DatNet Workout Tracker
 
-A cross-platform fitness tracking application built with .NET MAUI Blazor and Blazor Web App sharing a common code base.
+A cross-platform fitness tracking application built with .NET API and Blazor Web App for web
 
 ## Features
 
+- Track your workouts with sets, reps, and weights
+- Create and manage workout routines
+- View workout history and progress
 - Track your workouts with detailed exercise information
 - Store your exercise library with YouTube tutorials and equipment requirements
 - Calendar view to visualize your workout history
-- Works on web, mobile, and desktop platforms from a single codebase
-- Offline data synchronization for mobile devices
+- Responsive design for web and mobile
+- Syncfusion Blazor UI components for rich user experience
 
 ## Technology Stack
 
@@ -16,47 +19,33 @@ A cross-platform fitness tracking application built with .NET MAUI Blazor and Bl
 - **Blazor Web App** - For web interface
 - **MongoDB Atlas** - Cloud database for data storage
 - **Syncfusion Blazor UI** - Component library (Community License)
-- **Shared Razor Components** - Reusable UI components across web and mobile
 
 ## Project Structure
 
-- **FitnessTracker.RazorComponents** - Shared library with models, services, and UI components
-- **FitnessTracker.Web** - Blazor Web App for browser access
-- **FitnessTracker.MauiClient** - MAUI Blazor app for iOS, Android, macOS and Windows
+Following Modular Monolith architecture, the solution is divided into several projects:
+
 
 ## Getting Started
 
 ### Prerequisites
 
 - .NET 8 SDK
-- Visual Studio 2022 or Visual Studio Code
-- MAUI workload installed for mobile development
+- Visual Studio 2022, Rider or Visual Studio Code
 
 ### Setup
 
 1. Clone the repository
-2. Configure MongoDB connection string in `FitnessTracker.RazorComponents/appsettings.json` and `FitnessTracker.MauiClient/appsettings.json`
-3. Register for a free Syncfusion Community license and add it to appsettings.json
+2. Run docker-compose to start MongoDB and other services
+   ```bash
+   docker-compose up -d
+   ```
+3. Configure MongoDB connection string 
+4. Register for a free Syncfusion Community license and add it to appsettings.json
 
 ### Running the Web App
 
 ```
-cd FitnessTracker.Web/FitnessTracker.Web
 dotnet run
-```
-
-### Running the MAUI App
-
-For Android:
-```
-cd FitnessTracker.MauiClient
-dotnet build -t:Run -f net8.0-android
-```
-
-For iOS (requires Mac):
-```
-cd FitnessTracker.MauiClient
-dotnet build -t:Run -f net8.0-ios
 ```
 
 ## License
