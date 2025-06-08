@@ -19,7 +19,7 @@ builder.Services.AddControllers();
 builder.Services.AddSyncfusionBlazor();
 
 // Register Syncfusion license
-Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense(builder.Configuration["SyncfusionLicense"]);
+Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense(builder.Configuration["SyncfusionLicense"]!);
 
 // Add shared services
 builder.Services.AddSharedServices(builder.Configuration);
