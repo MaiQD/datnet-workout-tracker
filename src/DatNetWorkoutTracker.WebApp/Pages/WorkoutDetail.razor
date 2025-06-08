@@ -1,0 +1,602 @@
+@page "/workouts/new"
+@page "/workouts/{workoutId}"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject IWorkoutService WorkoutService
+@inject IExerciseService ExerciseService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<PageTitle>@(IsNewWorkout ? "New Workout" : workout.Name) - DatNet Workout Tracker</PageTitle>
+
+<div class="workout-detail-page">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1>@(IsNewWorkout ? "Create New Workout" : workout.Name)</h1>
+            @if (!IsNewWorkout && workout.Status != WorkoutStatus.Completed)
+            {
+                <div class="workout-timer">
+                    <span class="badge @GetStatusBadgeClass(workout.Status)">@workout.Status</span>
+                    @if (workout.Status == WorkoutStatus.InProgress && workout.StartTime != default)
+                    {
+                        <span class="timer">Duration: @GetElapsedTime()</span>
+                    }
+                </div>
+            }
+        </div>
+        <div class="action-buttons">
+            @if (IsNewWorkout)
+            {
+                <SfButton CssClass="e-success" OnClick="SaveWorkout" Disabled="@isSaving">
+                    @(isSaving ? "Saving..." : "Save Workout")
+                </SfButton>
+            }
+            else if (workout.Status == WorkoutStatus.Planned)
+            {
+                <SfButton CssClass="e-primary" OnClick="StartWorkout" Disabled="@isUpdating">
+                    Start Workout
+                </SfButton>
+                <SfButton CssClass="e-info" OnClick="SaveWorkout" Disabled="@isSaving">
+                    Update
+                </SfButton>
+            }
+            else if (workout.Status == WorkoutStatus.InProgress)
+            {
+                <SfButton CssClass="e-success" OnClick="CompleteWorkout" Disabled="@isUpdating">
+                    Complete Workout
+                </SfButton>
+                <SfButton CssClass="e-info" OnClick="SaveWorkout" Disabled="@isSaving">
+                    Save Progress
+                </SfButton>
+            }
+            <SfButton CssClass="e-outline" OnClick="GoBack">
+                Cancel
+            </SfButton>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <!-- Workout Details -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Workout Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Workout Name</label>
+                            <SfTextBox @bind-Value="workout.Name" Placeholder="Enter workout name" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <SfTextBox @bind-Value="workout.Description" Multiline="true" 
+                                      Placeholder="Optional description" FloatLabelType="@Syncfusion.Blazor.Inputs.FloatLabelType.Never" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Scheduled Date/Time</label>
+                            <SfDateTimePicker @bind-Value="workout.StartTime" Format="yyyy-MM-dd HH:mm" />
+                        </div>
+                        @if (!IsNewWorkout && workout.Status == WorkoutStatus.Completed && workout.Duration.HasValue)
+                        {
+                            <div class="mb-3">
+                                <label class="form-label">Duration</label>
+                                <div class="workout-stats">
+                                    <span class="stat-value">@workout.Duration.Value.ToString(@"hh\:mm\:ss")</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                @if (!IsNewWorkout && workout.Exercises.Any())
+                {
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5>Workout Stats</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="stat-row">
+                                <span>Total Exercises:</span>
+                                <span class="fw-bold">@workout.Exercises.Count</span>
+                            </div>
+                            <div class="stat-row">
+                                <span>Total Sets:</span>
+                                <span class="fw-bold">@workout.Exercises.SelectMany(e => e.Sets).Count()</span>
+                            </div>
+                            <div class="stat-row">
+                                <span>Total Weight:</span>
+                                <span class="fw-bold">@Math.Round(workout.Exercises.SelectMany(e => e.Sets).Sum(s => (s.Weight ?? 0) * (s.Reps ?? 0)), 1) kg</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Exercises -->
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5>Exercises</h5>
+                        <SfButton CssClass="e-outline e-small" OnClick="ShowAddExerciseDialog">
+                            <span class="oi oi-plus"></span> Add Exercise
+                        </SfButton>
+                    </div>
+                    <div class="card-body">
+                        @if (workout.Exercises.Any())
+                        {
+                            @foreach (var exercise in workout.Exercises.Select((e, i) => new { Exercise = e, Index = i }))
+                            {
+                                <div class="exercise-card">
+                                    <div class="exercise-header">
+                                        <h6>@exercise.Exercise.ExerciseName</h6>
+                                        <div class="exercise-actions">
+                                            <SfButton CssClass="e-outline e-small" OnClick="() => AddSet(exercise.Index)">
+                                                Add Set
+                                            </SfButton>
+                                            <SfButton CssClass="e-danger e-small" OnClick="() => RemoveExercise(exercise.Index)">
+                                                Remove
+                                            </SfButton>
+                                        </div>
+                                    </div>
+
+                                    <!-- Sets Table -->
+                                    <div class="sets-table">
+                                        <div class="table-responsive">
+                                            <table class="table table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Set</th>
+                                                        <th>Reps</th>
+                                                        <th>Weight (kg)</th>
+                                                        <th>Rest (min)</th>
+                                                        @if (workout.Status == WorkoutStatus.InProgress)
+                                                        {
+                                                            <th>Completed</th>
+                                                        }
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var set in exercise.Exercise.Sets.Select((s, i) => new { Set = s, Index = i }))
+                                                    {
+                                                        <tr class="@(set.Set.IsCompleted ? "completed-set" : "")">
+                                                            <td>@(set.Index + 1)</td>
+                                                            <td>
+                                                                <SfNumericTextBox @bind-Value="set.Set.Reps" 
+                                                                                 Min="1" Width="80px" ShowSpinButton="false" />
+                                                            </td>
+                                                            <td>
+                                                                <SfNumericTextBox @bind-Value="set.Set.Weight" 
+                                                                                 Min="0" Step="2.5m" Width="80px" ShowSpinButton="false" />
+                                                            </td>
+                                                            <td>
+                                                                <span>-</span>
+                                                            </td>
+                                                            @if (workout.Status == WorkoutStatus.InProgress)
+                                                            {
+                                                                <td>
+                                                                    <SfCheckBox @bind-Checked="set.Set.IsCompleted" />
+                                                                </td>
+                                                            }
+                                                            <td>
+                                                                <SfButton CssClass="e-danger e-small" 
+                                                                         OnClick="() => RemoveSet(exercise.Index, set.Index)">
+                                                                    Remove
+                                                                </SfButton>
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="text-center text-muted">
+                                <p>No exercises added yet</p>
+                                <SfButton CssClass="e-primary" OnClick="ShowAddExerciseDialog">
+                                    Add Your First Exercise
+                                </SfButton>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Add Exercise Modal -->
+@if (showAddExerciseDialog)
+{
+    <div class="modal fade show" style="display: block;" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Exercise</h5>
+                    <button type="button" class="btn-close" @onclick="CloseAddExerciseDialog"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Search Exercises</label>
+                        <SfAutoComplete TValue="string" TItem="Exercise" 
+                                       DataSource="@availableExercises"
+                                       @bind-Value="selectedExerciseName"
+                                       Placeholder="Type to search exercises"
+                                       FilterType="Syncfusion.Blazor.DropDowns.FilterType.Contains">
+                            <AutoCompleteFieldSettings Value="Name" />
+                        </SfAutoComplete>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Sets</label>
+                        <SfNumericTextBox @bind-Value="defaultSets" Min="1" Max="10" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Reps</label>
+                        <SfNumericTextBox @bind-Value="defaultReps" Min="1" Max="50" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Weight (kg)</label>
+                        <SfNumericTextBox @bind-Value="defaultWeight" Min="0" Step="2.5m" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <SfButton CssClass="e-success" OnClick="AddExerciseToWorkout">
+                        Add Exercise
+                    </SfButton>
+                    <SfButton CssClass="e-outline" OnClick="CloseAddExerciseDialog">
+                        Cancel
+                    </SfButton>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+<style>
+    .workout-detail-page {
+        padding: 1rem 0;
+    }
+
+    .workout-timer {
+        margin-top: 0.5rem;
+    }
+
+    .timer {
+        margin-left: 1rem;
+        font-weight: bold;
+        color: #28a745;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .exercise-card {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .exercise-header {
+        display: flex;
+        justify-content: between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .exercise-actions {
+        display: flex;
+        gap: 0.25rem;
+    }
+
+    .sets-table {
+        margin-top: 1rem;
+    }
+
+    .completed-set {
+        background-color: #d4edda;
+        opacity: 0.7;
+    }
+
+    .stat-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+    }
+
+    .workout-stats .stat-value {
+        font-size: 1.5rem;
+        color: #007bff;
+        font-weight: bold;
+    }
+
+    .modal.show {
+        background-color: rgba(0,0,0,0.5);
+    }
+
+    @@media (max-width: 768px) {
+        .action-buttons {
+            width: 100%;
+            justify-content: stretch;
+        }
+        
+        .action-buttons .e-btn {
+            flex: 1;
+        }
+    }
+</style>
+
+@code {
+    [Parameter] public string? WorkoutId { get; set; }
+
+    private bool IsNewWorkout => string.IsNullOrEmpty(WorkoutId);
+    private bool isLoading = true;
+    private bool isSaving = false;
+    private bool isUpdating = false;
+    private string currentUserId = "";
+    private Workout workout = new();
+    
+    // Add Exercise Dialog
+    private bool showAddExerciseDialog = false;
+    private List<Exercise> availableExercises = new();
+    private string selectedExerciseName = "";
+    private int defaultSets = 3;
+    private int defaultReps = 10;
+    private decimal defaultWeight = 20;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        currentUserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "";
+
+        if (!string.IsNullOrEmpty(currentUserId))
+        {
+            await LoadAvailableExercises();
+            
+            if (IsNewWorkout)
+            {
+                InitializeNewWorkout();
+            }
+            else
+            {
+                await LoadWorkout();
+            }
+        }
+
+        isLoading = false;
+    }
+
+    private void InitializeNewWorkout()
+    {
+        workout = new Workout
+        {
+            UserId = currentUserId,
+            Name = "New Workout",
+            StartTime = DateTime.Now,
+            Status = WorkoutStatus.Planned,
+            Exercises = new List<WorkoutExercise>()
+        };
+    }
+
+    private async Task LoadWorkout()
+    {
+        try
+        {
+            var loadedWorkout = await WorkoutService.GetWorkoutByIdAsync(WorkoutId!);
+            if (loadedWorkout != null && loadedWorkout.UserId == currentUserId)
+            {
+                workout = loadedWorkout;
+            }
+            else
+            {
+                Navigation.NavigateTo("/workouts");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading workout: {ex.Message}");
+            Navigation.NavigateTo("/workouts");
+        }
+    }
+
+    private async Task LoadAvailableExercises()
+    {
+        try
+        {
+            availableExercises = (await ExerciseService.GetAllExercisesAsync()).ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading exercises: {ex.Message}");
+        }
+    }
+
+    private async Task SaveWorkout()
+    {
+        if (string.IsNullOrWhiteSpace(workout.Name))
+        {
+            await JS.InvokeVoidAsync("alert", "Please enter a workout name");
+            return;
+        }
+
+        isSaving = true;
+        try
+        {
+            if (IsNewWorkout)
+            {
+                var createdWorkout = await WorkoutService.CreateWorkoutAsync(workout);
+                Navigation.NavigateTo($"/workouts/{createdWorkout.Id}");
+            }
+            else
+            {
+                await WorkoutService.UpdateWorkoutAsync(workout);
+                await JS.InvokeVoidAsync("alert", "Workout saved successfully!");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"Error saving workout: {ex.Message}");
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private async Task StartWorkout()
+    {
+        isUpdating = true;
+        try
+        {
+            await WorkoutService.StartWorkoutAsync(workout.Id);
+            workout.Status = WorkoutStatus.InProgress;
+            workout.StartTime = DateTime.Now;
+            await JS.InvokeVoidAsync("alert", "Workout started!");
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"Error starting workout: {ex.Message}");
+        }
+        finally
+        {
+            isUpdating = false;
+        }
+    }
+
+    private async Task CompleteWorkout()
+    {
+        isUpdating = true;
+        try
+        {
+            await WorkoutService.CompleteWorkoutAsync(workout.Id);
+            workout.Status = WorkoutStatus.Completed;
+            workout.EndTime = DateTime.Now;
+            if (workout.StartTime != default)
+            {
+                workout.Duration = workout.EndTime - workout.StartTime;
+            }
+            await JS.InvokeVoidAsync("alert", "Workout completed! Great job! 💪");
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"Error completing workout: {ex.Message}");
+        }
+        finally
+        {
+            isUpdating = false;
+        }
+    }
+
+    private void ShowAddExerciseDialog()
+    {
+        selectedExerciseName = "";
+        defaultSets = 3;
+        defaultReps = 10;
+        defaultWeight = 20;
+        showAddExerciseDialog = true;
+    }
+
+    private void CloseAddExerciseDialog()
+    {
+        showAddExerciseDialog = false;
+    }
+
+    private void AddExerciseToWorkout()
+    {
+        if (string.IsNullOrWhiteSpace(selectedExerciseName))
+        {
+            return;
+        }
+
+        var exerciseTemplate = availableExercises.FirstOrDefault(e => e.Name == selectedExerciseName);
+        
+        var workoutExercise = new WorkoutExercise
+        {
+            ExerciseName = selectedExerciseName,
+            ExerciseId = exerciseTemplate?.Id ?? "",
+            Sets = new List<WorkoutSet>()
+        };
+
+        // Add default sets
+        for (int i = 0; i < defaultSets; i++)
+        {
+            workoutExercise.Sets.Add(new WorkoutSet
+            {
+                Reps = defaultReps,
+                Weight = defaultWeight,
+                IsCompleted = false
+            });
+        }
+
+        workout.Exercises.Add(workoutExercise);
+        CloseAddExerciseDialog();
+    }
+
+    private void AddSet(int exerciseIndex)
+    {
+        var exercise = workout.Exercises[exerciseIndex];
+        var lastSet = exercise.Sets.LastOrDefault();
+        
+        exercise.Sets.Add(new WorkoutSet
+        {
+            Reps = lastSet?.Reps ?? defaultReps,
+            Weight = lastSet?.Weight ?? defaultWeight,
+            IsCompleted = false
+        });
+    }
+
+    private void RemoveSet(int exerciseIndex, int setIndex)
+    {
+        workout.Exercises[exerciseIndex].Sets.RemoveAt(setIndex);
+    }
+
+    private void RemoveExercise(int exerciseIndex)
+    {
+        workout.Exercises.RemoveAt(exerciseIndex);
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/workouts");
+    }
+
+    private string GetElapsedTime()
+    {
+        if (workout.StartTime == default) return "00:00:00";
+        
+        var elapsed = DateTime.Now - workout.StartTime;
+        return elapsed.ToString(@"hh\:mm\:ss");
+    }
+
+    private string GetStatusBadgeClass(WorkoutStatus status)
+    {
+        return status switch
+        {
+            WorkoutStatus.Completed => "bg-success",
+            WorkoutStatus.InProgress => "bg-warning",
+            WorkoutStatus.Planned => "bg-info",
+            WorkoutStatus.Cancelled => "bg-secondary",
+            _ => "bg-light"
+        };
+    }
+}

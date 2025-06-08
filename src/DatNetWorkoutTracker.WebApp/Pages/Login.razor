@@ -1,0 +1,97 @@
+@page "/login"
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Google
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Login - DatNet Workout Tracker</PageTitle>
+
+<div class="login-container">
+    <div class="login-card">
+        <div class="text-center mb-4">
+            <h1>💪 DatNet Fitness</h1>
+            <p class="lead">Track your fitness journey</p>
+        </div>
+
+        <div class="text-center">
+            <SfButton CssClass="e-success e-large google-login-btn" 
+                      OnClick="LoginWithGoogle">
+                <div class="button-content">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHZpZXdCb3g9IjAgMCAxOCAxOCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTE3LjY0IDkuMjA0NTVDMTcuNjQgOC41NjU5MSAxNy41ODI3IDcuOTUyMjcgMTcuNDc2NCA3LjM2MzY0SDE5VjkuMjA0NTVIMTcuNjRaIiBmaWxsPSIjNEY4NUY3Ii8+CjxwYXRoIGQ9Ik05IDEyLjI3MjdDMTAuNjA2NCAxMi4yNzI3IDExLjk1ODIgMTEuNzk1NSAxMi45NTQ1IDEwLjk1NDVMOS4wNDA5IDcuMzYzNjRIMTEuNTc3M0wxMi45NTQ1IDEwLjk1NDVMMTcuNDc2NCA3LjM2MzY0SDE5VjkuMjA0NTVIMTdIMTQuNTQ1NUw5IDEyLjI3MjdaIiBmaWxsPSIjMzQ3NEY3Ii8+Cjwvc3ZnPgo=" 
+                         alt="Google" class="google-icon" />
+                    <span>Continue with Google</span>
+                </div>
+            </SfButton>
+        </div>
+
+        <div class="features mt-5">
+            <h4>Features</h4>
+            <ul>
+                <li>📊 Track workouts with sets, reps, and weights</li>
+                <li>📋 Create and manage workout routines</li>
+                <li>📈 View progress and analytics</li>
+                <li>📅 Calendar view of workout history</li>
+                <li>💪 Exercise library with tutorials</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<style>
+    .login-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .login-card {
+        background: white;
+        padding: 3rem;
+        border-radius: 12px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        max-width: 400px;
+        width: 100%;
+        margin: 2rem;
+    }
+
+    .google-login-btn {
+        width: 100%;
+        padding: 12px 24px;
+    }
+
+    .button-content {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+    }
+
+    .google-icon {
+        width: 20px;
+        height: 20px;
+    }
+
+    .features {
+        border-top: 1px solid #eee;
+        padding-top: 1.5rem;
+    }
+
+    .features ul {
+        padding-left: 0;
+        list-style: none;
+    }
+
+    .features li {
+        padding: 0.5rem 0;
+        color: #666;
+    }
+</style>
+
+@code {
+    private async Task LoginWithGoogle()
+    {
+        Navigation.NavigateTo("/api/auth/google", forceLoad: true);
+    }
+}

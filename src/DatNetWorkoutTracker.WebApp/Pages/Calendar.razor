@@ -1,0 +1,319 @@
+@page "/calendar"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject IWorkoutService WorkoutService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>Workout Calendar - DatNet Workout Tracker</PageTitle>
+
+<div class="calendar-page">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Workout Calendar</h1>
+        <SfButton CssClass="e-success" OnClick="AddWorkout">
+            <span class="oi oi-plus"></span> Schedule Workout
+        </SfButton>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-lg-9">
+                <div class="card">
+                    <div class="card-body">
+                        <SfSchedule TValue="WorkoutEvent" 
+                                   Height="600px" 
+                                   DataSource="@workoutEvents"
+                                   CurrentView="View.Month"
+                                   StartHour="06:00"
+                                   EndHour="23:00">
+                            <ScheduleEventSettings DataSource="@workoutEvents" />
+                            <ScheduleViews>
+                                <ScheduleView Option="View.Day" />
+                                <ScheduleView Option="View.Week" />
+                                <ScheduleView Option="View.Month" />
+                            </ScheduleViews>
+                            <ScheduleEvents TValue="WorkoutEvent" EventClick="OnEventClick" />
+                        </SfSchedule>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Quick Stats</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="stat-item">
+                            <span class="stat-label">This Month:</span>
+                            <span class="stat-value">@thisMonthWorkouts workouts</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">This Week:</span>
+                            <span class="stat-value">@thisWeekWorkouts workouts</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Average per Week:</span>
+                            <span class="stat-value">@averagePerWeek workouts</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>Workout Types</h5>
+                    </div>
+                    <div class="card-body">
+                        @foreach (var type in workoutTypeStats)
+                        {
+                            <div class="workout-type-item">
+                                <div class="d-flex justify-content-between">
+                                    <span>@type.Key</span>
+                                    <span class="badge bg-primary">@type.Value</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Workout Details Modal -->
+@if (selectedWorkout != null)
+{
+    <div class="modal fade show" style="display: block;" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@selectedWorkout.Name</h5>
+                    <button type="button" class="btn-close" @onclick="CloseModal"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Date:</strong> @selectedWorkout.StartTime.ToString("MMM dd, yyyy HH:mm")</p>
+                    <p><strong>Status:</strong> 
+                        <span class="badge @GetStatusBadgeClass(selectedWorkout.Status)">@selectedWorkout.Status</span>
+                    </p>
+                    @if (selectedWorkout.Duration.HasValue)
+                    {
+                        <p><strong>Duration:</strong> @selectedWorkout.Duration.Value.ToString(@"hh\:mm")</p>
+                    }
+                    <p><strong>Exercises:</strong> @selectedWorkout.Exercises.Count</p>
+                    @if (!string.IsNullOrEmpty(selectedWorkout.Description))
+                    {
+                        <p><strong>Description:</strong> @selectedWorkout.Description</p>
+                    }
+                </div>
+                <div class="modal-footer">
+                    @if (selectedWorkout.Status == WorkoutStatus.InProgress)
+                    {
+                        <SfButton CssClass="e-success" OnClick="() => ContinueWorkout(selectedWorkout.Id)">
+                            Continue Workout
+                        </SfButton>
+                    }
+                    else if (selectedWorkout.Status == WorkoutStatus.Planned)
+                    {
+                        <SfButton CssClass="e-primary" OnClick="() => StartWorkout(selectedWorkout.Id)">
+                            Start Workout
+                        </SfButton>
+                    }
+                    <SfButton CssClass="e-info" OnClick="() => ViewWorkout(selectedWorkout.Id)">
+                        View Details
+                    </SfButton>
+                    <SfButton CssClass="e-light" OnClick="CloseModal">
+                        Close
+                    </SfButton>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+<style>
+    .calendar-page {
+        padding: 1rem 0;
+    }
+
+    .stat-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #eee;
+    }
+
+    .stat-item:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .workout-type-item {
+        margin-bottom: 0.5rem;
+    }
+
+    .modal.show {
+        background-color: rgba(0,0,0,0.5);
+    }
+</style>
+
+@code {
+    private bool isLoading = true;
+    private List<Workout> workouts = new();
+    private List<WorkoutEvent> workoutEvents = new();
+    private string currentUserId = "";
+    private Workout? selectedWorkout;
+
+    // Stats
+    private int thisMonthWorkouts;
+    private int thisWeekWorkouts;
+    private decimal averagePerWeek;
+    private Dictionary<string, int> workoutTypeStats = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        currentUserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "";
+
+        if (!string.IsNullOrEmpty(currentUserId))
+        {
+            await LoadWorkouts();
+            CalculateStats();
+        }
+
+        isLoading = false;
+    }
+
+    private async Task LoadWorkouts()
+    {
+        try
+        {
+            var allWorkouts = await WorkoutService.GetWorkoutsByUserAsync(currentUserId);
+            workouts = allWorkouts.ToList();
+
+            // Convert to calendar events
+            workoutEvents = workouts.Select(w => new WorkoutEvent
+            {
+                Id = w.Id,
+                Subject = w.Name,
+                StartTime = w.StartTime,
+                EndTime = w.EndTime ?? w.StartTime.AddHours(1),
+                CategoryColor = GetWorkoutColor(w.Status),
+                Description = w.Description ?? "",
+                Workout = w
+            }).ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading workouts: {ex.Message}");
+        }
+    }
+
+    private void CalculateStats()
+    {
+        var now = DateTime.Now;
+        var startOfMonth = new DateTime(now.Year, now.Month, 1);
+        var startOfWeek = now.Date.AddDays(-(int)now.DayOfWeek);
+
+        thisMonthWorkouts = workouts.Count(w => w.StartTime >= startOfMonth);
+        thisWeekWorkouts = workouts.Count(w => w.StartTime >= startOfWeek);
+
+        // Calculate average per week for last 12 weeks
+        var last12Weeks = now.AddDays(-84);
+        var recentWorkouts = workouts.Where(w => w.StartTime >= last12Weeks).Count();
+        averagePerWeek = Math.Round((decimal)recentWorkouts / 12, 1);
+
+        // Workout type stats (simplified - using first exercise name as type)
+        workoutTypeStats = workouts
+            .Where(w => w.Exercises.Any())
+            .GroupBy(w => w.Exercises.First().ExerciseName)
+            .ToDictionary(g => g.Key, g => g.Count())
+            .OrderByDescending(kvp => kvp.Value)
+            .Take(5)
+            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+    }
+
+    private string GetWorkoutColor(WorkoutStatus status)
+    {
+        return status switch
+        {
+            WorkoutStatus.Completed => "#28a745",
+            WorkoutStatus.InProgress => "#ffc107",
+            WorkoutStatus.Planned => "#007bff",
+            WorkoutStatus.Cancelled => "#6c757d",
+            _ => "#17a2b8"
+        };
+    }
+
+    private string GetStatusBadgeClass(WorkoutStatus status)
+    {
+        return status switch
+        {
+            WorkoutStatus.Completed => "bg-success",
+            WorkoutStatus.InProgress => "bg-warning",
+            WorkoutStatus.Planned => "bg-info",
+            WorkoutStatus.Cancelled => "bg-secondary",
+            _ => "bg-light"
+        };
+    }
+
+    private void OnEventClick(EventClickArgs<WorkoutEvent> args)
+    {
+        selectedWorkout = args.Event.Workout;
+    }
+
+    private void CloseModal()
+    {
+        selectedWorkout = null;
+    }
+
+    private void AddWorkout()
+    {
+        Navigation.NavigateTo("/workouts/new");
+    }
+
+    private async Task StartWorkout(string workoutId)
+    {
+        try
+        {
+            await WorkoutService.StartWorkoutAsync(workoutId);
+            Navigation.NavigateTo($"/workouts/{workoutId}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error starting workout: {ex.Message}");
+        }
+    }
+
+    private void ContinueWorkout(string workoutId)
+    {
+        Navigation.NavigateTo($"/workouts/{workoutId}");
+    }
+
+    private void ViewWorkout(string workoutId)
+    {
+        Navigation.NavigateTo($"/workouts/{workoutId}");
+    }
+
+    public class WorkoutEvent
+    {
+        public string Id { get; set; } = "";
+        public string Subject { get; set; } = "";
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
+        public string CategoryColor { get; set; } = "";
+        public string Description { get; set; } = "";
+        public Workout Workout { get; set; } = new();
+    }
+}

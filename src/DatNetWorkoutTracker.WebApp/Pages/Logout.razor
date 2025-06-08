@@ -1,0 +1,13 @@
+@page "/logout"
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        // Redirect to logout endpoint
+        Navigation.NavigateTo("/api/auth/logout", forceLoad: true);
+    }
+}

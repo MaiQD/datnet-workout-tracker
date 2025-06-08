@@ -1,0 +1,76 @@
+<div class="nav-menu">
+    <div class="brand">
+        <h3>💪 DatNet Fitness</h3>
+    </div>
+    
+    <nav class="flex-column">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="oi oi-home" aria-hidden="true"></span> Dashboard
+            </NavLink>
+        </div>
+        
+        <AuthorizeView>
+            <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="workouts">
+                        <span class="oi oi-activity" aria-hidden="true"></span> Workouts
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="routines">
+                        <span class="oi oi-list-rich" aria-hidden="true"></span> Routines
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="exercises">
+                        <span class="oi oi-book" aria-hidden="true"></span> Exercises
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="analytics">
+                        <span class="oi oi-bar-chart" aria-hidden="true"></span> Analytics
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="calendar">
+                        <span class="oi oi-calendar" aria-hidden="true"></span> Calendar
+                    </NavLink>
+                </div>
+            </Authorized>
+        </AuthorizeView>
+    </nav>
+</div>
+
+<style>
+    .nav-menu {
+        background: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
+        height: 100vh;
+        width: 250px;
+    }
+
+    .brand {
+        padding: 1.5rem;
+        color: white;
+        text-align: center;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .nav-link {
+        color: rgba(255,255,255,0.8);
+        padding: 0.75rem 1rem;
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+
+    .nav-link:hover, .nav-link.active {
+        background-color: rgba(255,255,255,0.1);
+        color: white;
+    }
+
+    .nav-link span {
+        margin-right: 0.5rem;
+    }
+</style>

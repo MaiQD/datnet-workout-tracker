@@ -1,0 +1,29 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@inherits LayoutComponentBase
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4 auth">
+            <AuthorizeView>
+                <Authorized>
+                    <div class="user-info">
+                        <img src="@context.User.FindFirst("picture")?.Value" alt="Profile" class="profile-pic" />
+                        <span>Hello, @context.User.Identity?.Name!</span>
+                        <a href="/logout" class="btn btn-outline-secondary btn-sm">Logout</a>
+                    </div>
+                </Authorized>
+                <NotAuthorized>
+                    <a href="/login" class="btn btn-primary">Login</a>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>

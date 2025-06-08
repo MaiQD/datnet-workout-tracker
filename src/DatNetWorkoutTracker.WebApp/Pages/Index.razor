@@ -1,0 +1,241 @@
+@page "/"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject IWorkoutService WorkoutService
+@inject IAnalyticsService AnalyticsService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Dashboard - DatNet Workout Tracker</PageTitle>
+
+<div class="dashboard">
+    <div class="welcome-section">
+        <h1>Welcome back! 💪</h1>
+        <p class="lead">Ready for your next workout?</p>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <!-- Quick Stats -->
+            <div class="col-md-3 mb-4">
+                <div class="stat-card">
+                    <div class="stat-value">@statistics.TotalWorkouts</div>
+                    <div class="stat-label">Total Workouts</div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="stat-card">
+                    <div class="stat-value">@Math.Round(statistics.TotalWorkoutTime.TotalHours, 1)h</div>
+                    <div class="stat-label">Total Time</div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="stat-card">
+                    <div class="stat-value">@statistics.TotalSets</div>
+                    <div class="stat-label">Total Sets</div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="stat-card">
+                    <div class="stat-value">@Math.Round(statistics.TotalWeightLifted, 0)kg</div>
+                    <div class="stat-label">Weight Lifted</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Active Workout -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Current Workout</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (activeWorkout != null)
+                        {
+                            <h6>@activeWorkout.Name</h6>
+                            <p>Started: @activeWorkout.StartTime.ToString("HH:mm")</p>
+                            <SfButton CssClass="e-success" OnClick="() => ContinueWorkout(activeWorkout.Id)">
+                                Continue Workout
+                            </SfButton>
+                        }
+                        else
+                        {
+                            <p>No active workout</p>
+                            <SfButton CssClass="e-primary" OnClick="StartNewWorkout">
+                                Start New Workout
+                            </SfButton>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Workouts -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Recent Workouts</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (recentWorkouts.Any())
+                        {
+                            @foreach (var workout in recentWorkouts.Take(3))
+                            {
+                                <div class="recent-workout-item">
+                                    <div>
+                                        <strong>@workout.Name</strong>
+                                        <small class="text-muted d-block">@workout.StartTime.ToString("MMM dd, yyyy")</small>
+                                    </div>
+                                    <span class="badge bg-success">@workout.Status</span>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p>No recent workouts</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Workout Frequency Chart -->
+        <div class="row">
+            <div class="col-12 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Workout Frequency (Last 30 Days)</h5>
+                    </div>
+                    <div class="card-body">
+                        <SfChart Title="Workouts per Day" Height="300px">
+                            <ChartPrimaryXAxis ValueType="Syncfusion.Blazor.Charts.ValueType.DateTime" />
+                            <ChartPrimaryYAxis Title="Number of Workouts" />
+                            <ChartSeriesCollection>
+                                <ChartSeries DataSource="@workoutFrequencyData" 
+                                           XName="Date" 
+                                           YName="WorkoutCount" 
+                                           Type="ChartSeriesType.Column">
+                                </ChartSeries>
+                            </ChartSeriesCollection>
+                        </SfChart>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .dashboard {
+        padding: 2rem 0;
+    }
+
+    .welcome-section {
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .stat-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+
+    .recent-workout-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #eee;
+    }
+
+    .recent-workout-item:last-child {
+        border-bottom: none;
+    }
+</style>
+
+@code {
+    private bool isLoading = true;
+    private WorkoutStatistics statistics = new();
+    private Workout? activeWorkout;
+    private List<Workout> recentWorkouts = new();
+    private List<WorkoutFrequencyData> workoutFrequencyData = new();
+    private string currentUserId = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        currentUserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "";
+
+        if (!string.IsNullOrEmpty(currentUserId))
+        {
+            await LoadDashboardData();
+        }
+
+        isLoading = false;
+    }
+
+    private async Task LoadDashboardData()
+    {
+        try
+        {
+            // Load statistics
+            statistics = await WorkoutService.GetWorkoutStatisticsAsync(currentUserId, DateTime.UtcNow.AddMonths(-1));
+
+            // Load active workout
+            activeWorkout = await WorkoutService.GetActiveWorkoutAsync(currentUserId);
+
+            // Load recent workouts
+            var allWorkouts = await WorkoutService.GetWorkoutsByUserAsync(currentUserId);
+            recentWorkouts = allWorkouts
+                .Where(w => w.Status == WorkoutStatus.Completed)
+                .OrderByDescending(w => w.StartTime)
+                .Take(5)
+                .ToList();
+
+            // Load workout frequency data
+            var analyticsService = AnalyticsService;
+            var frequencyData = await analyticsService.GetWorkoutFrequencyAsync(currentUserId, TimeSpan.FromDays(30));
+            workoutFrequencyData = frequencyData.ToList();
+        }
+        catch (Exception ex)
+        {
+            // Log error
+            Console.WriteLine($"Error loading dashboard data: {ex.Message}");
+        }
+    }
+
+    private void StartNewWorkout()
+    {
+        Navigation.NavigateTo("/workouts/new");
+    }
+
+    private void ContinueWorkout(string workoutId)
+    {
+        Navigation.NavigateTo($"/workouts/{workoutId}");
+    }
+}
+
+@inject NavigationManager Navigation
