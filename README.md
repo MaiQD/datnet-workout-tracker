@@ -14,7 +14,6 @@ A cross-platform fitness tracking application built with .NET MAUI Blazor and Bl
 
 - **.NET 8** - Latest .NET platform
 - **Blazor Web App** - For web interface
-- **.NET MAUI Blazor Hybrid** - For mobile and desktop apps
 - **MongoDB Atlas** - Cloud database for data storage
 - **Syncfusion Blazor UI** - Component library (Community License)
 - **Shared Razor Components** - Reusable UI components across web and mobile
