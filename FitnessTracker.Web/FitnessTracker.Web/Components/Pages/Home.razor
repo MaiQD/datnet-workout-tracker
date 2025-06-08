@@ -1,0 +1,167 @@
+﻿@page "/"
+@using FitnessTracker.RazorComponents.Models
+@using FitnessTracker.RazorComponents.Services
+@using FitnessTracker.RazorComponents.Components
+@inject MongoDBService MongoDBService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Dashboard - Fitness Tracker</PageTitle>
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Dashboard</h1>
+            <p class="lead">Track your workouts and monitor your progress over time</p>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3>Calendar View</h3>
+                </div>
+                <div class="card-body">
+                    <CalendarView />
+                </div>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Quick Stats</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-6">
+                            <div class="p-3 bg-light rounded text-center">
+                                <h2>@(workoutLogs?.Count ?? 0)</h2>
+                                <p class="mb-0">Total Workouts</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 bg-light rounded text-center">
+                                <h2>@(exercises?.Count ?? 0)</h2>
+                                <p class="mb-0">Exercises</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <!-- Recent Workouts -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3>Recent Workouts</h3>
+                    <a href="/workouts" class="btn btn-sm btn-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    @if (workoutLogs == null)
+                    {
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    }
+                    else if (!workoutLogs.Any())
+                    {
+                        <div class="text-center">
+                            <p>No workout logs found.</p>                            <button class="btn btn-outline-primary" @onclick="NavigateToWorkouts">
+                                Log Your First Workout
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="list-group">
+                            @foreach (var workout in workoutLogs.OrderByDescending(w => w.Date).Take(3))
+                            {
+                                <a href="/workouts" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1">Workout on @workout.Date.ToShortDateString()</h5>
+                                        <small>@workout.DurationMinutes min</small>
+                                    </div>
+                                    <p class="mb-1">@workout.ExerciseEntries.Count exercises</p>
+                                </a>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+            
+            <!-- Recent Exercises -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3>Recent Exercises</h3>
+                    <a href="/exercises" class="btn btn-sm btn-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    @if (exercises == null)
+                    {
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    }
+                    else if (!exercises.Any())
+                    {
+                        <div class="text-center">
+                            <p>No exercises found.</p>                            <button class="btn btn-outline-primary" @onclick="NavigateToExercises">
+                                Add Your First Exercise
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="list-group">
+                            @foreach (var exercise in exercises.Take(3))
+                            {
+                                <a href="/exercises" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1">@exercise.Name</h5>
+                                        <small>@exercise.Category</small>
+                                    </div>
+                                    <p class="mb-1">@exercise.MuscleGroup</p>
+                                </a>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<Exercise> exercises = new();
+    private List<WorkoutLog> workoutLogs = new();
+    
+    // Hardcoded user ID for now - would be replaced with auth system
+    private string currentUserId = "user123";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        var exercisesTask = MongoDBService.GetExercisesAsync();
+        var workoutsTask = MongoDBService.GetWorkoutLogsAsync(currentUserId);
+        
+        await Task.WhenAll(exercisesTask, workoutsTask);
+        
+        exercises = exercisesTask.Result;
+        workoutLogs = workoutsTask.Result;
+    }
+
+    private void NavigateToWorkouts()
+    {
+        NavigationManager.NavigateTo("/workouts");
+    }
+
+    private void NavigateToExercises()
+    {
+        NavigationManager.NavigateTo("/exercises");
+    }
+}

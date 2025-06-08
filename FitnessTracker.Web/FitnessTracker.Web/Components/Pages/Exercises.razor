@@ -1,0 +1,149 @@
+@page "/exercises"
+@using FitnessTracker.RazorComponents.Models
+@using FitnessTracker.RazorComponents.Services
+@using FitnessTracker.RazorComponents.Components
+@inject MongoDBService MongoDBService
+
+<PageTitle>Exercises - Fitness Tracker</PageTitle>
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Exercises</h1>
+            <p class="lead">Manage your exercise library</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3>Exercise Library</h3>
+                    @if (selectedExercise == null)
+                    {
+                        <button class="btn btn-primary" @onclick="() => CreateNewExercise()">Add New Exercise</button>
+                    }
+                </div>
+                <div class="card-body">
+                    @if (selectedExercise == null)
+                    {
+                        @if (exercises == null)
+                        {
+                            <div class="text-center p-3">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        }
+                        else if (!exercises.Any())
+                        {
+                            <div class="text-center p-4">
+                                <div class="mb-3">No exercises found.</div>
+                                <button class="btn btn-outline-primary" @onclick="() => CreateNewExercise()">Add Your First Exercise</button>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Category</th>
+                                            <th>Muscle Group</th>
+                                            <th>Equipment</th>
+                                            <th>Tutorial</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var exercise in exercises)
+                                        {
+                                            <tr>
+                                                <td>@exercise.Name</td>
+                                                <td>@exercise.Category</td>
+                                                <td>@exercise.MuscleGroup</td>
+                                                <td>
+                                                    @if (exercise.RequiredEquipment != null && exercise.RequiredEquipment.Any())
+                                                    {
+                                                        <span>@string.Join(", ", exercise.RequiredEquipment)</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="text-muted">None</span>
+                                                    }
+                                                </td>
+                                                <td>
+                                                    @if (!string.IsNullOrEmpty(exercise.YoutubeLink))
+                                                    {
+                                                        <a href="@exercise.YoutubeLink" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                                            <i class="bi bi-youtube"></i> Watch
+                                                        </a>
+                                                    }
+                                                </td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-primary" @onclick="() => EditExercise(exercise)">Edit</button>
+                                                    <button class="btn btn-sm btn-outline-danger ms-1" @onclick="() => DeleteExercise(exercise)">Delete</button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <button class="btn btn-outline-secondary mb-3" @onclick="HandleExerciseCancel">
+                            <span class="bi bi-arrow-left"></span> Back to List
+                        </button>
+                        <h4>@(string.IsNullOrEmpty(selectedExercise.Id) || selectedExercise.Id == MongoDB.Bson.ObjectId.Empty.ToString() ? "Add New Exercise" : "Edit Exercise")</h4>
+                        <ExerciseForm Exercise="selectedExercise" OnSaved="HandleExerciseSaved" OnCancel="HandleExerciseCancel" />
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<Exercise> exercises = new();
+    private Exercise? selectedExercise;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadExercises();
+    }
+
+    private async Task LoadExercises()
+    {
+        exercises = await MongoDBService.GetExercisesAsync();
+    }
+
+    private void CreateNewExercise()
+    {
+        selectedExercise = new Exercise();
+    }
+
+    private void EditExercise(Exercise exercise)
+    {
+        selectedExercise = exercise;
+    }
+
+    private async Task DeleteExercise(Exercise exercise)
+    {
+        await MongoDBService.DeleteExerciseAsync(exercise.Id);
+        await LoadExercises();
+    }
+
+    private async Task HandleExerciseSaved(Exercise exercise)
+    {
+        selectedExercise = null;
+        await LoadExercises();
+    }
+
+    private void HandleExerciseCancel()
+    {
+        selectedExercise = null;
+    }
+}

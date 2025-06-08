@@ -1,27 +1,64 @@
 # DatNet Workout Tracker
 
-A .NET-based workout tracking application that helps users track their fitness activities, set goals, and monitor progress.
+A cross-platform fitness tracking application built with .NET MAUI Blazor and Blazor Web App sharing a common code base.
 
-## Features (Planned)
+## Features
 
-- User registration and authentication
-- Track various types of workouts (strength training, cardio, etc.)
-- Record workout details (exercises, sets, reps, weights, duration)
-- View workout history
-- Set fitness goals and track progress
-- Generate reports and analytics
+- Track your workouts with detailed exercise information
+- Store your exercise library with YouTube tutorials and equipment requirements
+- Calendar view to visualize your workout history
+- Works on web, mobile, and desktop platforms from a single codebase
+- Offline data synchronization for mobile devices
 
 ## Technology Stack
 
-- ASP.NET Core for the backend API
-- Entity Framework Core for data access
-- SQL Server for the database
-- JWT for authentication
-- (Frontend technology to be decided)
+- **.NET 8** - Latest .NET platform
+- **Blazor Web App** - For web interface
+- **.NET MAUI Blazor Hybrid** - For mobile and desktop apps
+- **MongoDB Atlas** - Cloud database for data storage
+- **Syncfusion Blazor UI** - Component library (Community License)
+- **Shared Razor Components** - Reusable UI components across web and mobile
+
+## Project Structure
+
+- **FitnessTracker.RazorComponents** - Shared library with models, services, and UI components
+- **FitnessTracker.Web** - Blazor Web App for browser access
+- **FitnessTracker.MauiClient** - MAUI Blazor app for iOS, Android, macOS and Windows
 
 ## Getting Started
 
-Instructions for setting up the project will be added soon.
+### Prerequisites
+
+- .NET 8 SDK
+- Visual Studio 2022 or Visual Studio Code
+- MAUI workload installed for mobile development
+
+### Setup
+
+1. Clone the repository
+2. Configure MongoDB connection string in `FitnessTracker.RazorComponents/appsettings.json` and `FitnessTracker.MauiClient/appsettings.json`
+3. Register for a free Syncfusion Community license and add it to appsettings.json
+
+### Running the Web App
+
+```
+cd FitnessTracker.Web/FitnessTracker.Web
+dotnet run
+```
+
+### Running the MAUI App
+
+For Android:
+```
+cd FitnessTracker.MauiClient
+dotnet build -t:Run -f net8.0-android
+```
+
+For iOS (requires Mac):
+```
+cd FitnessTracker.MauiClient
+dotnet build -t:Run -f net8.0-ios
+```
 
 ## License
 

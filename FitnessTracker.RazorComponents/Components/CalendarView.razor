@@ -1,0 +1,257 @@
+@using FitnessTracker.RazorComponents.Models
+@using FitnessTracker.RazorComponents.Services
+@using FitnessTracker.RazorComponents.Utilities
+@inject MongoDBService MongoDBService
+
+<div class="calendar-container">
+    <h2>Workout Calendar</h2>
+    
+    <div class="calendar-header">
+        <button class="btn btn-outline-primary" @onclick="PreviousMonth">&lt;</button>
+        <h3>@CurrentMonth.ToString("MMMM yyyy")</h3>
+        <button class="btn btn-outline-primary" @onclick="NextMonth">&gt;</button>
+    </div>
+    
+    <div class="calendar-weekdays">
+        <div>Sun</div>
+        <div>Mon</div>
+        <div>Tue</div>
+        <div>Wed</div>
+        <div>Thu</div>
+        <div>Fri</div>
+        <div>Sat</div>
+    </div>
+    
+    <div class="calendar-days">
+        @foreach (var day in CalendarDays)
+        {
+            <div class="@GetDayClass(day)" @onclick="() => SelectDay(day)">
+                <span class="day-number">@day.Day</span>
+                @if (day.Month == CurrentMonth.Month && HasWorkout(day))
+                {
+                    <div class="workout-indicator"></div>
+                }
+            </div>
+        }
+    </div>
+    
+    @if (SelectedWorkouts.Any())
+    {
+        <div class="workout-list">
+            <h4>Workouts on @SelectedDate.ToString("MMMM d, yyyy")</h4>
+            @foreach (var workout in SelectedWorkouts)
+            {
+                <div class="workout-item" @onclick="() => ViewWorkoutDetails(workout)">
+                    <h5>@workout.Title</h5>
+                    <p>@workout.DurationMinutes min | @workout.ExerciseEntries.Count exercises</p>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .calendar-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .calendar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    
+    .calendar-weekdays {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        text-align: center;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+    
+    .calendar-days {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        grid-gap: 5px;
+    }
+    
+    .calendar-day {
+        aspect-ratio: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        position: relative;
+        cursor: pointer;
+    }
+    
+    .calendar-day:hover {
+        background-color: #f0f0f0;
+    }
+    
+    .other-month {
+        color: #aaa;
+        background-color: #f9f9f9;
+    }
+    
+    .selected {
+        background-color: #e6f7ff;
+        border-color: #1890ff;
+    }
+    
+    .today {
+        font-weight: bold;
+        color: #1890ff;
+    }
+    
+    .workout-indicator {
+        width: 6px;
+        height: 6px;
+        background-color: #52c41a;
+        border-radius: 50%;
+        position: absolute;
+        bottom: 5px;
+    }
+    
+    .workout-list {
+        margin-top: 1rem;
+        border-top: 1px solid #eee;
+        padding-top: 1rem;
+    }
+    
+    .workout-item {
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        margin-bottom: 0.5rem;
+        cursor: pointer;
+    }
+    
+    .workout-item:hover {
+        background-color: #f0f0f0;
+    }
+    
+    .workout-item h5 {
+        margin: 0 0 0.25rem 0;
+    }
+    
+    .workout-item p {
+        margin: 0;
+        color: #666;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public string UserId { get; set; } = string.Empty;
+    
+    [Parameter]
+    public EventCallback<WorkoutLog> OnWorkoutSelected { get; set; }
+    
+    private DateTime CurrentMonth { get; set; } = DateTime.Today.StartOfMonth();
+    private List<DateTime> CalendarDays { get; set; } = new List<DateTime>();
+    private DateTime SelectedDate { get; set; } = DateTime.Today;
+    private List<WorkoutLog> MonthWorkouts { get; set; } = new List<WorkoutLog>();
+    private List<WorkoutLog> SelectedWorkouts { get; set; } = new List<WorkoutLog>();
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMonthData();
+        GenerateCalendarDays();
+        UpdateSelectedDayWorkouts();
+    }
+    
+    private async Task LoadMonthData()
+    {
+        DateTime startDate = CurrentMonth.AddDays(-(int)CurrentMonth.DayOfWeek);
+        DateTime endDate = startDate.AddDays(42); // 6 weeks
+        
+        if (!string.IsNullOrEmpty(UserId))
+        {
+            MonthWorkouts = await MongoDBService.GetWorkoutLogsByDateRangeAsync(UserId, startDate, endDate);
+        }
+    }
+    
+    private void GenerateCalendarDays()
+    {
+        CalendarDays = new List<DateTime>();
+        
+        // Get the first day of the month
+        DateTime firstDayOfMonth = new DateTime(CurrentMonth.Year, CurrentMonth.Month, 1);
+        
+        // Get the last day of the month
+        DateTime lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
+        
+        // Get the first calendar day (may be from previous month)
+        DateTime firstCalendarDay = firstDayOfMonth.AddDays(-(int)firstDayOfMonth.DayOfWeek);
+        
+        // Generate 42 days (6 weeks)
+        for (int i = 0; i < 42; i++)
+        {
+            CalendarDays.Add(firstCalendarDay.AddDays(i));
+        }
+    }
+    
+    private string GetDayClass(DateTime day)
+    {
+        string classes = "calendar-day";
+        
+        if (day.Month != CurrentMonth.Month)
+        {
+            classes += " other-month";
+        }
+        
+        if (day.Date == SelectedDate.Date)
+        {
+            classes += " selected";
+        }
+        
+        if (day.Date == DateTime.Today.Date)
+        {
+            classes += " today";
+        }
+        
+        return classes;
+    }
+    
+    private bool HasWorkout(DateTime day)
+    {
+        return MonthWorkouts.Any(w => w.Date.Date == day.Date);
+    }
+    
+    private void SelectDay(DateTime day)
+    {
+        SelectedDate = day;
+        UpdateSelectedDayWorkouts();
+    }
+    
+    private void UpdateSelectedDayWorkouts()
+    {
+        SelectedWorkouts = MonthWorkouts.Where(w => w.Date.Date == SelectedDate.Date).ToList();
+    }
+    
+    private async Task ViewWorkoutDetails(WorkoutLog workout)
+    {
+        await OnWorkoutSelected.InvokeAsync(workout);
+    }
+    
+    private async Task PreviousMonth()
+    {
+        CurrentMonth = CurrentMonth.AddMonths(-1);
+        await LoadMonthData();
+        GenerateCalendarDays();
+    }
+    
+    private async Task NextMonth()
+    {
+        CurrentMonth = CurrentMonth.AddMonths(1);
+        await LoadMonthData();
+        GenerateCalendarDays();
+    }
+}
+
+

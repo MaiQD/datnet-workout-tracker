@@ -1,0 +1,177 @@
+@using FitnessTracker.RazorComponents.Models
+@using FitnessTracker.RazorComponents.Services
+@inject MongoDBService MongoDBService
+
+<EditForm Model="@WorkoutLog" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label for="workoutDate" class="form-label">Date:</label>
+        <InputDate id="workoutDate" @bind-Value="WorkoutLog.Date" class="form-control" />
+        <ValidationMessage For="@(() => WorkoutLog.Date)" />
+    </div>
+    
+    <div class="mb-3">
+        <label for="duration" class="form-label">Duration (minutes):</label>
+        <InputNumber id="duration" @bind-Value="WorkoutLog.DurationMinutes" class="form-control" />
+        <ValidationMessage For="@(() => WorkoutLog.DurationMinutes)" />
+    </div>
+    
+    <div class="mb-3">
+        <label class="form-label">Exercises:</label>
+        @if (availableExercises == null)
+        {
+            <div class="spinner-border spinner-border-sm" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        }
+        else
+        {
+            <div class="d-flex mb-2">
+                <InputSelect @bind-Value="selectedExerciseId" class="form-select me-2">
+                    <option value="">Select an exercise</option>
+                    @foreach (var exercise in availableExercises)
+                    {
+                        <option value="@exercise.Id">@exercise.Name (@exercise.Category)</option>
+                    }
+                </InputSelect>
+                <button type="button" class="btn btn-outline-primary" @onclick="AddExerciseToWorkout" disabled="@string.IsNullOrEmpty(selectedExerciseId)">Add</button>
+            </div>
+            
+            @if (WorkoutLog.ExerciseEntries.Any())
+            {
+                <div class="list-group mt-3">
+                    @foreach (var entry in WorkoutLog.ExerciseEntries)
+                    {
+                        var exercise = availableExercises.FirstOrDefault(e => e.Id == entry.ExerciseId);
+                        <div class="list-group-item">
+                            <div class="row align-items-center">
+                                <div class="col">
+                                    <h5 class="mb-0">@(exercise?.Name ?? "Unknown Exercise")</h5>
+                                </div>
+                                <div class="col-auto">
+                                    <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => RemoveExerciseFromWorkout(entry.ExerciseId)">Remove</button>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-md-4">
+                                    <div class="mb-2">
+                                        <label class="form-label small">Sets</label>
+                                        <InputNumber @bind-Value="entry.Sets" class="form-control form-control-sm" min="1" />
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-2">
+                                        <label class="form-label small">Reps</label>
+                                        <InputNumber @bind-Value="entry.Reps" class="form-control form-control-sm" min="0" />
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-2">
+                                        <label class="form-label small">Weight</label>
+                                        <div class="input-group input-group-sm">
+                                            <InputNumber @bind-Value="entry.Weight" class="form-control" min="0" step="0.5" />
+                                            <span class="input-group-text">kg</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small">Notes</label>
+                                <InputTextArea @bind-Value="entry.Notes" class="form-control form-control-sm" rows="2" placeholder="Add notes about this exercise..." />
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info mt-2">
+                    Add exercises to your workout using the dropdown above.
+                </div>
+            }
+        }
+    </div>
+    
+    <div class="mb-3">
+        <label for="notes" class="form-label">Workout Notes:</label>
+        <InputTextArea id="notes" @bind-Value="WorkoutLog.Notes" class="form-control" rows="3" />
+        <ValidationMessage For="@(() => WorkoutLog.Notes)" />
+    </div>
+
+    <div class="mt-4">
+        <button type="submit" class="btn btn-primary">Save Workout</button>
+        <button type="button" class="btn btn-outline-secondary ms-2" @onclick="CancelEdit">Cancel</button>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public WorkoutLog WorkoutLog { get; set; } = new WorkoutLog { Date = DateTime.Today };
+    
+    [Parameter]
+    public EventCallback<WorkoutLog> OnSaved { get; set; }
+    
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+    
+    private List<Exercise> availableExercises = new();
+    private string selectedExerciseId = string.Empty;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadExercises();
+    }
+    
+    private async Task LoadExercises()
+    {
+        availableExercises = await MongoDBService.GetExercisesAsync();
+    }
+    
+    private void AddExerciseToWorkout()
+    {
+        if (!string.IsNullOrEmpty(selectedExerciseId) && 
+            !WorkoutLog.ExerciseEntries.Any(e => e.ExerciseId == selectedExerciseId))
+        {
+            WorkoutLog.ExerciseEntries.Add(new WorkoutExerciseEntry 
+            { 
+                ExerciseId = selectedExerciseId,
+                Sets = 3,
+                Reps = 10,
+                Weight = 0
+            });
+            
+            selectedExerciseId = string.Empty;
+        }
+    }
+    
+    private void RemoveExerciseFromWorkout(string exerciseId)
+    {
+        var entry = WorkoutLog.ExerciseEntries.FirstOrDefault(e => e.ExerciseId == exerciseId);
+        if (entry != null)
+        {
+            WorkoutLog.ExerciseEntries.Remove(entry);
+        }
+    }
+    
+    private async Task HandleValidSubmit()
+    {
+        if (string.IsNullOrEmpty(WorkoutLog.Id) || WorkoutLog.Id == MongoDB.Bson.ObjectId.Empty.ToString())
+        {
+            WorkoutLog.Id = MongoDB.Bson.ObjectId.GenerateNewId().ToString();
+            await MongoDBService.CreateWorkoutLogAsync(WorkoutLog);
+        }
+        else
+        {
+            await MongoDBService.UpdateWorkoutLogAsync(WorkoutLog.Id, WorkoutLog);
+        }
+        
+        await OnSaved.InvokeAsync(WorkoutLog);
+    }
+    
+    private async Task CancelEdit()
+    {
+        await OnCancel.InvokeAsync();
+    }
+}
