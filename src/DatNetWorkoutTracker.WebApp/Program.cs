@@ -8,7 +8,21 @@ using DatNetWorkoutTracker.Workouts.Extensions;
 using DatNetWorkoutTracker.Routines.Extensions;
 using DatNetWorkoutTracker.Analytics.Extensions;
 
-var builder = WebApplication.CreateBuilder(args);
+// Set development environment if not explicitly set to production
+#if !RELEASE
+Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
+#endif
+
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    EnvironmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development"
+});
+
+// Explicitly configure to use development settings in development environment
+if (builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddJsonFile("appsettings.Development.json", optional: false, reloadOnChange: true);
+}
 
 // Add services to the container.
 builder.Services.AddRazorPages();
