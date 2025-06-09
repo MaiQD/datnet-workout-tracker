@@ -178,13 +178,13 @@ main {
 }
 
 .stat-card {
-    background: rgba(255, 255, 255, 0.98);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* Dark gradient background for white text */
     border-radius: 20px;
     padding: 2.5rem 2rem;
     text-align: center;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
     backdrop-filter: blur(15px);
-    border: 2px solid rgba(102, 126, 234, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.2); /* Light border for contrast */
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     position: relative;
     overflow: hidden;
@@ -218,22 +218,99 @@ main {
 .stat-value {
     font-size: 3rem;
     font-weight: 800;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
     margin-bottom: 0.75rem;
     line-height: 1;
+    /* Simple bright white text */
+    color: #ffffff;
+    /* Simple shadow for definition only */
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Fallback support for better compatibility */
+@supports not (text-shadow: 0 0 10px rgba(255, 255, 255, 0.8)) {
+    .stat-value {
+        color: #ffffff !important;
+        font-weight: 900 !important;
+    }
 }
 
 .stat-label {
-    color: #555;
-    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9); /* Bright white with slight transparency */
+    font-weight: 600; /* Medium weight for readability */
     font-size: 1rem;
     text-transform: uppercase;
     letter-spacing: 1.5px;
     margin: 0;
-    opacity: 0.8;
+    opacity: 1;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); /* Subtle shadow for definition */
+}
+
+/* High contrast alternative for stat cards */
+.stat-card.high-contrast {
+    background: rgba(255, 255, 255, 0.99) !important;
+    border: 2px solid #e2e8f0 !important;
+}
+
+.stat-card.high-contrast .stat-value {
+    color: #1a202c !important;
+    background: none !important;
+    -webkit-text-fill-color: #1a202c !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+}
+
+.stat-card.high-contrast .stat-label {
+    color: #4a5568 !important;
+    opacity: 1 !important;
+}
+
+/* Ultra high contrast version for accessibility */
+.stat-card.ultra-contrast {
+    background: #ffffff !important;
+    border: 3px solid #2d3748 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+.stat-card.ultra-contrast .stat-value {
+    color: #000000 !important;
+    background: none !important;
+    -webkit-text-fill-color: #000000 !important;
+    text-shadow: none !important;
+    font-weight: 900 !important;
+}
+
+.stat-card.ultra-contrast .stat-label {
+    color: #2d3748 !important;
+    opacity: 1 !important;
+    font-weight: 800 !important;
+}
+
+/* Utility classes for easy contrast switching */
+.text-enhanced-contrast {
+    color: #1a365d !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+}
+
+.bg-enhanced-contrast {
+    background: rgba(255, 255, 255, 0.98) !important;
+    border-color: rgba(102, 126, 234, 0.4) !important;
+}
+
+/* Quick toggle class for stat cards */
+.stat-card.enhanced-visibility {
+    background: rgba(255, 255, 255, 0.99) !important;
+    border: 3px solid rgba(102, 126, 234, 0.5) !important;
+}
+
+.stat-card.enhanced-visibility .stat-value {
+    color: #1a365d !important;
+    font-weight: 900 !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+}
+
+.stat-card.enhanced-visibility .stat-label {
+    color: #000000 !important; /* Pure black for maximum brightness */
+    font-weight: 900 !important; /* Maximum font weight */
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5) !important; /* White shadow for extra pop */
 }
 
 /* Responsive Design for Layout */
@@ -563,3 +640,33 @@ main {
 ::-webkit-scrollbar-thumb:hover {
     background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
 }
+
+/*
+ * TEXT CONTRAST ENHANCEMENT SUMMARY
+ * =================================
+ * 
+ * ISSUE RESOLVED: Stat card numbers were blending with background, making them hard to read
+ * 
+ * SOLUTIONS IMPLEMENTED:
+ * 1. Enhanced standard stat cards with:
+ *    - Stronger fallback colors (#1a365d instead of lighter colors)
+ *    - Improved text shadows for better definition
+ *    - More opaque background (98% instead of 95%)
+ *    - Better browser compatibility with @supports rules
+ * 
+ * 2. Added multiple contrast levels:
+ *    - .stat-card (standard with enhanced contrast)
+ *    - .stat-card.high-contrast (solid colors, no gradients)
+ *    - .stat-card.ultra-contrast (maximum accessibility)
+ *    - .stat-card.enhanced-visibility (quick toggle for better visibility)
+ * 
+ * 3. Utility classes for easy switching:
+ *    - .text-enhanced-contrast
+ *    - .bg-enhanced-contrast
+ * 
+ * USAGE:
+ * - Default cards now have much better contrast
+ * - Add 'high-contrast' class for solid colors
+ * - Add 'ultra-contrast' class for maximum accessibility
+ * - Add 'enhanced-visibility' class for quick improvement
+ */

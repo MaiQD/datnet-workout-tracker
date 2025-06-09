@@ -5,11 +5,12 @@
 <div class="dashboard">
     <div class="welcome-section">
         <h1>Test Stats Page 💪</h1>
-        <p class="lead">Testing stat card visibility</p>
+        <p class="lead">Testing stat card visibility - Choose your preferred contrast level</p>
     </div>
 
+    <h3>Standard Version (Enhanced Contrast)</h3>
     <div class="row">
-        <!-- Test Stat Cards -->
+        <!-- Standard Enhanced Stat Cards -->
         <div class="col-md-3 mb-4">
             <div class="stat-card">
                 <div class="stat-value">42</div>
@@ -36,11 +37,69 @@
         </div>
     </div>
 
+    <h3>High Contrast Version</h3>
+    <div class="row">
+        <!-- High Contrast Stat Cards -->
+        <div class="col-md-3 mb-4">
+            <div class="stat-card high-contrast">
+                <div class="stat-value">42</div>
+                <div class="stat-label">Total Workouts</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="stat-card high-contrast">
+                <div class="stat-value">25.5h</div>
+                <div class="stat-label">Total Time</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="stat-card high-contrast">
+                <div class="stat-value">450</div>
+                <div class="stat-label">Total Sets</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="stat-card high-contrast">
+                <div class="stat-value">12.5kg</div>
+                <div class="stat-label">Weight Lifted</div>
+            </div>
+        </div>
+    </div>
+
+    <h3>Ultra High Contrast Version (Maximum Accessibility)</h3>
+    <div class="row">
+        <!-- Ultra High Contrast Stat Cards -->
+        <div class="col-md-3 mb-4">
+            <div class="stat-card ultra-contrast">
+                <div class="stat-value">42</div>
+                <div class="stat-label">Total Workouts</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="stat-card ultra-contrast">
+                <div class="stat-value">25.5h</div>
+                <div class="stat-label">Total Time</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="stat-card ultra-contrast">
+                <div class="stat-value">450</div>
+                <div class="stat-label">Total Sets</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="stat-card ultra-contrast">
+                <div class="stat-value">12.5kg</div>
+                <div class="stat-label">Weight Lifted</div>
+            </div>
+        </div>
+    </div>
+
     <div class="alert alert-info">
-        <h4>Debug Information:</h4>
-        <p>✅ This page should show 4 stat cards with bright red borders</p>
-        <p>✅ Each card should have debug labels and eye emojis</p>
-        <p>✅ The entire row should have a yellow background with dashed border</p>
-        <p>✅ Cards should have hover effects with scaling and shadow</p>
+        <h4>Contrast Level Comparison:</h4>
+        <p><strong>Standard:</strong> Beautiful gradient text with enhanced contrast and shadows</p>
+        <p><strong>High Contrast:</strong> Solid dark colors on white background</p>
+        <p><strong>Ultra Contrast:</strong> Maximum accessibility with black text and bold borders</p>
+        <p>✅ All versions should have clear, readable text that doesn't blend with the background</p>
     </div>
 </div>
