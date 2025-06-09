@@ -31,7 +31,6 @@
                     <div class="card-body">
                         <SfSchedule TValue="WorkoutEvent" 
                                    Height="600px" 
-                                   DataSource="@workoutEvents"
                                    CurrentView="View.Month"
                                    StartHour="06:00"
                                    EndHour="23:00">
@@ -41,7 +40,7 @@
                                 <ScheduleView Option="View.Week" />
                                 <ScheduleView Option="View.Month" />
                             </ScheduleViews>
-                            <ScheduleEvents TValue="WorkoutEvent" EventClick="OnEventClick" />
+                            <ScheduleEvents TValue="WorkoutEvent" OnEventClick="OnEventClick" />
                         </SfSchedule>
                     </div>
                 </div>
