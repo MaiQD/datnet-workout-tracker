@@ -1,9 +1,11 @@
 @page "/"
 @using Microsoft.AspNetCore.Authorization
-@* @attribute [Authorize] *@
+@using Microsoft.AspNetCore.Components.Authorization
+@attribute [Authorize]
 @inject IWorkoutService WorkoutService
 @inject IAnalyticsService AnalyticsService
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
 
 <PageTitle>Dashboard - DatNet Workout Tracker</PageTitle>
 
