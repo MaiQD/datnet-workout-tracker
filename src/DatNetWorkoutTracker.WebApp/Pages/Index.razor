@@ -1,6 +1,6 @@
 @page "/"
 @using Microsoft.AspNetCore.Authorization
-@attribute [Authorize]
+@* @attribute [Authorize] *@
 @inject IWorkoutService WorkoutService
 @inject IAnalyticsService AnalyticsService
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -27,25 +27,25 @@
             <!-- Quick Stats -->
             <div class="col-md-3 mb-4">
                 <div class="stat-card">
-                    <div class="stat-value">@statistics.TotalWorkouts</div>
+                    <div class="stat-value">@(statistics?.TotalWorkouts ?? 0)</div>
                     <div class="stat-label">Total Workouts</div>
                 </div>
             </div>
             <div class="col-md-3 mb-4">
                 <div class="stat-card">
-                    <div class="stat-value">@Math.Round(statistics.TotalWorkoutTime.TotalHours, 1)h</div>
+                    <div class="stat-value">@(statistics != null ? Math.Round(statistics.TotalWorkoutTime.TotalHours, 1).ToString() + "h" : "0h")</div>
                     <div class="stat-label">Total Time</div>
                 </div>
             </div>
             <div class="col-md-3 mb-4">
                 <div class="stat-card">
-                    <div class="stat-value">@statistics.TotalSets</div>
+                    <div class="stat-value">@(statistics?.TotalSets ?? 0)</div>
                     <div class="stat-label">Total Sets</div>
                 </div>
             </div>
             <div class="col-md-3 mb-4">
                 <div class="stat-card">
-                    <div class="stat-value">@Math.Round(statistics.TotalWeightLifted, 0)kg</div>
+                    <div class="stat-value">@(statistics != null ? Math.Round(statistics.TotalWeightLifted, 0).ToString() + "kg" : "0kg")</div>
                     <div class="stat-label">Weight Lifted</div>
                 </div>
             </div>
