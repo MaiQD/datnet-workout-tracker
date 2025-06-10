@@ -1,29 +1,502 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @inherits LayoutComponentBase
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
+<div class="app-layout">
+    <!-- Mobile menu overlay -->
+    <div class="mobile-overlay @(isMobileMenuOpen ? "show" : "")" @onclick="CloseMobileMenu"></div>
+    
+    <!-- Sidebar -->
+    <aside class="sidebar @(isMobileMenuOpen ? "mobile-open" : "")">
+        <NavMenu OnMenuItemClick="CloseMobileMenu" />
+    </aside>
+
+    <!-- Main content area -->
+    <div class="main-content">
+        <!-- Top navigation bar -->
+        <header class="top-navbar">
+            <div class="navbar-container">
+                <!-- Mobile menu toggle -->
+                <button class="mobile-menu-toggle d-lg-none" @onclick="ToggleMobileMenu">
+                    <span class="hamburger-line"></span>
+                    <span class="hamburger-line"></span>
+                    <span class="hamburger-line"></span>
+                </button>
+
+                <!-- Page title placeholder (will be set by individual pages) -->
+                <div class="page-title-container">
+                    <h1 class="page-title" id="current-page-title">Dashboard</h1>
+                </div>
+
+                <!-- Right side actions -->
+                <div class="navbar-actions">
+                    <AuthorizeView>
+                        <Authorized>
+                            <!-- User profile dropdown -->
+                            <div class="user-profile-dropdown">
+                                <button class="user-profile-btn" @onclick="ToggleUserMenu">
+                                    <img src="@context.User.FindFirst("picture")?.Value" 
+                                         alt="Profile" 
+                                         class="profile-avatar" 
+                                         onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiNFODQ1NDUiLz4KPHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4PSI4IiB5PSI4Ij4KPHBhdGggZD0iTTggMTJDNi44IDEyIDYgMTEuMiA2IDEwVjZDNiA0LjggNi44IDQgOCA0QzkuMiA0IDEwIDQuOCAxMCA2VjEwQzEwIDExLjIgOS4yIDEyIDggMTJaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4KPC9zdmc+'" />
+                                    <span class="user-name d-none d-md-inline">@context.User.Identity?.Name</span>
+                                    <span class="dropdown-arrow oi oi-chevron-bottom"></span>
+                                </button>
+                                
+                                <div class="user-menu @(isUserMenuOpen ? "show" : "")">
+                                    <div class="user-menu-header">
+                                        <img src="@context.User.FindFirst("picture")?.Value" 
+                                             alt="Profile" 
+                                             class="profile-avatar-large" />
+                                        <div class="user-info">
+                                            <div class="user-name-large">@context.User.Identity?.Name</div>
+                                            <div class="user-email">@context.User.FindFirst("email")?.Value</div>
+                                        </div>
+                                    </div>
+                                    <div class="user-menu-divider"></div>
+                                    <div class="user-menu-items">
+                                        <a href="/profile" class="user-menu-item">
+                                            <span class="oi oi-person"></span>
+                                            Profile Settings
+                                        </a>
+                                        <a href="/settings" class="user-menu-item">
+                                            <span class="oi oi-cog"></span>
+                                            Preferences
+                                        </a>
+                                        <div class="user-menu-divider"></div>
+                                        <a href="/logout" class="user-menu-item text-danger">
+                                            <span class="oi oi-account-logout"></span>
+                                            Sign Out
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </Authorized>
+                        <NotAuthorized>
+                            <a href="/login" class="btn btn-primary">
+                                <span class="oi oi-account-login me-2"></span>
+                                Sign In
+                            </a>
+                        </NotAuthorized>
+                    </AuthorizeView>
+                </div>
+            </div>
+        </header>
+
+        <!-- Page content -->
+        <main class="page-content">
+            <div class="content-container">
+                @Body
+            </div>
+        </main>
     </div>
 
-    <main>
-        <div class="top-row px-4 auth">
-            <AuthorizeView>
-                <Authorized>
-                    <div class="user-info">
-                        <img src="@context.User.FindFirst("picture")?.Value" alt="Profile" class="profile-pic" />
-                        <span>Hello, @context.User.Identity?.Name!</span>
-                        <a href="/logout" class="btn btn-outline-secondary btn-sm">Logout</a>
-                    </div>
-                </Authorized>
-                <NotAuthorized>
-                    <a href="/login" class="btn btn-primary">Login</a>
-                </NotAuthorized>
-            </AuthorizeView>
-        </div>
-
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
+    <!-- Theme toggle component -->
+    <ThemeToggle />
 </div>
+
+<style>
+    /* ===== LAYOUT STRUCTURE ===== */
+    .app-layout {
+        display: flex;
+        min-height: 100vh;
+        background: var(--bg-secondary);
+    }
+
+    .sidebar {
+        width: 280px;
+        background: var(--gradient-secondary);
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        z-index: 1000;
+        transition: transform var(--transition-normal);
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+    }
+
+    .sidebar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .sidebar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 3px;
+    }
+
+    .main-content {
+        flex: 1;
+        margin-left: 280px;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        transition: margin-left var(--transition-normal);
+    }
+
+    /* ===== TOP NAVBAR ===== */
+    .top-navbar {
+        background: var(--bg-primary);
+        border-bottom: 1px solid var(--border);
+        box-shadow: var(--card-shadow);
+        position: sticky;
+        top: 0;
+        z-index: 900;
+        backdrop-filter: blur(10px);
+    }
+
+    .navbar-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: var(--space-4) var(--space-6);
+        max-width: 100%;
+    }
+
+    .mobile-menu-toggle {
+        display: none;
+        background: none;
+        border: none;
+        padding: var(--space-2);
+        cursor: pointer;
+        flex-direction: column;
+        gap: 4px;
+        border-radius: var(--radius-md);
+        transition: background-color var(--transition-fast);
+    }
+
+    .mobile-menu-toggle:hover {
+        background: var(--bg-accent);
+    }
+
+    .hamburger-line {
+        width: 24px;
+        height: 3px;
+        background: var(--text-primary);
+        border-radius: 2px;
+        transition: all var(--transition-fast);
+    }
+
+    .page-title-container {
+        flex: 1;
+        margin-left: var(--space-4);
+    }
+
+    .page-title {
+        font-size: var(--font-size-2xl);
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    /* ===== USER PROFILE DROPDOWN ===== */
+    .navbar-actions {
+        display: flex;
+        align-items: center;
+        gap: var(--space-4);
+    }
+
+    .user-profile-dropdown {
+        position: relative;
+    }
+
+    .user-profile-btn {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        background: var(--bg-accent);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-full);
+        padding: var(--space-2) var(--space-4);
+        cursor: pointer;
+        transition: all var(--transition-fast);
+        color: var(--text-primary);
+        text-decoration: none;
+    }
+
+    .user-profile-btn:hover {
+        background: var(--bg-secondary);
+        box-shadow: var(--card-shadow);
+        transform: translateY(-1px);
+    }
+
+    .profile-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: var(--radius-full);
+        object-fit: cover;
+        border: 2px solid var(--color-red);
+    }
+
+    .profile-avatar-large {
+        width: 48px;
+        height: 48px;
+        border-radius: var(--radius-full);
+        object-fit: cover;
+        border: 2px solid var(--color-red);
+    }
+
+    .user-name {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .dropdown-arrow {
+        font-size: 12px;
+        transition: transform var(--transition-fast);
+    }
+
+    .user-profile-dropdown.open .dropdown-arrow {
+        transform: rotate(180deg);
+    }
+
+    /* ===== USER MENU ===== */
+    .user-menu {
+        position: absolute;
+        top: calc(100% + var(--space-2));
+        right: 0;
+        background: var(--bg-primary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--card-shadow-lg);
+        min-width: 280px;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-10px);
+        transition: all var(--transition-normal);
+        z-index: 1000;
+    }
+
+    .user-menu.show {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+
+    .user-menu-header {
+        display: flex;
+        align-items: center;
+        gap: var(--space-4);
+        padding: var(--space-6);
+        border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .user-info {
+        flex: 1;
+    }
+
+    .user-name-large {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: var(--space-1);
+    }
+
+    .user-email {
+        font-size: var(--font-size-sm);
+        color: var(--text-secondary);
+    }
+
+    .user-menu-divider {
+        height: 1px;
+        background: var(--border-subtle);
+        margin: var(--space-2) 0;
+    }
+
+    .user-menu-items {
+        padding: var(--space-2);
+    }
+
+    .user-menu-item {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        padding: var(--space-3) var(--space-4);
+        border-radius: var(--radius-lg);
+        color: var(--text-primary);
+        text-decoration: none;
+        font-weight: 500;
+        transition: all var(--transition-fast);
+    }
+
+    .user-menu-item:hover {
+        background: var(--bg-accent);
+        color: var(--text-primary);
+        transform: translateX(4px);
+    }
+
+    .user-menu-item.text-danger {
+        color: var(--danger);
+    }
+
+    .user-menu-item.text-danger:hover {
+        background: var(--danger-light);
+        color: var(--danger);
+    }
+
+    /* ===== PAGE CONTENT ===== */
+    .page-content {
+        flex: 1;
+        padding: var(--space-6);
+        overflow-y: auto;
+    }
+
+    .content-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    /* ===== MOBILE STYLES ===== */
+    @@media (max-width: 991.98px) {
+        .sidebar {
+            transform: translateX(-100%);
+        }
+
+        .sidebar.mobile-open {
+            transform: translateX(0);
+        }
+
+        .main-content {
+            margin-left: 0;
+        }
+
+        .mobile-menu-toggle {
+            display: flex;
+        }
+
+        .mobile-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all var(--transition-normal);
+        }
+
+        .mobile-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .page-title {
+            font-size: var(--font-size-xl);
+        }
+
+        .page-content {
+            padding: var(--space-4);
+        }
+
+        .user-name {
+            display: none;
+        }
+
+        .user-menu {
+            right: auto;
+            left: 0;
+            min-width: 260px;
+        }
+    }
+
+    @@media (max-width: 576px) {
+        .navbar-container {
+            padding: var(--space-3) var(--space-4);
+        }
+
+        .page-title {
+            font-size: var(--font-size-lg);
+        }
+
+        .page-content {
+            padding: var(--space-3);
+        }
+
+        .user-profile-btn {
+            padding: var(--space-2);
+        }
+
+        .profile-avatar {
+            width: 28px;
+            height: 28px;
+        }
+    }
+
+    /* ===== ANIMATIONS ===== */
+    .sidebar.mobile-open {
+        animation: slideIn 0.3s ease-out;
+    }
+
+    /* ===== DARK THEME ADJUSTMENTS ===== */
+    [data-theme="dark"] .top-navbar {
+        background: rgba(43, 46, 74, 0.95);
+        backdrop-filter: blur(20px);
+    }
+
+    [data-theme="dark"] .user-profile-btn {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    [data-theme="dark"] .user-profile-btn:hover {
+        background: rgba(255, 255, 255, 0.15);
+    }
+
+    [data-theme="dark"] .user-menu {
+        background: var(--bg-secondary);
+        border-color: var(--border-dark);
+    }
+</style>
+
+@code {
+    private bool isMobileMenuOpen = false;
+    private bool isUserMenuOpen = false;
+
+    private void ToggleMobileMenu()
+    {
+        isMobileMenuOpen = !isMobileMenuOpen;
+    }
+
+    private void CloseMobileMenu()
+    {
+        isMobileMenuOpen = false;
+    }
+
+    private void ToggleUserMenu()
+    {
+        isUserMenuOpen = !isUserMenuOpen;
+    }
+
+    // Close user menu when clicking outside
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("eval", @"
+                document.addEventListener('click', function(e) {
+                    if (!e.target.closest('.user-profile-dropdown')) {
+                        DotNet.invokeMethodAsync('DatNetWorkoutTracker.WebApp', 'CloseUserMenu');
+                    }
+                });
+            ");
+        }
+    }
+
+    [JSInvokable]
+    public static void CloseUserMenu()
+    {
+        // This would be handled by JavaScript to close the menu
+    }
+}
+
+@inject IJSRuntime JSRuntime

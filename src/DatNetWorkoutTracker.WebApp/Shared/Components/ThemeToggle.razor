@@ -1,0 +1,81 @@
+@inject IJSRuntime JSRuntime
+@implements IDisposable
+
+<div class="theme-toggle" @onclick="ToggleTheme" title="Toggle Theme">
+    @if (isDarkTheme)
+    {
+        <span class="oi oi-sun" style="color: var(--color-red);"></span>
+    }
+    else
+    {
+        <span class="oi oi-moon" style="color: var(--color-navy);"></span>
+    }
+</div>
+
+@code {
+    private bool isDarkTheme = false;
+    private DotNetObjectReference<ThemeToggle>? objRef;
+
+    protected override async Task OnInitializedAsync()
+    {
+        objRef = DotNetObjectReference.Create(this);
+        
+        // Get initial theme from localStorage
+        try
+        {
+            var theme = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "theme");
+            isDarkTheme = theme == "dark";
+            
+            if (!string.IsNullOrEmpty(theme))
+            {
+                await SetTheme(theme);
+            }
+        }
+        catch (Exception)
+        {
+            // Fallback to light theme if localStorage is not available
+            isDarkTheme = false;
+        }
+    }
+
+    private async Task ToggleTheme()
+    {
+        isDarkTheme = !isDarkTheme;
+        var theme = isDarkTheme ? "dark" : "light";
+        
+        await SetTheme(theme);
+        await SaveThemePreference(theme);
+    }
+
+    private async Task SetTheme(string theme)
+    {
+        await JSRuntime.InvokeVoidAsync("setTheme", theme);
+    }
+
+    private async Task SaveThemePreference(string theme)
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "theme", theme);
+        }
+        catch (Exception)
+        {
+            // Handle gracefully if localStorage is not available
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnSystemThemeChanged(bool isDark)
+    {
+        if (isDarkTheme != isDark)
+        {
+            isDarkTheme = isDark;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public void Dispose()
+    {
+        objRef?.Dispose();
+    }
+}

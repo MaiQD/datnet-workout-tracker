@@ -9,51 +9,857 @@
 
 <PageTitle>Dashboard - DatNet Workout Tracker</PageTitle>
 
-<div class="dashboard">
-    <div class="welcome-section">
-        <h1>Welcome back! 💪</h1>
-        <p class="lead">Ready for your next workout?</p>
-    </div>
+<div class="dashboard-container">
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1 class="hero-title">Welcome back! 💪</h1>
+                <p class="hero-subtitle">Ready to crush your fitness goals today?</p>
+            </div>
+            <div class="hero-actions">
+                @if (activeWorkout != null)
+                {
+                    <button class="btn btn-success btn-lg hero-btn" @onclick="() => ContinueWorkout(activeWorkout.Id)">
+                        <span class="oi oi-play-circle me-2"></span>
+                        Continue Workout
+                    </button>
+                }
+                else
+                {
+                    <button class="btn btn-primary btn-lg hero-btn" @onclick="StartNewWorkout">
+                        <span class="oi oi-plus me-2"></span>
+                        Start New Workout
+                    </button>
+                }
+                <a href="/routines" class="btn btn-outline-secondary btn-lg hero-btn">
+                    <span class="oi oi-list-rich me-2"></span>
+                    Browse Routines
+                </a>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="stats-preview">
+                <div class="quick-stat">
+                    <div class="stat-number">@(statistics?.TotalWorkouts ?? 0)</div>
+                    <div class="stat-text">Workouts</div>
+                </div>
+                <div class="quick-stat">
+                    <div class="stat-number">@(statistics != null ? Math.Round(statistics.TotalWorkoutTime.TotalHours, 1).ToString() + "h" : "0h")</div>
+                    <div class="stat-text">Total Time</div>
+                </div>
+            </div>
+        </div>
+    </section>
 
     @if (isLoading)
     {
-        <div class="text-center">
-            <div class="spinner-border" role="status">
+        <div class="loading-section">
+            <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Loading...</span>
             </div>
+            <p class="mt-3 text-muted">Loading your fitness data...</p>
         </div>
     }
     else
     {
-        <div class="row">
-            <!-- Quick Stats -->
-            <div class="col-md-3 mb-4">
-                <div class="stat-card">
-                    <div class="stat-value">@(statistics?.TotalWorkouts ?? 0)</div>
-                    <div class="stat-label">Total Workouts</div>
+        <!-- Statistics Cards -->
+        <section class="stats-section">
+            <div class="section-header">
+                <h2 class="section-title">Your Progress</h2>
+                <p class="section-subtitle">Track your fitness journey at a glance</p>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-xl-3 col-md-6">
+                    <div class="stat-card workouts">
+                        <div class="stat-card-icon">
+                            <span class="oi oi-flash"></span>
+                        </div>
+                        <div class="stat-card-content">
+                            <div class="stat-value">@(statistics?.TotalWorkouts ?? 0)</div>
+                            <div class="stat-label">Total Workouts</div>
+                            <div class="stat-change positive">
+                                <span class="oi oi-arrow-top"></span>
+                                +5 this week
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6">
+                    <div class="stat-card time">
+                        <div class="stat-card-icon">
+                            <span class="oi oi-clock"></span>
+                        </div>
+                        <div class="stat-card-content">
+                            <div class="stat-value">@(statistics != null ? Math.Round(statistics.TotalWorkoutTime.TotalHours, 1).ToString() + "h" : "0h")</div>
+                            <div class="stat-label">Total Time</div>
+                            <div class="stat-change positive">
+                                <span class="oi oi-arrow-top"></span>
+                                +2.5h this week
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6">
+                    <div class="stat-card sets">
+                        <div class="stat-card-icon">
+                            <span class="oi oi-list"></span>
+                        </div>
+                        <div class="stat-card-content">
+                            <div class="stat-value">@(statistics?.TotalSets ?? 0)</div>
+                            <div class="stat-label">Total Sets</div>
+                            <div class="stat-change positive">
+                                <span class="oi oi-arrow-top"></span>
+                                +25 this week
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6">
+                    <div class="stat-card weight">
+                        <div class="stat-card-icon">
+                            <span class="oi oi-tag"></span>
+                        </div>
+                        <div class="stat-card-content">
+                            <div class="stat-value">@(statistics != null ? Math.Round(statistics.TotalWeightLifted, 0).ToString() + "kg" : "0kg")</div>
+                            <div class="stat-label">Weight Lifted</div>
+                            <div class="stat-change positive">
+                                <span class="oi oi-arrow-top"></span>
+                                +150kg this week
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-3 mb-4">
-                <div class="stat-card">
-                    <div class="stat-value">@(statistics != null ? Math.Round(statistics.TotalWorkoutTime.TotalHours, 1).ToString() + "h" : "0h")</div>
-                    <div class="stat-label">Total Time</div>
-                </div>
-            </div>
-            <div class="col-md-3 mb-4">
-                <div class="stat-card">
-                    <div class="stat-value">@(statistics?.TotalSets ?? 0)</div>
-                    <div class="stat-label">Total Sets</div>
-                </div>
-            </div>
-            <div class="col-md-3 mb-4">
-                <div class="stat-card">
-                    <div class="stat-value">@(statistics != null ? Math.Round(statistics.TotalWeightLifted, 0).ToString() + "kg" : "0kg")</div>
-                    <div class="stat-label">Weight Lifted</div>
-                </div>
-            </div>
-        </div>
+        </section>
 
-        <div class="row">
+        <!-- Main Content Grid -->
+        <section class="main-content-section">
+            <div class="row g-4">
+                <!-- Current Workout Status -->
+                <div class="col-lg-6">
+                    <div class="content-card current-workout">
+                        <div class="card-header">
+                            <div class="card-header-content">
+                                <h3 class="card-title">
+                                    <span class="oi oi-pulse me-2"></span>
+                                    Current Workout
+                                </h3>
+                                @if (activeWorkout != null)
+                                {
+                                    <span class="status-badge active">In Progress</span>
+                                }
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            @if (activeWorkout != null)
+                            {
+                                <div class="workout-info">
+                                    <h4 class="workout-name">@activeWorkout.Name</h4>
+                                    <p class="workout-time">Started: @activeWorkout.StartTime.ToString("HH:mm")</p>
+                                    <div class="workout-progress">
+                                        <div class="progress-item">
+                                            <span class="progress-label">Exercises</span>
+                                            <span class="progress-value">@activeWorkout.Exercises.Count</span>
+                                        </div>
+                                        <div class="progress-item">
+                                            <span class="progress-label">Duration</span>
+                                            <span class="progress-value">@GetElapsedTime(activeWorkout.StartTime)</span>
+                                        </div>
+                                    </div>
+                                    <div class="workout-actions">
+                                        <button class="btn btn-success" @onclick="() => ContinueWorkout(activeWorkout.Id)">
+                                            <span class="oi oi-play-circle me-2"></span>
+                                            Continue Workout
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="no-workout">
+                                    <div class="no-workout-icon">🏃‍♂️</div>
+                                    <h4>No active workout</h4>
+                                    <p>Ready to start your next fitness session?</p>
+                                    <button class="btn btn-primary" @onclick="StartNewWorkout">
+                                        <span class="oi oi-plus me-2"></span>
+                                        Start New Workout
+                                    </button>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Workouts -->
+                <div class="col-lg-6">
+                    <div class="content-card recent-workouts">
+                        <div class="card-header">
+                            <div class="card-header-content">
+                                <h3 class="card-title">
+                                    <span class="oi oi-timer me-2"></span>
+                                    Recent Workouts
+                                </h3>
+                                <a href="/workouts" class="view-all-link">View All</a>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            @if (recentWorkouts.Any())
+                            {
+                                <div class="workout-list">
+                                    @foreach (var workout in recentWorkouts.Take(4))
+                                    {
+                                        <div class="workout-item">
+                                            <div class="workout-item-icon">
+                                                <span class="oi oi-check"></span>
+                                            </div>
+                                            <div class="workout-item-content">
+                                                <h5 class="workout-item-title">@workout.Name</h5>
+                                                <p class="workout-item-date">@workout.StartTime.ToString("MMM dd, yyyy")</p>
+                                                <div class="workout-item-stats">
+                                                    <span class="stat">@workout.Exercises.Count exercises</span>
+                                                    @if (workout.Duration.HasValue)
+                                                    {
+                                                        <span class="stat">@workout.Duration.Value.ToString(@"hh\:mm")</span>
+                                                    }
+                                                </div>
+                                            </div>
+                                            <div class="workout-item-status">
+                                                <span class="status-badge completed">@workout.Status</span>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="no-data">
+                                    <div class="no-data-icon">📊</div>
+                                    <p>No recent workouts found. Start your first workout to see your progress here!</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Workout Frequency Chart -->
+        @if (workoutFrequencyData.Any())
+        {
+            <section class="chart-section">
+                <div class="content-card chart-card">
+                    <div class="card-header">
+                        <div class="card-header-content">
+                            <h3 class="card-title">
+                                <span class="oi oi-bar-chart me-2"></span>
+                                Workout Frequency
+                            </h3>
+                            <p class="card-subtitle">Last 30 days activity overview</p>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <div class="chart-placeholder">
+                                <i class="fas fa-chart-bar chart-icon"></i>
+                                <h5>Workout Frequency Chart</h5>
+                                <p>Visual representation of your workout frequency over the last 30 days</p>
+                                @if (workoutFrequencyData.Any())
+                                {
+                                    <div class="chart-data">
+                                        <p>Total workouts: @workoutFrequencyData.Sum(x => x.WorkoutCount)</p>
+                                        <p>Average per day: @Math.Round(workoutFrequencyData.Average(x => x.WorkoutCount), 1)</p>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <p class="text-muted">No workout data available</p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        }
+
+        <!-- Quick Actions -->
+        <section class="quick-actions-section">
+            <div class="content-card quick-actions-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <span class="oi oi-zap me-2"></span>
+                        Quick Actions
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="quick-actions-grid">
+                        <a href="/workouts/new" class="quick-action">
+                            <div class="quick-action-icon">
+                                <span class="oi oi-plus"></span>
+                            </div>
+                            <div class="quick-action-content">
+                                <h4>New Workout</h4>
+                                <p>Start a fresh training session</p>
+                            </div>
+                        </a>
+                        
+                        <a href="/exercises" class="quick-action">
+                            <div class="quick-action-icon">
+                                <span class="oi oi-book"></span>
+                            </div>
+                            <div class="quick-action-content">
+                                <h4>Exercise Library</h4>
+                                <p>Browse available exercises</p>
+                            </div>
+                        </a>
+                        
+                        <a href="/routines" class="quick-action">
+                            <div class="quick-action-icon">
+                                <span class="oi oi-list-rich"></span>
+                            </div>
+                            <div class="quick-action-content">
+                                <h4>My Routines</h4>
+                                <p>Manage workout templates</p>
+                            </div>
+                        </a>
+                        
+                        <a href="/analytics" class="quick-action">
+                            <div class="quick-action-icon">
+                                <span class="oi oi-bar-chart"></span>
+                            </div>
+                            <div class="quick-action-content">
+                                <h4>Analytics</h4>
+                                <p>View detailed progress</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    }
+</div>
+
+<style>
+    /* ===== DASHBOARD LAYOUT ===== */
+    .dashboard-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: var(--space-4) 0;
+    }
+
+    /* ===== HERO SECTION ===== */
+    .hero-section {
+        background: var(--gradient-hero);
+        border-radius: var(--radius-2xl);
+        padding: var(--space-12) var(--space-8);
+        margin-bottom: var(--space-8);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 200px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: 
+            radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+        pointer-events: none;
+    }
+
+    .hero-content {
+        flex: 1;
+        z-index: 1;
+        position: relative;
+    }
+
+    .hero-title {
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: var(--space-3);
+        background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .hero-subtitle {
+        font-size: var(--font-size-xl);
+        opacity: 0.9;
+        margin-bottom: var(--space-6);
+        font-weight: 500;
+    }
+
+    .hero-actions {
+        display: flex;
+        gap: var(--space-4);
+        flex-wrap: wrap;
+    }
+
+    .hero-btn {
+        padding: var(--space-4) var(--space-6);
+        font-weight: 600;
+        border-radius: var(--radius-xl);
+        backdrop-filter: blur(10px);
+        transition: all var(--transition-fast);
+    }
+
+    .hero-visual {
+        z-index: 1;
+        position: relative;
+    }
+
+    .stats-preview {
+        display: flex;
+        gap: var(--space-6);
+    }
+
+    .quick-stat {
+        text-align: center;
+        background: rgba(255, 255, 255, 0.1);
+        padding: var(--space-4);
+        border-radius: var(--radius-xl);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 800;
+        color: white;
+        margin-bottom: var(--space-1);
+    }
+
+    .stat-text {
+        font-size: var(--font-size-sm);
+        color: rgba(255, 255, 255, 0.8);
+        font-weight: 500;
+    }
+
+    /* ===== SECTION STYLES ===== */
+    .section-header {
+        text-align: center;
+        margin-bottom: var(--space-8);
+    }
+
+    .section-title {
+        font-size: var(--font-size-3xl);
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: var(--space-2);
+    }
+
+    .section-subtitle {
+        font-size: var(--font-size-lg);
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+
+    .stats-section, .main-content-section, .chart-section, .quick-actions-section {
+        margin-bottom: var(--space-8);
+    }
+
+    /* ===== STAT CARDS ===== */
+    .stat-card {
+        background: var(--card-bg);
+        border-radius: var(--radius-xl);
+        padding: var(--space-6);
+        box-shadow: var(--card-shadow);
+        transition: all var(--transition-normal);
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: var(--space-4);
+        height: 100%;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--card-shadow-hover);
+    }
+
+    .stat-card-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: var(--radius-xl);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+        flex-shrink: 0;
+    }
+
+    .stat-card.workouts .stat-card-icon { background: var(--gradient-primary); }
+    .stat-card.time .stat-card-icon { background: var(--gradient-secondary); }
+    .stat-card.sets .stat-card-icon { background: var(--gradient-accent); }
+    .stat-card.weight .stat-card-icon { background: linear-gradient(135deg, var(--success) 0%, #059669 100%); }
+
+    .stat-card-content {
+        flex: 1;
+    }
+
+    .stat-value {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        line-height: 1;
+        margin-bottom: var(--space-1);
+    }
+
+    .stat-label {
+        font-size: var(--font-size-base);
+        color: var(--text-secondary);
+        font-weight: 600;
+        margin-bottom: var(--space-2);
+    }
+
+    .stat-change {
+        font-size: var(--font-size-sm);
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: var(--space-1);
+    }
+
+    .stat-change.positive {
+        color: var(--success);
+    }
+
+    /* ===== CONTENT CARDS ===== */
+    .content-card {
+        background: var(--card-bg);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--card-shadow);
+        border: 1px solid var(--border);
+        height: 100%;
+        transition: all var(--transition-normal);
+    }
+
+    .content-card:hover {
+        box-shadow: var(--card-shadow-hover);
+    }
+
+    .card-header {
+        padding: var(--space-6) var(--space-6) var(--space-4);
+        border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .card-header-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .card-title {
+        font-size: var(--font-size-xl);
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+        display: flex;
+        align-items: center;
+    }
+
+    .card-subtitle {
+        font-size: var(--font-size-sm);
+        color: var(--text-secondary);
+        margin: 0;
+    }
+
+    .view-all-link {
+        color: var(--color-red);
+        text-decoration: none;
+        font-weight: 600;
+        font-size: var(--font-size-sm);
+        transition: color var(--transition-fast);
+    }
+
+    .view-all-link:hover {
+        color: var(--color-burgundy);
+    }
+
+    .card-body {
+        padding: var(--space-6);
+    }
+
+    /* ===== WORKOUT COMPONENTS ===== */
+    .workout-info {
+        text-align: center;
+    }
+
+    .workout-name {
+        font-size: var(--font-size-xl);
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: var(--space-2);
+    }
+
+    .workout-time {
+        color: var(--text-secondary);
+        margin-bottom: var(--space-4);
+    }
+
+    .workout-progress {
+        display: flex;
+        justify-content: center;
+        gap: var(--space-6);
+        margin-bottom: var(--space-6);
+    }
+
+    .progress-item {
+        text-align: center;
+    }
+
+    .progress-label {
+        display: block;
+        font-size: var(--font-size-sm);
+        color: var(--text-secondary);
+        margin-bottom: var(--space-1);
+    }
+
+    .progress-value {
+        font-size: var(--font-size-lg);
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .no-workout, .no-data {
+        text-align: center;
+        padding: var(--space-8) var(--space-4);
+    }
+
+    .no-workout-icon, .no-data-icon {
+        font-size: 4rem;
+        margin-bottom: var(--space-4);
+    }
+
+    /* ===== WORKOUT LIST ===== */
+    .workout-list {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+    }
+
+    .workout-item {
+        display: flex;
+        align-items: center;
+        gap: var(--space-4);
+        padding: var(--space-4);
+        background: var(--bg-accent);
+        border-radius: var(--radius-lg);
+        transition: all var(--transition-fast);
+    }
+
+    .workout-item:hover {
+        background: var(--bg-secondary);
+        transform: translateX(4px);
+    }
+
+    .workout-item-icon {
+        width: 40px;
+        height: 40px;
+        background: var(--success);
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        flex-shrink: 0;
+    }
+
+    .workout-item-content {
+        flex: 1;
+    }
+
+    .workout-item-title {
+        font-size: var(--font-size-base);
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: var(--space-1);
+    }
+
+    .workout-item-date {
+        font-size: var(--font-size-sm);
+        color: var(--text-secondary);
+        margin-bottom: var(--space-2);
+    }
+
+    .workout-item-stats {
+        display: flex;
+        gap: var(--space-3);
+    }
+
+    .stat {
+        font-size: var(--font-size-xs);
+        color: var(--text-muted);
+        background: var(--bg-primary);
+        padding: var(--space-1) var(--space-2);
+        border-radius: var(--radius-sm);
+    }
+
+    /* ===== STATUS BADGES ===== */
+    .status-badge {
+        padding: var(--space-1) var(--space-3);
+        border-radius: var(--radius-full);
+        font-size: var(--font-size-xs);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .status-badge.active {
+        background: var(--warning-light);
+        color: var(--warning);
+    }
+
+    .status-badge.completed {
+        background: var(--success-light);
+        color: var(--success);
+    }
+
+    /* ===== QUICK ACTIONS ===== */
+    .quick-actions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: var(--space-4);
+    }
+
+    .quick-action {
+        display: flex;
+        align-items: center;
+        gap: var(--space-4);
+        padding: var(--space-5);
+        background: var(--bg-accent);
+        border-radius: var(--radius-xl);
+        text-decoration: none;
+        transition: all var(--transition-fast);
+        border: 1px solid var(--border-subtle);
+    }
+
+    .quick-action:hover {
+        background: var(--bg-secondary);
+        transform: translateY(-2px);
+        box-shadow: var(--card-shadow);
+        border-color: var(--color-red);
+    }
+
+    .quick-action-icon {
+        width: 48px;
+        height: 48px;
+        background: var(--gradient-primary);
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: var(--font-size-lg);
+        flex-shrink: 0;
+    }
+
+    .quick-action-content h4 {
+        font-size: var(--font-size-base);
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: var(--space-1);
+    }
+
+    .quick-action-content p {
+        font-size: var(--font-size-sm);
+        color: var(--text-secondary);
+        margin: 0;
+    }
+
+    /* ===== CHART STYLES ===== */
+    .chart-container {
+        padding: var(--space-4);
+    }
+
+    /* ===== LOADING STATE ===== */
+    .loading-section {
+        text-align: center;
+        padding: var(--space-16) var(--space-4);
+    }
+
+    /* ===== RESPONSIVE DESIGN ===== */
+    @@media (max-width: 1200px) {
+        .hero-section {
+            flex-direction: column;
+            text-align: center;
+            gap: var(--space-6);
+        }
+
+        .stats-preview {
+            justify-content: center;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .dashboard-container {
+            padding: var(--space-3) var(--space-2);
+        }
+
+        .hero-section {
+            padding: var(--space-8) var(--space-4);
+        }
+
+        .hero-title {
+            font-size: 2.5rem;
+        }
+
+        .hero-actions {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .hero-btn {
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .stats-preview {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .workout-progress {
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+
+        .quick-actions-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media (max-width: 576px) {
+        .stat-card {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .stat-card-icon {
+            margin-bottom: var(--space-2);
+        }
+    }
+</style>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="dashboard-content">
+                <div class="row">
             <!-- Active Workout -->
             <div class="col-md-6 mb-4">
                 <div class="card">
@@ -65,16 +871,18 @@
                         {
                             <h6>@activeWorkout.Name</h6>
                             <p>Started: @activeWorkout.StartTime.ToString("HH:mm")</p>
-                            <SfButton CssClass="e-success" OnClick="() => ContinueWorkout(activeWorkout.Id)">
+                            <button class="btn btn-success" @onclick="() => ContinueWorkout(activeWorkout.Id)">
+                                <i class="fas fa-play"></i>
                                 Continue Workout
-                            </SfButton>
+                            </button>
                         }
                         else
                         {
                             <p>No active workout</p>
-                            <SfButton CssClass="e-primary" OnClick="StartNewWorkout">
+                            <button class="btn btn-primary" @onclick="StartNewWorkout">
+                                <i class="fas fa-plus"></i>
                                 Start New Workout
-                            </SfButton>
+                            </button>
                         }
                     </div>
                 </div>
@@ -117,23 +925,31 @@
                         <h5>Workout Frequency (Last 30 Days)</h5>
                     </div>
                     <div class="card-body">
-                        <SfChart Title="Workouts per Day" Height="300px">
-                            <ChartPrimaryXAxis ValueType="Syncfusion.Blazor.Charts.ValueType.DateTime" />
-                            <ChartPrimaryYAxis Title="Number of Workouts" />
-                            <ChartSeriesCollection>
-                                <ChartSeries DataSource="@workoutFrequencyData" 
-                                           XName="Date" 
-                                           YName="WorkoutCount" 
-                                           Type="ChartSeriesType.Column">
-                                </ChartSeries>
-                            </ChartSeriesCollection>
-                        </SfChart>
+                        <div class="chart-placeholder">
+                            <i class="fas fa-chart-line chart-icon"></i>
+                            <h5>Daily Workout Trends</h5>
+                            <p>Track your workout consistency over time</p>
+                            @if (workoutFrequencyData.Any())
+                            {
+                                <div class="chart-data">
+                                    <p>Most active day: @workoutFrequencyData.OrderByDescending(x => x.WorkoutCount).First().Date.ToString("MMM dd")</p>
+                                    <p>Total workouts: @statistics.TotalWorkouts</p>
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="text-muted">Start your first workout to see trends</p>
+                            }
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     }
 </div>
+            </div>
+        </div>
+    </div>
 
 <style>
     .dashboard {
@@ -237,6 +1053,16 @@
     private void ContinueWorkout(string workoutId)
     {
         Navigation.NavigateTo($"/workouts/{workoutId}");
+    }
+
+    private string GetElapsedTime(DateTime startTime)
+    {
+        var elapsed = DateTime.UtcNow - startTime;
+        if (elapsed.TotalHours >= 1)
+        {
+            return $"{elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}";
+        }
+        return $"{elapsed.Minutes:D2}:{elapsed.Seconds:D2}";
     }
 }
 

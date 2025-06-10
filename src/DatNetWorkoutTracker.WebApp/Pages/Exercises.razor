@@ -9,197 +9,456 @@
 
 <PageTitle>Exercise Library - DatNet Workout Tracker</PageTitle>
 
-<div class="exercises-page">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Exercise Library</h1>
-        <SfButton CssClass="e-success" OnClick="ShowAddExerciseDialog">
-            <span class="oi oi-plus"></span> Add Exercise
-        </SfButton>
+<div class="exercise-library-page">
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="hero-content">
+            <h1 class="hero-title">Exercise Library</h1>
+            <p class="hero-subtitle">Discover, master, and build your perfect workout arsenal</p>
+            <div class="hero-stats">
+                <div class="stat">
+                    <span class="stat-number">@exercises.Count</span>
+                    <span class="stat-label">Exercises</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">@exercises.Select(e => e.TargetMuscleGroups).SelectMany(x => x).Distinct().Count()</span>
+                    <span class="stat-label">Muscle Groups</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">@exercises.Select(e => e.Equipment).SelectMany(x => x).Distinct().Count()</span>
+                    <span class="stat-label">Equipment Types</span>
+                </div>
+            </div>
+        </div>
+        <div class="hero-actions">
+            <button class="btn btn-primary-custom btn-lg" @onclick="ShowAddExerciseDialog">
+                <i class="fas fa-plus"></i>
+                <span>Add New Exercise</span>
+            </button>
+        </div>
     </div>
 
     @if (isLoading)
     {
-        <div class="text-center">
-            <div class="spinner-border" role="status">
-                <span class="visually-hidden">Loading...</span>
+        <div class="loading-section">
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+                <p>Loading your exercise library...</p>
             </div>
         </div>
     }
     else
     {
-        <!-- Filter and Search -->
-        <div class="row mb-4">
-            <div class="col-md-4">
-                <SfTextBox @bind-Value="searchTerm" 
-                          Placeholder="Search exercises...">
-                </SfTextBox>
-            </div>
-            <div class="col-md-3">
-                <SfDropDownList TValue="string" TItem="string" 
-                               DataSource="@muscleGroups" 
-                               @bind-Value="selectedMuscleGroup"
-                               ValueChange="@((string value) => OnMuscleGroupChanged(value))"
-                               Placeholder="Filter by Muscle Group">
-                </SfDropDownList>
-            </div>
-            <div class="col-md-3">
-                <SfDropDownList TValue="string" TItem="string" 
-                               DataSource="@equipmentTypes" 
-                               @bind-Value="selectedEquipment"
-                               ValueChange="@((string value) => OnEquipmentChanged(value))"
-                               Placeholder="Filter by Equipment">
-                </SfDropDownList>
-            </div>
-            <div class="col-md-2">
-                <SfButton CssClass="e-outline" OnClick="ClearFilters">
-                    Clear Filters
-                </SfButton>
+        <!-- Filter and Search Section -->
+        <div class="filters-section">
+            <div class="container-fluid">
+                <div class="row g-3">
+                    <div class="col-lg-4 col-md-6">
+                        <div class="filter-group">
+                            <label class="filter-label">
+                                <i class="fas fa-search"></i>
+                                Search Exercises
+                            </label>
+                            <SfTextBox @bind-Value="searchTerm" 
+                                      Placeholder="Find your perfect exercise..."
+                                      CssClass="modern-input">
+                            </SfTextBox>
+                        </div>
+                    </div>
+                    <div class="col-lg-2 col-md-3 col-sm-6">
+                        <div class="filter-group">
+                            <label class="filter-label">
+                                <i class="fas fa-dumbbell"></i>
+                                Muscle Group
+                            </label>
+                            <SfDropDownList TValue="string" TItem="string" 
+                                           DataSource="@muscleGroups" 
+                                           @bind-Value="selectedMuscleGroup"
+                                           ValueChange="@((string value) => OnMuscleGroupChanged(value))"
+                                           Placeholder="All Muscles"
+                                           CssClass="modern-dropdown">
+                            </SfDropDownList>
+                        </div>
+                    </div>
+                    <div class="col-lg-2 col-md-3 col-sm-6">
+                        <div class="filter-group">
+                            <label class="filter-label">
+                                <i class="fas fa-tools"></i>
+                                Equipment
+                            </label>
+                            <SfDropDownList TValue="string" TItem="string" 
+                                           DataSource="@equipmentTypes" 
+                                           @bind-Value="selectedEquipment"
+                                           ValueChange="@((string value) => OnEquipmentChanged(value))"
+                                           Placeholder="All Equipment"
+                                           CssClass="modern-dropdown">
+                            </SfDropDownList>
+                        </div>
+                    </div>
+                    <div class="col-lg-2 col-md-6 col-sm-6">
+                        <div class="filter-group">
+                            <label class="filter-label">
+                                <i class="fas fa-signal"></i>
+                                Difficulty
+                            </label>
+                            <SfDropDownList TValue="string" TItem="string" 
+                                           DataSource="@difficultyLevels" 
+                                           @bind-Value="selectedDifficulty"
+                                           ValueChange="@((string value) => OnDifficultyChanged(value))"
+                                           Placeholder="All Levels"
+                                           CssClass="modern-dropdown">
+                            </SfDropDownList>
+                        </div>
+                    </div>
+                    <div class="col-lg-2 col-md-6 col-sm-6">
+                        <div class="filter-group d-flex flex-column justify-content-end">
+                            <button class="btn btn-outline-secondary" @onclick="ClearFilters">
+                                <i class="fas fa-times"></i>
+                                Clear Filters
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- Exercise Grid -->
-        <div class="row">
-            @foreach (var exercise in filteredExercises)
-            {
-                <div class="col-lg-4 col-md-6 mb-4">
-                    <div class="exercise-card">
-                        @if (!string.IsNullOrEmpty(exercise.ThumbnailUrl))
-                        {
-                            <div class="exercise-image">
-                                <img src="@exercise.ThumbnailUrl" alt="@exercise.Name" class="img-fluid" />
-                            </div>
-                        }
-                        <div class="exercise-content">
-                            <h5 class="exercise-title">@exercise.Name</h5>
-                            <div class="exercise-meta">
-                                <span class="badge bg-primary">@string.Join(", ", exercise.TargetMuscleGroups)</span>
-                                <span class="badge bg-secondary">@string.Join(", ", exercise.Equipment)</span>
-                                <span class="badge bg-info">@exercise.Category</span>
-                            </div>
-                            <p class="exercise-description">@exercise.Description</p>
-                            
-                            <div class="exercise-actions">
-                                <SfButton CssClass="e-info e-small" OnClick="() => ViewExerciseDetails(exercise)">
-                                    View Details
-                                </SfButton>
-                                @if (!string.IsNullOrEmpty(exercise.YoutubeUrl))
-                                {
-                                    <SfButton CssClass="e-success e-small" OnClick="() => OpenVideoTutorial(exercise.YoutubeUrl)">
-                                        Watch Tutorial
-                                    </SfButton>
-                                }
-                                <SfButton CssClass="e-warning e-small" OnClick="() => EditExercise(exercise)">
-                                    Edit
-                                </SfButton>
-                                <SfButton CssClass="e-danger e-small" OnClick="() => DeleteExercise(exercise.Id)">
-                                    Delete
-                                </SfButton>
-                            </div>
+        <div class="exercises-grid">
+            <div class="container-fluid">
+                @if (filteredExercises.Any())
+                {
+                    <div class="grid-header">
+                        <div class="results-info">
+                            <span class="results-count">@filteredExercises.Count</span>
+                            <span class="results-text">exercise@(filteredExercises.Count != 1 ? "s" : "") found</span>
+                        </div>
+                        <div class="view-options">
+                            <button class="view-btn @(gridView ? "active" : "")" @onclick="() => gridView = true">
+                                <i class="fas fa-th"></i>
+                            </button>
+                            <button class="view-btn @(!gridView ? "active" : "")" @onclick="() => gridView = false">
+                                <i class="fas fa-list"></i>
+                            </button>
                         </div>
                     </div>
-                </div>
-            }
-        </div>
 
-        @if (!filteredExercises.Any())
-        {
-            <div class="text-center text-muted mt-5">
-                <p>No exercises found matching your criteria.</p>
-                <SfButton CssClass="e-primary" OnClick="ShowAddExerciseDialog">
-                    Add Your First Exercise
-                </SfButton>
+                    <div class="@(gridView ? "row" : "list-view")">
+                        @foreach (var exercise in filteredExercises)
+                        {
+                            @if (gridView)
+                            {
+                                <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+                                    <div class="exercise-card modern-card">
+                                        @if (!string.IsNullOrEmpty(exercise.ThumbnailUrl))
+                                        {
+                                            <div class="exercise-image">
+                                                <img src="@exercise.ThumbnailUrl" alt="@exercise.Name" />
+                                                <div class="exercise-overlay">
+                                                    <div class="difficulty-badge difficulty-@exercise.Difficulty.ToString().ToLower()">
+                                                        @exercise.Difficulty
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="exercise-image exercise-placeholder">
+                                                <i class="fas fa-dumbbell"></i>
+                                                <div class="exercise-overlay">
+                                                    <div class="difficulty-badge difficulty-@exercise.Difficulty.ToString().ToLower()">
+                                                        @exercise.Difficulty
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                        
+                                        <div class="exercise-content">
+                                            <h5 class="exercise-title">@exercise.Name</h5>
+                                            
+                                            <div class="exercise-tags">
+                                                @foreach (var muscle in exercise.TargetMuscleGroups.Take(2))
+                                                {
+                                                    <span class="tag tag-muscle">@muscle</span>
+                                                }
+                                                @if (exercise.TargetMuscleGroups.Count > 2)
+                                                {
+                                                    <span class="tag tag-more">+@(exercise.TargetMuscleGroups.Count - 2)</span>
+                                                }
+                                            </div>
+
+                                            <p class="exercise-description">@exercise.Description</p>
+                                            
+                                            <div class="exercise-meta">
+                                                <div class="meta-item">
+                                                    <i class="fas fa-tools"></i>
+                                                    <span>@string.Join(", ", exercise.Equipment.Take(2))</span>
+                                                </div>
+                                                <div class="meta-item">
+                                                    <i class="fas fa-tag"></i>
+                                                    <span>@exercise.Category</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="exercise-actions">
+                                                <button class="btn btn-outline-primary btn-sm" @onclick="() => ViewExerciseDetails(exercise)">
+                                                    <i class="fas fa-eye"></i>
+                                                    Details
+                                                </button>
+                                                @if (!string.IsNullOrEmpty(exercise.YoutubeUrl))
+                                                {
+                                                    <button class="btn btn-outline-success btn-sm" @onclick="() => OpenVideoTutorial(exercise.YoutubeUrl)">
+                                                        <i class="fab fa-youtube"></i>
+                                                        Video
+                                                    </button>
+                                                }
+                                                <div class="dropdown">
+                                                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                                                        <i class="fas fa-ellipsis-v"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        <li><a class="dropdown-item" @onclick="() => EditExercise(exercise)">
+                                                            <i class="fas fa-edit"></i> Edit
+                                                        </a></li>
+                                                        <li><a class="dropdown-item text-danger" @onclick="() => DeleteExercise(exercise.Id)">
+                                                            <i class="fas fa-trash"></i> Delete
+                                                        </a></li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="exercise-list-item modern-card mb-3">
+                                    <div class="row g-0">
+                                        <div class="col-md-3">
+                                            @if (!string.IsNullOrEmpty(exercise.ThumbnailUrl))
+                                            {
+                                                <div class="list-image">
+                                                    <img src="@exercise.ThumbnailUrl" alt="@exercise.Name" />
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="list-image list-placeholder">
+                                                    <i class="fas fa-dumbbell"></i>
+                                                </div>
+                                            }
+                                        </div>
+                                        <div class="col-md-9">
+                                            <div class="list-content">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div>
+                                                        <h5 class="exercise-title">@exercise.Name</h5>
+                                                        <p class="exercise-description">@exercise.Description</p>
+                                                        <div class="exercise-tags">
+                                                            @foreach (var muscle in exercise.TargetMuscleGroups)
+                                                            {
+                                                                <span class="tag tag-muscle">@muscle</span>
+                                                            }
+                                                            <span class="tag tag-equipment">@string.Join(", ", exercise.Equipment)</span>
+                                                            <span class="tag tag-difficulty difficulty-@exercise.Difficulty.ToString().ToLower()">@exercise.Difficulty</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="list-actions">
+                                                        <button class="btn btn-outline-primary btn-sm" @onclick="() => ViewExerciseDetails(exercise)">
+                                                            <i class="fas fa-eye"></i>
+                                                        </button>
+                                                        @if (!string.IsNullOrEmpty(exercise.YoutubeUrl))
+                                                        {
+                                                            <button class="btn btn-outline-success btn-sm" @onclick="() => OpenVideoTutorial(exercise.YoutubeUrl)">
+                                                                <i class="fab fa-youtube"></i>
+                                                            </button>
+                                                        }
+                                                        <button class="btn btn-outline-secondary btn-sm" @onclick="() => EditExercise(exercise)">
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
+                                                        <button class="btn btn-outline-danger btn-sm" @onclick="() => DeleteExercise(exercise.Id)">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <h3>No exercises found</h3>
+                        <p>Try adjusting your filters or search terms</p>
+                        <button class="btn btn-primary-custom" @onclick="ShowAddExerciseDialog">
+                            <i class="fas fa-plus"></i>
+                            Add Your First Exercise
+                        </button>
+                    </div>
+                }
             </div>
-        }
+        </div>
     }
 </div>
 
 <!-- Add/Edit Exercise Modal -->
 @if (showExerciseDialog)
 {
-    <div class="modal fade show" style="display: block;" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">@(isEditMode ? "Edit Exercise" : "Add New Exercise")</h5>
-                    <button type="button" class="btn-close" @onclick="CloseExerciseDialog"></button>
+    <div class="modal fade show d-block" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content modern-modal">
+                <div class="modal-header gradient-header">
+                    <div class="modal-title-group">
+                        <h4 class="modal-title">
+                            <i class="fas @(isEditMode ? "fa-edit" : "fa-plus")"></i>
+                            @(isEditMode ? "Edit Exercise" : "Add New Exercise")
+                        </h4>
+                        <p class="modal-subtitle">@(isEditMode ? "Update your exercise details" : "Create a new exercise for your library")</p>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CloseExerciseDialog"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Exercise Name *</label>
-                                <SfTextBox @bind-Value="currentExercise.Name" Placeholder="Enter exercise name" />
+                    <form class="exercise-form">
+                        <div class="row g-4">
+                            <!-- Basic Information -->
+                            <div class="col-lg-6">
+                                <div class="form-section">
+                                    <h6 class="section-title">
+                                        <i class="fas fa-info-circle"></i>
+                                        Basic Information
+                                    </h6>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label required">Exercise Name</label>
+                                        <SfTextBox @bind-Value="currentExercise.Name" 
+                                                  Placeholder="e.g., Push-ups, Squats, Deadlift"
+                                                  CssClass="modern-input" />
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label">Description</label>
+                                        <SfTextBox @bind-Value="currentExercise.Description" 
+                                                  Multiline="true" 
+                                                  Placeholder="Brief description of the exercise..."
+                                                  CssClass="modern-textarea" />
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label">Step-by-Step Instructions</label>
+                                        <SfTextBox @bind-Value="instructionsText" 
+                                                  Multiline="true" 
+                                                  Placeholder="1. Starting position...&#10;2. Movement execution...&#10;3. Return to start..."
+                                                  CssClass="modern-textarea instructions-field" />
+                                    </div>
+                                </div>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">Description</label>
-                                <SfTextBox @bind-Value="currentExercise.Description" 
-                                          Multiline="true" 
-                                          Placeholder="Describe the exercise..." />
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Instructions</label>
-                                <SfTextBox @bind-Value="instructionsText" 
-                                          Multiline="true" 
-                                          Placeholder="Step-by-step instructions..." />
+                            
+                            <!-- Exercise Details -->
+                            <div class="col-lg-6">
+                                <div class="form-section">
+                                    <h6 class="section-title">
+                                        <i class="fas fa-cogs"></i>
+                                        Exercise Details
+                                    </h6>
+                                    
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="form-label required">Muscle Groups</label>
+                                                <SfMultiSelect TValue="List<MuscleGroup>" TItem="MuscleGroup" 
+                                                               DataSource="@availableMuscleGroups" 
+                                                               @bind-Value="currentExercise.TargetMuscleGroups"
+                                                               Placeholder="Select target muscles"
+                                                               CssClass="modern-multiselect">
+                                                    <MultiSelectFieldSettings Value="Value" />
+                                                </SfMultiSelect>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="form-label required">Equipment</label>
+                                                <SfMultiSelect TValue="List<Equipment>" TItem="Equipment" 
+                                                               DataSource="@availableEquipment" 
+                                                               @bind-Value="currentExercise.Equipment"
+                                                               Placeholder="Select equipment needed"
+                                                               CssClass="modern-multiselect">
+                                                    <MultiSelectFieldSettings Value="Value" />
+                                                </SfMultiSelect>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="form-label">Category</label>
+                                                <SfDropDownList TValue="ExerciseCategory" TItem="ExerciseCategory" 
+                                                               DataSource="@availableCategories" 
+                                                               @bind-Value="currentExercise.Category"
+                                                               Placeholder="Select category"
+                                                               CssClass="modern-dropdown">
+                                                    <DropDownListFieldSettings Value="Value" />
+                                                </SfDropDownList>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="form-label">Difficulty Level</label>
+                                                <SfDropDownList TValue="DifficultyLevel" TItem="DifficultyLevel" 
+                                                               DataSource="@availableDifficultyLevels" 
+                                                               @bind-Value="currentExercise.Difficulty"
+                                                               Placeholder="Select difficulty"
+                                                               CssClass="modern-dropdown">
+                                                    <DropDownListFieldSettings Value="Value" />
+                                                </SfDropDownList>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label">
+                                            <i class="fab fa-youtube text-danger"></i>
+                                            Video Tutorial URL
+                                        </label>
+                                        <SfTextBox @bind-Value="currentExercise.YoutubeUrl" 
+                                                  Placeholder="https://youtube.com/watch?v=..."
+                                                  CssClass="modern-input" />
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label">
+                                            <i class="fas fa-image"></i>
+                                            Exercise Image URL
+                                        </label>
+                                        <SfTextBox @bind-Value="currentExercise.ThumbnailUrl" 
+                                                  Placeholder="https://example.com/exercise-image.jpg"
+                                                  CssClass="modern-input" />
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Muscle Groups *</label>
-                                <SfMultiSelect TValue="List<MuscleGroup>" TItem="MuscleGroup" 
-                                               DataSource="@availableMuscleGroups" 
-                                               @bind-Value="currentExercise.TargetMuscleGroups"
-                                               Placeholder="Select muscle groups">
-                                    <MultiSelectFieldSettings Value="Value" />
-                                </SfMultiSelect>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Equipment *</label>
-                                <SfMultiSelect TValue="List<Equipment>" TItem="Equipment" 
-                                               DataSource="@availableEquipment" 
-                                               @bind-Value="currentExercise.Equipment"
-                                               Placeholder="Select equipment">
-                                    <MultiSelectFieldSettings Value="Value" />
-                                </SfMultiSelect>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Category</label>
-                                <SfDropDownList TValue="ExerciseCategory" TItem="ExerciseCategory" 
-                                               DataSource="@availableCategories" 
-                                               @bind-Value="currentExercise.Category"
-                                               Placeholder="Select category">
-                                    <DropDownListFieldSettings Value="Value" />
-                                </SfDropDownList>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Difficulty Level</label>
-                                <SfDropDownList TValue="DifficultyLevel" TItem="DifficultyLevel" 
-                                               DataSource="@availableDifficultyLevels" 
-                                               @bind-Value="currentExercise.Difficulty"
-                                               Placeholder="Select difficulty">
-                                    <DropDownListFieldSettings Value="Value" />
-                                </SfDropDownList>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Video URL (YouTube)</label>
-                                <SfTextBox @bind-Value="currentExercise.YoutubeUrl" 
-                                          Placeholder="https://youtube.com/watch?v=..." />
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Image URL</label>
-                                <SfTextBox @bind-Value="currentExercise.ThumbnailUrl" 
-                                          Placeholder="https://example.com/image.jpg" />
-                            </div>
-                        </div>
-                    </div>
+                    </form>
                 </div>
                 <div class="modal-footer">
-                    <SfButton CssClass="e-success" OnClick="SaveExercise" Disabled="@isSaving">
-                        @(isSaving ? "Saving..." : "Save Exercise")
-                    </SfButton>
-                    <SfButton CssClass="e-outline" OnClick="CloseExerciseDialog">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseExerciseDialog">
+                        <i class="fas fa-times"></i>
                         Cancel
-                    </SfButton>
+                    </button>
+                    <button type="button" class="btn btn-primary-custom" @onclick="SaveExercise" disabled="@isSaving">
+                        @if (isSaving)
+                        {
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <span>Saving...</span>
+                        }
+                        else
+                        {
+                            <i class="fas fa-save"></i>
+                            <span>Save Exercise</span>
+                        }
+                    </button>
                 </div>
             </div>
         </div>
@@ -210,63 +469,103 @@
 <!-- Exercise Details Modal -->
 @if (showDetailsModal && selectedExercise != null)
 {
-    <div class="modal fade show" style="display: block;" tabindex="-1">
+    <div class="modal fade show d-block" tabindex="-1">
         <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">@selectedExercise.Name</h5>
-                    <button type="button" class="btn-close" @onclick="CloseDetailsModal"></button>
+            <div class="modal-content modern-modal">
+                <div class="modal-header gradient-header">
+                    <div class="modal-title-group">
+                        <h4 class="modal-title">
+                            <i class="fas fa-dumbbell"></i>
+                            @selectedExercise.Name
+                        </h4>
+                        <p class="modal-subtitle">Exercise details and instructions</p>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CloseDetailsModal"></button>
                 </div>
-                <div class="modal-body">                        <div class="row">
+                <div class="modal-body">
+                    <div class="row g-4">
                         @if (!string.IsNullOrEmpty(selectedExercise.ThumbnailUrl))
                         {
-                            <div class="col-md-6">
-                                <img src="@selectedExercise.ThumbnailUrl" alt="@selectedExercise.Name" 
-                                     class="img-fluid rounded mb-3" />
+                            <div class="col-md-5">
+                                <div class="exercise-image-container">
+                                    <img src="@selectedExercise.ThumbnailUrl" alt="@selectedExercise.Name" 
+                                         class="exercise-detail-image" />
+                                    <div class="image-overlay">
+                                        <div class="difficulty-badge difficulty-@selectedExercise.Difficulty.ToString().ToLower()">
+                                            @selectedExercise.Difficulty
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         }
-                        <div class="col-md-@(string.IsNullOrEmpty(selectedExercise.ThumbnailUrl) ? "12" : "6")">
-                            <div class="exercise-details">
-                                <div class="detail-row">
-                                    <strong>Muscle Groups:</strong>
-                                    @foreach (var muscleGroup in selectedExercise.TargetMuscleGroups)
-                                    {
-                                        <span class="badge bg-primary me-1">@muscleGroup</span>
-                                    }
+                        <div class="col-md-@(string.IsNullOrEmpty(selectedExercise.ThumbnailUrl) ? "12" : "7")">
+                            <div class="exercise-details-content">
+                                <!-- Tags Section -->
+                                <div class="details-section">
+                                    <div class="detail-tags">
+                                        <div class="tag-group">
+                                            <h6 class="tag-title">
+                                                <i class="fas fa-bullseye"></i>
+                                                Target Muscles
+                                            </h6>
+                                            @foreach (var muscleGroup in selectedExercise.TargetMuscleGroups)
+                                            {
+                                                <span class="tag tag-muscle">@muscleGroup</span>
+                                            }
+                                        </div>
+                                        
+                                        <div class="tag-group">
+                                            <h6 class="tag-title">
+                                                <i class="fas fa-tools"></i>
+                                                Equipment
+                                            </h6>
+                                            @foreach (var equipment in selectedExercise.Equipment)
+                                            {
+                                                <span class="tag tag-equipment">@equipment</span>
+                                            }
+                                        </div>
+                                        
+                                        <div class="tag-group">
+                                            <h6 class="tag-title">
+                                                <i class="fas fa-tag"></i>
+                                                Category
+                                            </h6>
+                                            <span class="tag tag-category">@selectedExercise.Category</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="detail-row">
-                                    <strong>Equipment:</strong>
-                                    @foreach (var equipment in selectedExercise.Equipment)
-                                    {
-                                        <span class="badge bg-secondary me-1">@equipment</span>
-                                    }
-                                </div>
-                                <div class="detail-row">
-                                    <strong>Category:</strong>
-                                    <span class="badge bg-info">@selectedExercise.Category</span>
-                                </div>
-                                <div class="detail-row">
-                                    <strong>Difficulty:</strong>
-                                    <span class="badge bg-warning">@selectedExercise.Difficulty</span>
-                                </div>
+                                
+                                <!-- Description -->
+                                @if (!string.IsNullOrEmpty(selectedExercise.Description))
+                                {
+                                    <div class="details-section">
+                                        <h6 class="section-title">
+                                            <i class="fas fa-info-circle"></i>
+                                            Description
+                                        </h6>
+                                        <p class="description-text">@selectedExercise.Description</p>
+                                    </div>
+                                }
                             </div>
                         </div>
                     </div>
                     
-                    @if (!string.IsNullOrEmpty(selectedExercise.Description))
-                    {
-                        <div class="mt-3">
-                            <h6>Description</h6>
-                            <p>@selectedExercise.Description</p>
-                        </div>
-                    }
-                    
+                    <!-- Instructions -->
                     @if (selectedExercise.Instructions?.Any() == true)
                     {
-                        <div class="mt-3">
-                            <h6>Instructions</h6>
-                            <div class="instructions">
-                                @((MarkupString)string.Join("<br>", selectedExercise.Instructions))
+                        <div class="details-section mt-4">
+                            <h6 class="section-title">
+                                <i class="fas fa-list-ol"></i>
+                                Step-by-Step Instructions
+                            </h6>
+                            <div class="instructions-container">
+                                @for (int i = 0; i < selectedExercise.Instructions.Count; i++)
+                                {
+                                    <div class="instruction-step">
+                                        <div class="step-number">@(i + 1)</div>
+                                        <div class="step-text">@selectedExercise.Instructions[i]</div>
+                                    </div>
+                                }
                             </div>
                         </div>
                     }
@@ -274,13 +573,19 @@
                 <div class="modal-footer">
                     @if (!string.IsNullOrEmpty(selectedExercise.YoutubeUrl))
                     {
-                        <SfButton CssClass="e-success" OnClick="() => OpenVideoTutorial(selectedExercise.YoutubeUrl)">
+                        <button type="button" class="btn btn-success" @onclick="() => OpenVideoTutorial(selectedExercise.YoutubeUrl)">
+                            <i class="fab fa-youtube"></i>
                             Watch Tutorial
-                        </SfButton>
+                        </button>
                     }
-                    <SfButton CssClass="e-outline" OnClick="CloseDetailsModal">
+                    <button type="button" class="btn btn-outline-primary" @onclick="() => EditExercise(selectedExercise)">
+                        <i class="fas fa-edit"></i>
+                        Edit Exercise
+                    </button>
+                    <button type="button" class="btn btn-secondary" @onclick="CloseDetailsModal">
+                        <i class="fas fa-times"></i>
                         Close
-                    </SfButton>
+                    </button>
                 </div>
             </div>
         </div>
@@ -289,113 +594,812 @@
 }
 
 <style>
-    .exercises-page {
-        padding: 1rem 0;
+    /* Exercise Library Page Styles */
+    .exercise-library-page {
+        animation: fadeIn 0.6s ease-out;
     }
 
+    /* Hero Section */
+    .hero-section {
+        background: var(--gradient-primary);
+        color: white;
+        padding: 3rem 0;
+        margin-bottom: 2rem;
+        border-radius: 0 0 2rem 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 2rem;
+    }
+
+    .hero-content {
+        flex: 1;
+        min-width: 300px;
+    }
+
+    .hero-title {
+        font-size: 3rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .hero-subtitle {
+        font-size: 1.2rem;
+        opacity: 0.9;
+        margin-bottom: 2rem;
+    }
+
+    .hero-stats {
+        display: flex;
+        gap: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .stat {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        line-height: 1;
+        background: linear-gradient(45deg, rgba(255,255,255,0.2), rgba(255,255,255,0.8));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.8;
+        margin-top: 0.25rem;
+    }
+
+    .hero-actions {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    /* Loading Section */
+    .loading-section {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 400px;
+    }
+
+    .loading-spinner {
+        text-align: center;
+    }
+
+    .spinner {
+        width: 60px;
+        height: 60px;
+        border: 4px solid var(--color-light-bg);
+        border-top: 4px solid var(--color-primary);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1rem;
+    }
+
+    @@keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* Filters Section */
+    .filters-section {
+        background: var(--color-surface);
+        padding: 2rem;
+        border-radius: 1rem;
+        margin-bottom: 2rem;
+        box-shadow: var(--shadow-card);
+        border: 1px solid var(--color-border);
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .filter-label {
+        font-weight: 600;
+        color: var(--color-text-secondary);
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .filter-label i {
+        color: var(--color-primary);
+        width: 16px;
+    }
+
+    /* Exercise Grid */
+    .exercises-grid {
+        animation: slideUp 0.6s ease-out 0.3s both;
+    }
+
+    .grid-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .results-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .results-count {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--color-primary);
+    }
+
+    .results-text {
+        color: var(--color-text-secondary);
+    }
+
+    .view-options {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .view-btn {
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        color: var(--color-text-secondary);
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .view-btn:hover {
+        background: var(--color-primary);
+        color: white;
+        border-color: var(--color-primary);
+    }
+
+    .view-btn.active {
+        background: var(--color-primary);
+        color: white;
+        border-color: var(--color-primary);
+    }
+
+    /* Exercise Cards */
     .exercise-card {
-        border: 1px solid #dee2e6;
-        border-radius: 12px;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: 1rem;
         overflow: hidden;
-        transition: transform 0.2s, box-shadow 0.2s;
+        transition: all 0.3s ease;
         height: 100%;
         display: flex;
         flex-direction: column;
+        box-shadow: var(--shadow-card);
     }
 
     .exercise-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transform: translateY(-8px);
+        box-shadow: var(--shadow-card-hover);
+        border-color: var(--color-primary);
     }
 
     .exercise-image {
         height: 200px;
         overflow: hidden;
-        background: #f8f9fa;
+        position: relative;
+        background: var(--gradient-secondary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .exercise-image img {
         width: 100%;
         height: 100%;
         object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .exercise-card:hover .exercise-image img {
+        transform: scale(1.05);
+    }
+
+    .exercise-placeholder {
+        color: rgba(255,255,255,0.7);
+        font-size: 3rem;
+    }
+
+    .exercise-overlay {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+    }
+
+    .difficulty-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 2rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        backdrop-filter: blur(10px);
+    }
+
+    .difficulty-beginner {
+        background: rgba(40, 167, 69, 0.9);
+        color: white;
+    }
+
+    .difficulty-intermediate {
+        background: rgba(255, 193, 7, 0.9);
+        color: white;
+    }
+
+    .difficulty-advanced {
+        background: rgba(220, 53, 69, 0.9);
+        color: white;
     }
 
     .exercise-content {
-        padding: 1rem;
+        padding: 1.5rem;
         flex: 1;
         display: flex;
         flex-direction: column;
+        gap: 1rem;
     }
 
     .exercise-title {
-        margin-bottom: 0.5rem;
-        font-size: 1.1rem;
-        font-weight: 600;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--color-text-primary);
+        margin: 0;
+        line-height: 1.3;
     }
 
-    .exercise-meta {
-        margin-bottom: 0.75rem;
+    .exercise-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: auto;
     }
 
-    .exercise-meta .badge {
-        margin-right: 0.25rem;
-        margin-bottom: 0.25rem;
+    .tag {
+        padding: 0.25rem 0.75rem;
+        border-radius: 2rem;
+        font-size: 0.8rem;
+        font-weight: 500;
+        border: 1px solid var(--color-border);
+        transition: all 0.3s ease;
+    }
+
+    .tag-muscle {
+        background: rgba(var(--color-primary-rgb), 0.1);
+        color: var(--color-primary);
+        border-color: var(--color-primary);
+    }
+
+    .tag-equipment {
+        background: rgba(var(--color-secondary-rgb), 0.1);
+        color: var(--color-secondary);
+        border-color: var(--color-secondary);
+    }
+
+    .tag-category {
+        background: rgba(var(--color-accent-rgb), 0.1);
+        color: var(--color-accent);
+        border-color: var(--color-accent);
+    }
+
+    .tag-difficulty {
+        color: white;
+        border: none;
+    }
+
+    .tag-more {
+        background: var(--color-text-secondary);
+        color: white;
+        border-color: var(--color-text-secondary);
     }
 
     .exercise-description {
         font-size: 0.9rem;
-        color: #6c757d;
-        margin-bottom: 1rem;
-        flex: 1;
+        color: var(--color-text-secondary);
+        line-height: 1.5;
         display: -webkit-box;
         -webkit-line-clamp: 3;
         -webkit-box-orient: vertical;
         overflow: hidden;
+        margin: 0;
+    }
+
+    .exercise-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        color: var(--color-text-secondary);
+    }
+
+    .meta-item i {
+        color: var(--color-primary);
+        width: 16px;
     }
 
     .exercise-actions {
         display: flex;
-        gap: 0.25rem;
+        gap: 0.5rem;
         flex-wrap: wrap;
+        margin-top: auto;
     }
 
-    .exercise-actions .e-btn {
-        font-size: 0.8rem;
-        padding: 0.25rem 0.5rem;
+    .exercise-actions .btn {
+        flex: 1;
+        min-width: 80px;
+        font-size: 0.85rem;
+        padding: 0.5rem 0.75rem;
     }
 
-    .detail-row {
+    /* List View */
+    .list-view {
         display: flex;
-        justify-content: space-between;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .exercise-list-item {
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: 1rem;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        box-shadow: var(--shadow-card);
+    }
+
+    .exercise-list-item:hover {
+        transform: translateX(8px);
+        box-shadow: var(--shadow-card-hover);
+        border-color: var(--color-primary);
+    }
+
+    .list-image {
+        height: 150px;
+        overflow: hidden;
+        position: relative;
+        background: var(--gradient-secondary);
+        display: flex;
         align-items: center;
-        margin-bottom: 0.75rem;
+        justify-content: center;
+    }
+
+    .list-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .list-placeholder {
+        color: rgba(255,255,255,0.7);
+        font-size: 2rem;
+    }
+
+    .list-content {
+        padding: 1.5rem;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .list-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: auto;
+    }
+
+    .list-actions .btn {
+        padding: 0.5rem;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: var(--color-surface);
+        border-radius: 1rem;
+        border: 1px solid var(--color-border);
+        margin-top: 2rem;
+    }
+
+    .empty-icon {
+        font-size: 4rem;
+        color: var(--color-text-secondary);
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .empty-state h3 {
+        color: var(--color-text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-state p {
+        color: var(--color-text-secondary);
+        margin-bottom: 2rem;
+    }
+
+    /* Modal Styles */
+    .modern-modal .modal-content {
+        border: none;
+        border-radius: 1rem;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        background: var(--color-surface);
+    }
+
+    .gradient-header {
+        background: var(--gradient-primary);
+        color: white;
+        border-radius: 1rem 1rem 0 0;
+        padding: 2rem;
+        border: none;
+    }
+
+    .modal-title-group {
+        flex: 1;
+    }
+
+    .modal-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .modal-subtitle {
+        margin: 0.5rem 0 0 0;
+        opacity: 0.9;
+        font-size: 0.9rem;
+    }
+
+    .btn-close-white {
+        filter: brightness(0) invert(1);
+        opacity: 0.8;
+    }
+
+    .btn-close-white:hover {
+        opacity: 1;
+    }
+
+    /* Form Styles */
+    .exercise-form {
+        background: var(--color-surface);
+    }
+
+    .form-section {
+        background: var(--color-light-bg);
+        padding: 2rem;
+        border-radius: 1rem;
+        height: 100%;
+        border: 1px solid var(--color-border);
+    }
+
+    .section-title {
+        color: var(--color-text-primary);
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        border-bottom: 2px solid var(--color-border);
         padding-bottom: 0.5rem;
-        border-bottom: 1px solid #eee;
     }
 
-    .detail-row:last-child {
-        border-bottom: none;
-        margin-bottom: 0;
+    .section-title i {
+        color: var(--color-primary);
     }
 
-    .instructions {
-        background: #f8f9fa;
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: var(--color-text-primary);
+        margin-bottom: 0.5rem;
+        display: block;
+        font-size: 0.9rem;
+    }
+
+    .form-label.required::after {
+        content: " *";
+        color: var(--color-danger);
+    }
+
+    .modern-input,
+    .modern-textarea,
+    .modern-dropdown,
+    .modern-multiselect {
+        border-radius: 0.5rem !important;
+        border: 1px solid var(--color-border) !important;
+        transition: all 0.3s ease !important;
+    }
+
+    .modern-input:focus,
+    .modern-textarea:focus,
+    .modern-dropdown:focus,
+    .modern-multiselect:focus {
+        border-color: var(--color-primary) !important;
+        box-shadow: 0 0 0 0.2rem rgba(var(--color-primary-rgb), 0.25) !important;
+    }
+
+    .instructions-field {
+        min-height: 120px !important;
+    }
+
+    /* Exercise Details Modal */
+    .exercise-image-container {
+        position: relative;
+        border-radius: 1rem;
+        overflow: hidden;
+        background: var(--gradient-secondary);
+        height: 300px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .exercise-detail-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .image-overlay {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+    }
+
+    .exercise-details-content {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .details-section {
+        background: var(--color-light-bg);
+        padding: 1.5rem;
+        border-radius: 1rem;
+        border: 1px solid var(--color-border);
+    }
+
+    .detail-tags {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .tag-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .tag-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--color-text-secondary);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .tag-title i {
+        color: var(--color-primary);
+        width: 16px;
+    }
+
+    .description-text {
+        color: var(--color-text-secondary);
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .instructions-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .instruction-step {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
         padding: 1rem;
-        border-radius: 8px;
-        border-left: 4px solid #007bff;
+        background: var(--color-surface);
+        border-radius: 0.5rem;
+        border-left: 4px solid var(--color-primary);
+        transition: all 0.3s ease;
     }
 
-    .modal.show {
-        background-color: rgba(0,0,0,0.5);
+    .instruction-step:hover {
+        background: var(--color-light-bg);
+        transform: translateX(4px);
     }
 
+    .step-number {
+        background: var(--color-primary);
+        color: white;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+    }
+
+    .step-text {
+        color: var(--color-text-primary);
+        line-height: 1.5;
+        flex: 1;
+    }
+
+    /* Responsive Design */
     @@media (max-width: 768px) {
+        .hero-section {
+            padding: 2rem 1rem;
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .hero-title {
+            font-size: 2rem;
+        }
+
+        .hero-stats {
+            justify-content: center;
+        }
+
+        .filters-section {
+            padding: 1rem;
+        }
+
+        .grid-header {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 1rem;
+        }
+
+        .results-info {
+            justify-content: center;
+        }
+
+        .view-options {
+            justify-content: center;
+        }
+
         .exercise-actions {
             flex-direction: column;
         }
-        
-        .exercise-actions .e-btn {
+
+        .exercise-actions .btn {
             width: 100%;
+        }
+
+        .list-actions {
+            flex-wrap: wrap;
+        }
+
+        .form-section {
+            padding: 1rem;
+        }
+
+        .modal-dialog {
+            margin: 1rem;
+        }
+
+        .gradient-header {
+            padding: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+        }
+    }
+
+    @@media (max-width: 576px) {
+        .hero-stats {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .exercise-image {
+            height: 150px;
+        }
+
+        .exercise-content {
+            padding: 1rem;
+        }
+
+        .tag {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.5rem;
+        }
+    }
+
+    /* Animations */
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Dark mode adjustments */
+    [data-theme="dark"] {
+        .hero-section {
+            background: linear-gradient(135deg, var(--color-primary-dark), var(--color-secondary-dark));
+        }
+
+        .exercise-placeholder,
+        .list-placeholder {
+            color: rgba(255,255,255,0.5);
+        }
+
+        .modern-modal .modal-content {
+            background: var(--color-surface-dark);
+        }
+
+        .gradient-header {
+            background: linear-gradient(135deg, var(--color-primary-dark), var(--color-secondary-dark));
         }
     }
 </style>
@@ -403,6 +1407,7 @@
 @code {
     private bool isLoading = true;
     private bool isSaving = false;
+    private bool gridView = true;
     private List<Exercise> exercises = new();
     private List<Exercise> filteredExercises = new();
     
@@ -410,6 +1415,7 @@
     private string searchTerm = "";
     private string selectedMuscleGroup = "";
     private string selectedEquipment = "";
+    private string selectedDifficulty = "";
     
     // Modal properties
     private bool showExerciseDialog = false;
@@ -453,7 +1459,7 @@
 
     private List<string> difficultyLevels = new()
     {
-        "Beginner", "Intermediate", "Advanced"
+        "All", "Beginner", "Intermediate", "Advanced"
     };
 
     // Enum collections for form binding
@@ -498,6 +1504,10 @@
                 !e.Equipment.Any(eq => eq.ToString() == selectedEquipment))
                 return false;
 
+            if (!string.IsNullOrEmpty(selectedDifficulty) && selectedDifficulty != "All" && 
+                !e.Difficulty.ToString().Equals(selectedDifficulty, StringComparison.OrdinalIgnoreCase))
+                return false;
+
             return true;
         }).ToList();
     }
@@ -520,11 +1530,18 @@
         ApplyFilters();
     }
 
+    private void OnDifficultyChanged(string value)
+    {
+        selectedDifficulty = value;
+        ApplyFilters();
+    }
+
     private void ClearFilters()
     {
         searchTerm = "";
         selectedMuscleGroup = "";
         selectedEquipment = "";
+        selectedDifficulty = "";
         ApplyFilters();
     }
 
