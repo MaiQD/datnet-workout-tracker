@@ -625,4 +625,173 @@ p.small {
     }
 }
 
+/* ===== NAVIGATION THEME OVERRIDES ===== */
+/* Fix navigation background and text colors for proper theme adaptation */
+
+/* Light theme navigation styling */
+.nav-menu {
+    background: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border-right: 1px solid var(--border) !important;
+}
+
+.brand-section {
+    background: var(--bg-accent) !important;
+    border-bottom: 1px solid var(--border) !important;
+}
+
+.brand-name {
+    color: var(--color-navy) !important;
+}
+
+.brand-subtitle {
+    color: var(--text-secondary) !important;
+}
+
+.nav-section-title {
+    color: var(--text-muted) !important;
+}
+
+.nav-link {
+    color: var(--text-secondary) !important;
+}
+
+.nav-link:hover {
+    color: var(--text-primary) !important;
+    background: var(--bg-accent) !important;
+}
+
+.nav-link.active {
+    color: var(--color-red) !important;
+    background: rgba(232, 69, 69, 0.1) !important;
+    border: 1px solid rgba(232, 69, 69, 0.2) !important;
+}
+
+.nav-footer .version-info small {
+    color: var(--text-muted) !important;
+}
+
+.social-link {
+    color: var(--text-muted) !important;
+}
+
+.social-link:hover {
+    color: var(--color-red) !important;
+}
+
+/* Dark theme navigation styling - restore gradient background */
+[data-theme="dark"] .nav-menu {
+    background: var(--gradient-secondary) !important;
+    color: white !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+[data-theme="dark"] .brand-section {
+    background: transparent !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+[data-theme="dark"] .brand-name {
+    color: white !important;
+}
+
+[data-theme="dark"] .brand-subtitle {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+[data-theme="dark"] .nav-section-title {
+    color: rgba(255, 255, 255, 0.6) !important;
+}
+
+[data-theme="dark"] .nav-link {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+[data-theme="dark"] .nav-link:hover {
+    color: white !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+[data-theme="dark"] .nav-link.active {
+    color: white !important;
+    background: rgba(232, 69, 69, 0.2) !important;
+    border: 1px solid rgba(232, 69, 69, 0.3) !important;
+}
+
+[data-theme="dark"] .nav-footer .version-info small {
+    color: rgba(255, 255, 255, 0.5) !important;
+}
+
+[data-theme="dark"] .social-link {
+    color: rgba(255, 255, 255, 0.6) !important;
+}
+
+[data-theme="dark"] .social-link:hover {
+    color: var(--color-red) !important;
+}
+
+/* Main content and div fixes */
+/* Ensure main content and divs adapt to theme backgrounds */
+.main-content, 
+.page-content,
+.content-container,
+.top-navbar {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Card and container backgrounds */
+.container,
+.card {
+    background: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border) !important;
+}
+
+/* Welcome section and content areas */
+.welcome-section {
+    background: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border) !important;
+}
+
+/* Stat cards and content sections */
+.stat-card {
+    background: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border) !important;
+}
+
+/* Fix any remaining div backgrounds */
+div:not(.nav-menu):not(.brand-section):not(.logo-icon) {
+    color: var(--text-primary);
+}
+
+/* Additional fixes for content sections */
+.top-row, .navbar, .app-layout {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Ensure form controls and inputs have proper theming */
+.form-control, .e-input, .e-multiselect {
+    background: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border) !important;
+}
+
+/* Fix any modals and popups */
+.modal-content, .e-dialog {
+    background: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border) !important;
+}
+
+/* Fix dropdowns and select elements */
+.dropdown-menu, .e-dropdownbase {
+    background: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border) !important;
+}
+
 /* ===== EXISTING COMPONENTS AND STYLES ===== */
