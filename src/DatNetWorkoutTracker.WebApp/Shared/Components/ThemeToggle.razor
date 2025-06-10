@@ -1,14 +1,14 @@
 @inject IJSRuntime JSRuntime
 @implements IDisposable
 
-<div class="theme-toggle" @onclick="ToggleTheme" title="Toggle Theme">
+<div class="theme-toggle" @onclick="ToggleTheme" title="@GetToggleTitle()">
     @if (isDarkTheme)
     {
-        <span class="oi oi-sun" style="color: var(--color-red);"></span>
+        <span class="oi oi-moon"></span>
     }
     else
     {
-        <span class="oi oi-moon" style="color: var(--color-navy);"></span>
+        <span class="oi oi-sun"></span>
     }
 </div>
 
@@ -72,6 +72,11 @@
             isDarkTheme = isDark;
             await InvokeAsync(StateHasChanged);
         }
+    }
+
+    private string GetToggleTitle()
+    {
+        return isDarkTheme ? "Switch to Light Theme" : "Switch to Dark Theme";
     }
 
     public void Dispose()

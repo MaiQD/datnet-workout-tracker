@@ -245,23 +245,84 @@ body {
 
 /* ===== THEME TOGGLE ===== */
 .theme-toggle {
-    background: var(--bg-accent);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-full);
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: var(--card-shadow);
+    border-radius: var(--radius-full);
     transition: all var(--transition-fast);
+    position: relative;
+    border: 2px solid;
+    font-size: 1.2rem;
+    
+    /* Light theme: Dark appearance (opposite of theme) */
+    background: var(--color-navy);
+    border-color: var(--color-navy);
+    color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(43, 46, 74, 0.3);
 }
 
 .theme-toggle:hover {
-    background: var(--bg-secondary);
-    box-shadow: var(--card-shadow-hover);
     transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(43, 46, 74, 0.4);
+    background: #1A1D29;
+    border-color: #1A1D29;
+}
+
+.theme-toggle:active {
+    transform: scale(0.95);
+}
+
+/* Dark theme: Light appearance (opposite of theme) */
+[data-theme="dark"] .theme-toggle {
+    background: #FFFFFF;
+    border-color: #F1F5F9;
+    color: var(--color-navy);
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .theme-toggle:hover {
+    background: #F8FAFC;
+    border-color: #E2E8F0;
+    box-shadow: 0 6px 20px rgba(255, 255, 255, 0.3);
+}
+
+/* Icon styling for Open Iconic */
+.theme-toggle .oi {
+    font-size: inherit;
+    transition: all var(--transition-fast);
+    display: inline-block;
+    line-height: 1;
+    font-weight: normal;
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+}
+
+.theme-toggle:hover .oi {
+    transform: scale(1.1);
+}
+
+/* Ensure icons are properly visible */
+.theme-toggle .oi-sun,
+.theme-toggle .oi-moon {
+    opacity: 1;
+    font-style: normal;
+    font-variant: normal;
+    text-transform: none;
+}
+
+/* Light theme shows sun icon (to switch to dark) */
+.theme-toggle .oi-sun {
+    color: #FFC107;
+    filter: drop-shadow(0 0 3px rgba(255, 193, 7, 0.5));
+}
+
+/* Dark theme shows moon icon (to switch to light) */
+[data-theme="dark"] .theme-toggle .oi-moon {
+    color: var(--color-navy);
+    filter: drop-shadow(0 0 2px rgba(43, 46, 74, 0.3));
 }
 
 /* ===== TYPOGRAPHY ENHANCEMENTS ===== */
