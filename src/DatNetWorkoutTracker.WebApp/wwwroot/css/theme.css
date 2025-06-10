@@ -245,15 +245,11 @@ body {
 
 /* ===== THEME TOGGLE ===== */
 .theme-toggle {
-    position: fixed;
-    top: var(--space-4);
-    right: var(--space-4);
-    z-index: 1000;
-    background: var(--card-bg);
+    background: var(--bg-accent);
     border: 1px solid var(--border);
     border-radius: var(--radius-full);
-    width: 48px;
-    height: 48px;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -263,6 +259,7 @@ body {
 }
 
 .theme-toggle:hover {
+    background: var(--bg-secondary);
     box-shadow: var(--card-shadow-hover);
     transform: scale(1.05);
 }
@@ -275,10 +272,8 @@ body {
     }
     
     .theme-toggle {
-        width: 40px;
-        height: 40px;
-        top: var(--space-3);
-        right: var(--space-3);
+        width: 36px;
+        height: 36px;
     }
 }
 
