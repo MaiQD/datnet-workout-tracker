@@ -6,6 +6,7 @@ using System.Text;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Mvc;
 using dotFitness.SharedKernel.Outbox;
+using dotFitness.Modules.Users.Domain.Entities;
 
 // Configure Serilog
 Log.Logger = new LoggerConfiguration()
@@ -88,6 +89,18 @@ builder.Services.AddSingleton(sp =>
     return database.GetCollection<OutboxMessage>("outboxMessages");
 });
 
+builder.Services.AddSingleton(sp =>
+{
+    var database = sp.GetRequiredService<IMongoDatabase>();
+    return database.GetCollection<User>("users");
+});
+
+builder.Services.AddSingleton(sp =>
+{
+    var database = sp.GetRequiredService<IMongoDatabase>();
+    return database.GetCollection<UserMetric>("userMetrics");
+});
+
 // Configure JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["SecretKey"];
@@ -155,6 +168,29 @@ static async Task ConfigureMongoDbIndexes(IServiceProvider services)
         new CreateIndexModel<OutboxMessage>(outboxIndexBuilder.Ascending(x => x.IsProcessed)),
         new CreateIndexModel<OutboxMessage>(outboxIndexBuilder.Ascending(x => x.CreatedAt)),
         new CreateIndexModel<OutboxMessage>(outboxIndexBuilder.Ascending(x => x.EventType))
+    });
+
+    // Create indexes for User collection
+    var userCollection = database.GetCollection<User>("users");
+    var userIndexBuilder = Builders<User>.IndexKeys;
+    
+    await userCollection.Indexes.CreateManyAsync(new[]
+    {
+        new CreateIndexModel<User>(userIndexBuilder.Ascending(x => x.Email), new CreateIndexOptions { Unique = true }),
+        new CreateIndexModel<User>(userIndexBuilder.Ascending(x => x.GoogleId)),
+        new CreateIndexModel<User>(userIndexBuilder.Ascending(x => x.CreatedAt)),
+        new CreateIndexModel<User>(userIndexBuilder.Ascending(x => x.Roles))
+    });
+
+    // Create indexes for UserMetric collection
+    var userMetricCollection = database.GetCollection<UserMetric>("userMetrics");
+    var userMetricIndexBuilder = Builders<UserMetric>.IndexKeys;
+      await userMetricCollection.Indexes.CreateManyAsync(new[]
+    {
+        new CreateIndexModel<UserMetric>(userMetricIndexBuilder.Ascending(x => x.UserId)),
+        new CreateIndexModel<UserMetric>(userMetricIndexBuilder.Ascending(x => x.Date)),
+        new CreateIndexModel<UserMetric>(userMetricIndexBuilder.Ascending(x => x.UserId).Descending(x => x.Date)),
+        new CreateIndexModel<UserMetric>(userMetricIndexBuilder.Ascending(x => x.UserId).Ascending(x => x.Date), new CreateIndexOptions { Unique = true })
     });
     
     Log.Information("MongoDB indexes configured successfully");

@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Modules\Users\dotFitness.Modules.Users.Application\dotFitness.Modules.Users.Application.csproj" />
+    <ProjectReference Include="..\Modules\Users\dotFitness.Modules.Users.Domain\dotFitness.Modules.Users.Domain.csproj" />
   </ItemGroup>
 
 </Project>
