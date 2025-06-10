@@ -17,8 +17,10 @@ This document provides a comprehensive, sequential list of actions required to d
 9. **Create Users Module - Tests Project:** Execute `dotnet new xunit -n dotFitness.Modules.Users.Tests`.
 10. **Add All Created Projects to Solution:** Execute `dotnet sln add **/*.csproj`.
 11. **Add Project References - dotFitness.Api:**
+    - `dotnet add dotFitness.Api/dotFitness.Api.csproj reference dotFitness.SharedKernel/dotFitness.SharedKernel.csproj`
     - `dotnet add dotFitness.Api/dotFitness.Api.csproj reference dotFitness.Modules.Users.Application/dotFitness.Modules.Users.Application.csproj`
     - *(Repeat this for all other `.Application` modules as they are created later: Exercises, Routines, WorkoutLogs)*
+    - **Note:** Following Clean Architecture principles, the API project should only reference Application layers and SharedKernel. Infrastructure dependencies are managed through the generic module registration system.
 12. **Add Project References - dotFitness.SharedKernel:** (No outgoing references from SharedKernel)
 13. **Add Project References - dotFitness.Modules.Users.Application:**
     - `dotnet add dotFitness.Modules.Users.Application/dotFitness.Modules.Users.Application.csproj reference dotFitness.SharedKernel/dotFitness.SharedKernel.csproj`
@@ -45,6 +47,11 @@ This document provides a comprehensive, sequential list of actions required to d
     - Create file `dotFitness.SharedKernel/Outbox/OutboxMessage.cs` and add the `OutboxMessage` class.
     - Add NuGet package `MongoDB.Bson`.
     - Add NuGet package `System.Text.Json`.
+19a. **Implement `dotFitness.SharedKernel` - `Utilities` Folder & `UnitConverter.cs`:**
+    - Create directory `dotFitness.SharedKernel/Utilities`.
+    - Create file `dotFitness.SharedKernel/Utilities/UnitConverter.cs` with centralized unit conversion utilities.
+    - Add NuGet package `UnitsNet` for unit conversion capabilities.
+    - This enables cross-module unit handling and BMI calculations.
 20. **Setup Local MongoDB with Docker Compose:**
     - Create file `dotFitness.WorkoutTracker/docker-compose.yml` with the MongoDB service definition.
     - Execute `docker compose up -d` in the `dotFitness.WorkoutTracker` directory to start the MongoDB container.
@@ -53,11 +60,10 @@ This document provides a comprehensive, sequential list of actions required to d
     - `dotnet add dotFitness.Api/dotFitness.Api.csproj package Serilog.AspNetCore`
     - `dotnet add dotFitness.Api/dotFitness.Api.csproj package Serilog.Sinks.Console`
     - `dotnet add dotFitness.Api/dotFitness.Api.csproj package MediatR`
-    - `dotnet add dotFitness.Api/dotFitness.Api.csproj package MediatR.Extensions.Microsoft.DependencyInjection`
     - `dotnet add dotFitness.Api/dotFitness.Api.csproj package Microsoft.AspNetCore.Authentication.JwtBearer`
     - `dotnet add dotFitness.Api/dotFitness.Api.csproj package Microsoft.AspNetCore.Mvc.Versioning`
     - `dotnet add dotFitness.Api/dotFitness.Api.csproj package FluentValidation.AspNetCore`
-    - `dotnet add dotFitness.Api/dotFitness.Api.csproj package Mapperly.Diagnostics` (This is a diagnostic package for Mapperly, the core functionality is built-in as a source generator with `Mapperly.Generator` which is not a direct package add).
+    - **Note:** MediatR and authentication configurations are now handled through the generic module registration system.
 22. **Configure `dotFitness.Api` - Update `appsettings.json`:**
     - Modify `dotFitness.Api/appsettings.json` and `dotFitness.Api/appsettings.Development.json` to include:
         - `ConnectionStrings:MongoDB` (e.g., `"mongodb://admin:password@localhost:27017/dotFitnessDb?authSource=admin"`).
@@ -65,16 +71,79 @@ This document provides a comprehensive, sequential list of actions required to d
 23. **Configure `dotFitness.Api` - Update `Program.cs`:**
     - Set up Serilog logging.
     - Register `IMongoClient` and `IMongoDatabase` as singletons.
-    - Register all `IMongoCollection<T>` (for all planned entities: `User`, `UserMetric`, `Exercise`, `MuscleGroup`, `Equipment`, `Routine`, `WorkoutLog`, `OutboxMessage`) as singletons.
-    - Implement `ConfigureMongoDbIndexes` function and call it to create indexes on startup.
-    - Add Swagger/OpenAPI services.
+    - Register all `IMongoCollection<T>` (for shared entities like `OutboxMessage`) as singletons.
+    - Implement `ConfigureMongoDbIndexes` function for shared collections and call it on startup.
+    - Add Swagger/OpenAPI services with JWT Bearer authentication configuration.
     - Add CORS services.
-    - Configure JWT Authentication and Authorization services.
-    - Register MediatR to scan all `Application` assemblies.
+    - **Implement Generic Module Registration System:**
+        - Create `dotFitness.Api/Infrastructure/ModuleRegistry.cs` with automatic module discovery.
+        - Use `ModuleRegistry.RegisterAllModules()` to automatically discover and register all modules.
+        - Use `ModuleRegistry.RegisterModuleAssemblies()` to register MediatR from discovered assemblies.
+        - Each module handles its own JWT authentication, MongoDB indexes, and dependency injection configuration.
     - Configure centralized error handling middleware.
     - Configure API Versioning services.
+    - **Note:** Module-specific configurations (JWT, MongoDB collections, MediatR handlers) are now automatically handled by each module's registration system.
 
-### Phase 2: Core User & Authentication Implementation
+### Phase 2: Core User & Authentication Implementation ✅ COMPLETED
+
+**Status:** Phase 2 has been fully implemented with Clean Architecture refactoring and generic module registration system.
+
+1. **✅ Implement Users Module - Domain Layer (`dotFitness.Modules.Users.Domain`):**
+    - ✅ Created `Entities` directory with `User.cs` and `UserMetric.cs` entities
+    - ✅ Applied MongoDB.Bson.Serialization.Attributes correctly
+    - ✅ Created `Repositories` directory with `IUserRepository.cs` and `IUserMetricsRepository.cs`
+    - ✅ Created `Events` directory with `UserCreatedEvent.cs`
+
+2. **✅ Implement Users Module - Infrastructure Layer (`dotFitness.Modules.Users.Infrastructure`):**
+    - ✅ Created MongoDB repositories implementing domain interfaces
+    - ✅ Added comprehensive NuGet packages: MediatR, FluentValidation, Microsoft.Extensions.Options, System.IdentityModel.Tokens.Jwt, Google.Apis.Auth
+    - ✅ Implemented complete CQRS handlers:
+        - `LoginWithGoogleCommandHandler` - Google OAuth, JWT generation, admin role assignment
+        - `UpdateUserProfileCommandHandler` - Profile updates with enum handling
+        - `AddUserMetricCommandHandler` - Body metrics with BMI calculation using user's unit preference
+        - `GetUserByIdQueryHandler`, `GetUserProfileQueryHandler`, `GetLatestUserMetricQueryHandler`, `GetUserMetricsQueryHandler`
+    - ✅ Created modular configuration system with `UsersInfrastructureModule.AddUsersModule()`
+    - ✅ Separated settings classes into `/Settings/` directory
+
+3. **✅ Implement Users Module - Application Layer (`dotFitness.Modules.Users.Application`):**
+    - ✅ Created comprehensive Commands and Queries with proper CQRS implementation
+    - ✅ Implemented DTOs: `LoginResponseDto`, `UserDto`, `UserMetricDto`
+    - ✅ Created Riok.Mapperly-based mappers: `UserMapper` and `UserMetricMapper`
+    - ✅ Implemented FluentValidation validators for all commands
+    - ✅ Created `UsersModuleRegistration` for dependency injection
+
+4. **✅ Integrate Users Module into `dotFitness.Api`:**
+    - ✅ Created `AuthController.cs` with Google OAuth login endpoint
+    - ✅ Created `UsersController.cs` with complete user profile and metrics management
+    - ✅ Applied proper authorization with `[Authorize]` attributes
+    - ✅ Implemented comprehensive error handling and validation
+
+5. **✅ Users Module Testing Implementation:**
+    - ✅ **Next Step:** Implement comprehensive unit tests for Users module using the testing framework above
+    - ✅ **Next Step:** Create HTTP test files for Users API endpoints
+    - ✅ **Next Step:** Verify all CRUD operations, authentication flows, and error scenarios
+    - **Testing Focus Areas:**
+      - User entity validation and business logic
+      - UserMetric BMI calculation accuracy
+      - Repository operations with MongoDB
+      - Google OAuth authentication flow
+      - JWT generation and validation
+      - Admin role assignment logic
+      - Profile update workflows
+      - Metrics tracking and retrieval
+
+**✅ Clean Architecture Refactoring Completed:**
+- ✅ Updated API project to only reference Application layers + SharedKernel
+- ✅ Moved JWT authentication configuration from API to Users module
+- ✅ Created modular registration system maintaining proper boundaries
+- ✅ Separated MongoDB index configuration by ownership
+
+**✅ Generic Module Registration System Implemented:**
+- ✅ Created `ModuleRegistry` with automatic module discovery
+- ✅ Zero-configuration module addition (just add name to array)
+- ✅ Automatic assembly discovery and MediatR handler registration
+- ✅ Graceful handling of missing modules with proper logging
+- ✅ Clean Architecture compliance maintained
 
 1. **Implement Users Module - Domain Layer (`dotFitness.Modules.Users.Domain`):**
     - Create `Entities` directory.
@@ -170,19 +239,435 @@ This document provides a comprehensive, sequential list of actions required to d
     - Create `dotFitness.Api/Controllers/AdminMuscleGroupsController.cs` and `dotFitness.Api/Controllers/AdminEquipmentController.cs` for global management.
     - Apply `[Authorize]` and `[Authorize(Roles="Admin")]` appropriately.
     - Register `IMongoCollection<Exercise>`, `IMongoCollection<MuscleGroup>`, `IMongoCollection<Equipment>` in `Program.cs`.
-6. **Implement Routines Module (Repeat Steps 28-32, replacing “Exercises” with “Routines”):**
+
+### Module Testing Framework (Apply to Each Module)
+
+**Note:** Apply these testing steps to each module (Users, Exercises, Routines, WorkoutLogs) after implementing the respective module. Replace `[Module]` with the actual module name.
+
+#### Unit Testing Implementation
+
+1. **Setup Test Project Dependencies:**
+   ```bash
+   # Add required NuGet packages to the test project
+   dotnet add dotFitness.Modules.[Module].Tests/dotFitness.Modules.[Module].Tests.csproj package Microsoft.Extensions.Logging.Abstractions
+   dotnet add dotFitness.Modules.[Module].Tests/dotFitness.Modules.[Module].Tests.csproj package Moq
+   dotnet add dotFitness.Modules.[Module].Tests/dotFitness.Modules.[Module].Tests.csproj package FluentAssertions
+   dotnet add dotFitness.Modules.[Module].Tests/dotFitness.Modules.[Module].Tests.csproj package Microsoft.Extensions.Options
+   dotnet add dotFitness.Modules.[Module].Tests/dotFitness.Modules.[Module].Tests.csproj package Testcontainers.MongoDb
+   ```
+
+2. **Create Domain Entity Tests:**
+   - Create `dotFitness.Modules.[Module].Tests/Domain/Entities/[Entity]Tests.cs`
+   - Test entity creation, validation, and business logic
+   - Example structure:
+     ```csharp
+     [Fact]
+     public void Should_Create_Valid_Entity_With_Required_Properties()
+     [Fact] 
+     public void Should_Calculate_Derived_Properties_Correctly()
+     [Theory, InlineData(...)]
+     public void Should_Validate_Input_Parameters(params)
+     ```
+
+3. **Create Repository Tests:**
+   - Create `dotFitness.Modules.[Module].Tests/Infrastructure/MongoDB/[Entity]RepositoryTests.cs`
+   - Use Testcontainers.MongoDb for integration testing
+   - Test CRUD operations, queries, and error handling
+   - Example structure:
+     ```csharp
+     [Fact]
+     public async Task Should_Create_Entity_Successfully()
+     [Fact]
+     public async Task Should_Retrieve_Entity_By_Id()
+     [Fact]
+     public async Task Should_Update_Entity_Successfully()
+     [Fact]
+     public async Task Should_Delete_Entity_Successfully()
+     [Fact]
+     public async Task Should_Return_NotFound_For_NonExistent_Entity()
+     ```
+
+4. **Create Command Handler Tests:**
+   - Create `dotFitness.Modules.[Module].Tests/Infrastructure/Handlers/[Command]HandlerTests.cs`
+   - Mock dependencies (repositories, logger, external services)
+   - Test success scenarios, validation failures, and error cases
+   - Example structure:
+     ```csharp
+     [Fact]
+     public async Task Should_Handle_Valid_Command_Successfully()
+     [Fact]
+     public async Task Should_Return_ValidationError_For_Invalid_Command()
+     [Fact]
+     public async Task Should_Handle_Repository_Errors_Gracefully()
+     ```
+
+5. **Create Query Handler Tests:**
+   - Create `dotFitness.Modules.[Module].Tests/Infrastructure/Handlers/[Query]HandlerTests.cs`
+   - Test data retrieval, filtering, and error handling
+   - Example structure:
+     ```csharp
+     [Fact]
+     public async Task Should_Return_Entity_When_Found()
+     [Fact]
+     public async Task Should_Return_NotFound_When_Entity_DoesNot_Exist()
+     [Fact]
+     public async Task Should_Apply_Filters_Correctly()
+     ```
+
+6. **Create Validator Tests:**
+   - Create `dotFitness.Modules.[Module].Tests/Application/Validators/[Command]ValidatorTests.cs`
+   - Test all validation rules and edge cases
+   - Example structure:
+     ```csharp
+     [Fact]
+     public void Should_Pass_Validation_For_Valid_Command()
+     [Theory, InlineData(...)]
+     public void Should_Fail_Validation_For_Invalid_Property(params)
+     [Fact]
+     public void Should_Have_Validation_Error_For_Missing_Required_Field()
+     ```
+
+7. **Create Mapper Tests:**
+   - Create `dotFitness.Modules.[Module].Tests/Application/Mappers/[Entity]MapperTests.cs`
+   - Test entity-to-DTO and DTO-to-entity mappings
+   - Example structure:
+     ```csharp
+     [Fact]
+     public void Should_Map_Entity_To_Dto_Correctly()
+     [Fact]
+     public void Should_Map_Dto_To_Entity_Correctly() 
+     [Fact]
+     public void Should_Handle_Null_Values_In_Mapping()
+     ```
+
+8. **Run Unit Tests:**
+   ```bash
+   # Run all tests for the module
+   dotnet test dotFitness.Modules.[Module].Tests/
+   
+   # Run with coverage (if coverage tools are installed)
+   dotnet test dotFitness.Modules.[Module].Tests/ --collect:"XPlat Code Coverage"
+   
+   # Run specific test class
+   dotnet test dotFitness.Modules.[Module].Tests/ --filter "ClassName=[Entity]Tests"
+   ```
+
+#### API Testing with HTTP Files
+
+1. **Create HTTP Test Files Directory:**
+   - Create `tests/api/` directory in the solution root
+   - Create `tests/api/[module]/` subdirectory for each module
+
+2. **Create Environment Configuration:**
+   - Create `tests/api/http-client.env.json`:
+     ```json
+     {
+       "dev": {
+         "baseUrl": "https://localhost:7001",
+         "adminEmail": "your.admin.email@gmail.com",
+         "testUserEmail": "test.user@example.com"
+       },
+       "prod": {
+         "baseUrl": "https://your-api.azurewebsites.net"
+       }
+     }
+     ```
+
+3. **Create Authentication HTTP File:**
+   - Create `tests/api/auth/auth.http`:
+     ```http
+     ### Login with Google (Mock for testing)
+     POST {{baseUrl}}/api/auth/google-login
+     Content-Type: application/json
+     
+     {
+       "googleTokenId": "mock_google_token_for_{{adminEmail}}"
+     }
+     
+     > {%
+       client.global.set("authToken", response.body.token);
+       client.global.set("userId", response.body.user.id);
+     %}
+     
+     ### Verify Authentication
+     GET {{baseUrl}}/api/users/profile
+     Authorization: Bearer {{authToken}}
+     ```
+
+4. **Create Module-Specific HTTP Files:**
+   
+   **For Users Module (`tests/api/users/users.http`):**
+   ```http
+   ### Get User Profile
+   GET {{baseUrl}}/api/users/profile
+   Authorization: Bearer {{authToken}}
+   
+   ### Update User Profile
+   PUT {{baseUrl}}/api/users/profile
+   Authorization: Bearer {{authToken}}
+   Content-Type: application/json
+   
+   {
+     "displayName": "Updated Test User",
+     "gender": "Male",
+     "dateOfBirth": "1990-01-01",
+     "unitPreference": "Metric"
+   }
+   
+   ### Add User Metric
+   POST {{baseUrl}}/api/users/metrics
+   Authorization: Bearer {{authToken}}
+   Content-Type: application/json
+   
+   {
+     "weight": 70.5,
+     "height": 175.0,
+     "date": "{{$isoTimestamp}}",
+     "notes": "Test metric entry"
+   }
+   
+   ### Get Latest User Metric
+   GET {{baseUrl}}/api/users/metrics/latest
+   Authorization: Bearer {{authToken}}
+   
+   ### Get User Metrics History
+   GET {{baseUrl}}/api/users/metrics?startDate=2024-01-01&endDate={{$isoTimestamp}}
+   Authorization: Bearer {{authToken}}
+   ```
+
+   **For Exercises Module (`tests/api/exercises/exercises.http`):**
+   ```http
+   ### Get All Exercises
+   GET {{baseUrl}}/api/exercises
+   Authorization: Bearer {{authToken}}
+   
+   ### Create Exercise
+   POST {{baseUrl}}/api/exercises
+   Authorization: Bearer {{authToken}}
+   Content-Type: application/json
+   
+   {
+     "name": "Test Exercise",
+     "description": "A test exercise for API testing",
+     "muscleGroups": ["Chest", "Triceps"],
+     "equipment": ["Barbell"],
+     "instructions": ["Step 1", "Step 2"],
+     "difficulty": "Intermediate",
+     "videoUrl": "https://example.com/video"
+   }
+   
+   > {%
+     client.global.set("exerciseId", response.body.id);
+   %}
+   
+   ### Get Exercise by ID
+   GET {{baseUrl}}/api/exercises/{{exerciseId}}
+   Authorization: Bearer {{authToken}}
+   
+   ### Update Exercise
+   PUT {{baseUrl}}/api/exercises/{{exerciseId}}
+   Authorization: Bearer {{authToken}}
+   Content-Type: application/json
+   
+   {
+     "name": "Updated Test Exercise",
+     "description": "Updated description",
+     "muscleGroups": ["Chest", "Shoulders"],
+     "equipment": ["Dumbbell"],
+     "instructions": ["Updated Step 1", "Updated Step 2"],
+     "difficulty": "Advanced",
+     "videoUrl": "https://example.com/updated-video"
+   }
+   
+   ### Delete Exercise
+   DELETE {{baseUrl}}/api/exercises/{{exerciseId}}
+   Authorization: Bearer {{authToken}}
+   ```
+
+   **For Routines Module (`tests/api/routines/routines.http`):**
+   ```http
+   ### Get All Routines
+   GET {{baseUrl}}/api/routines
+   Authorization: Bearer {{authToken}}
+   
+   ### Create Routine
+   POST {{baseUrl}}/api/routines
+   Authorization: Bearer {{authToken}}
+   Content-Type: application/json
+   
+   {
+     "name": "Test Workout Routine",
+     "description": "A test routine for API testing",
+     "exercises": [
+       {
+         "exerciseId": "{{exerciseId}}",
+         "sets": 3,
+         "reps": 10,
+         "weight": 50.0,
+         "restTime": 60,
+         "notes": "Focus on form"
+       }
+     ],
+     "tags": ["Strength", "Upper Body"]
+   }
+   
+   > {%
+     client.global.set("routineId", response.body.id);
+   %}
+   
+   ### Get Routine Suggestions
+   GET {{baseUrl}}/api/routines/suggest?muscleGroups=Chest&difficulty=Intermediate
+   Authorization: Bearer {{authToken}}
+   
+   ### Get Predefined Templates
+   GET {{baseUrl}}/api/routines/templates
+   Authorization: Bearer {{authToken}}
+   ```
+
+   **For WorkoutLogs Module (`tests/api/workoutlogs/workoutlogs.http`):**
+   ```http
+   ### Log Workout
+   POST {{baseUrl}}/api/workoutlogs
+   Authorization: Bearer {{authToken}}
+   Content-Type: application/json
+   
+   {
+     "routineId": "{{routineId}}",
+     "startTime": "{{$isoTimestamp}}",
+     "endTime": "{{$isoTimestamp}}",
+     "exercisesPerformed": [
+       {
+         "exerciseId": "{{exerciseId}}",
+         "setsPerformed": [
+           {
+             "reps": 10,
+             "weight": 50.0,
+             "restTime": 60,
+             "completed": true
+           },
+           {
+             "reps": 8,
+             "weight": 52.5,
+             "restTime": 60,
+             "completed": true
+           }
+         ]
+       }
+     ],
+     "notes": "Great workout session!"
+   }
+   
+   > {%
+     client.global.set("workoutLogId", response.body.id);
+   %}
+   
+   ### Get Workout History
+   GET {{baseUrl}}/api/workoutlogs/history?startDate=2024-01-01&endDate={{$isoTimestamp}}
+   Authorization: Bearer {{authToken}}
+   
+   ### Get Workout Statistics
+   GET {{baseUrl}}/api/workoutlogs/statistics
+   Authorization: Bearer {{authToken}}
+   
+   ### Get Personal Bests
+   GET {{baseUrl}}/api/workoutlogs/personal-bests
+   Authorization: Bearer {{authToken}}
+   
+   ### Get Exercise Progress
+   GET {{baseUrl}}/api/workoutlogs/exercise-progress/{{exerciseId}}
+   Authorization: Bearer {{authToken}}
+   ```
+
+5. **Create Test Scenarios Documentation:**
+   - Create `tests/api/README.md` with test execution instructions:
+     ```markdown
+     # API Testing Guide
+     
+     ## Prerequisites
+     - VS Code with REST Client extension installed
+     - Application running locally or deployed
+     - Valid Google OAuth setup for authentication
+     
+     ## Test Execution Order
+     1. Run `auth/auth.http` to authenticate and get token
+     2. Run module-specific tests in dependency order:
+        - Users (foundational)
+        - Exercises (required for routines)
+        - Routines (required for workout logs)
+        - WorkoutLogs (depends on routines and exercises)
+     
+     ## Environment Configuration
+     - Update `http-client.env.json` with your environment URLs
+     - Set appropriate email addresses for testing
+     
+     ## Expected Results
+     - All requests should return appropriate HTTP status codes
+     - Response bodies should match expected schemas
+     - Authentication should be required for protected endpoints
+     ```
+
+6. **Run API Tests:**
+   - Open HTTP files in VS Code with REST Client extension
+   - Execute requests in order (authentication first)
+   - Verify responses and status codes
+   - Test error scenarios (invalid data, unauthorized access)
+   - Document any issues found
+
+#### Comprehensive Testing Checklist
+
+For each module, ensure the following testing aspects are covered:
+
+**Domain Layer Testing:**
+- [ ] Entity creation and validation
+- [ ] Business rule enforcement
+- [ ] Value object behavior
+- [ ] Domain event creation
+
+**Application Layer Testing:**
+- [ ] Command validation
+- [ ] Query parameter validation
+- [ ] DTO mapping accuracy
+- [ ] Service orchestration
+
+**Infrastructure Layer Testing:**
+- [ ] Repository CRUD operations
+- [ ] Database connectivity
+- [ ] Error handling and logging
+- [ ] External service integration
+
+**API Layer Testing:**
+- [ ] Endpoint accessibility
+- [ ] Request/response serialization
+- [ ] Authentication and authorization
+- [ ] Error response formatting
+- [ ] API documentation accuracy
+
+**Integration Testing:**
+- [ ] End-to-end workflow testing
+- [ ] Cross-module communication
+- [ ] Database transaction handling
+- [ ] Outbox pattern functionality
+
+**Performance Testing:**
+- [ ] Response time benchmarks
+- [ ] Concurrent request handling
+- [ ] Database query optimization
+- [ ] Memory usage monitoring
+6. **Implement Routines Module (Repeat Steps 28-32, replacing "Exercises" with "Routines"):**
     - **`dotFitness.Modules.Routines` Projects:** Create and reference.
     - **Domain:** Define `Routine.cs` (including nested `Exercises` property).
     - **Infrastructure:** Implement `IRoutineRepository.cs`, `RoutineRepository.cs`. Implement `CreateRoutineCommandHandler`, `UpdateRoutineCommandHandler`, `DeleteRoutineCommandHandler`. Implement `GetRoutineByIdQueryHandler`, `GetAllRoutinesQueryHandler`, `SuggestRoutineQueryHandler`, `GetPredefinedRoutineTemplatesQueryHandler`.
     - **Application:** Define `Commands`, `Queries`, `DTOs` (`RoutineDto`, `RoutineExerciseDto`), Mappers, and FluentValidation validators.
     - **API:** Create `dotFitness.Api/Controllers/RoutinesController.cs` (for CRUD, suggestions, templates). Register `IMongoCollection<Routine>`.
-7. **Implement Workout Logs Module (Repeat Steps 28-32, replacing “Exercises” with “WorkoutLogs”):**
+    - **Testing:** Apply the Module Testing Framework above for comprehensive unit and API testing.
+7. **Implement Workout Logs Module (Repeat Steps 28-32, replacing "Exercises" with "WorkoutLogs"):**
     - **`dotFitness.Modules.WorkoutLogs` Projects:** Create and reference.
     - **Domain:** Define `WorkoutLog.cs` (including nested `ExercisesPerformed`, `SetsPerformed`). Define `WorkoutCompletedEvent.cs`.
     - **Infrastructure:** Implement `IWorkoutLogRepository.cs`, `WorkoutLogRepository.cs`. Implement `LogWorkoutCommandHandler`.
         - **WT-003 Set Logging (Backend):** `LogWorkoutCommandHandler` will save `WorkoutLog` and **initiate Outbox Pattern** by inserting `WorkoutCompletedEvent` into `outboxMessages` within a MongoDB transaction.
     - **Application:** Define `Commands` (`LogWorkoutCommand`), `Queries` (`GetWorkoutLogByIdQuery`, `GetWorkoutHistoryQuery`, `GetWorkoutStatisticsQuery`, `GetPersonalBestsQuery`, `GetExerciseProgressQuery`), `DTOs`, Mappers, Validators.
     - **API:** Create `dotFitness.Api/Controllers/WorkoutLogsController.cs` (for logging, history, stats, personal bests). Register `IMongoCollection<WorkoutLog>`.
+	- **Testing:** Apply the Module Testing Framework above, with special focus on Outbox Pattern testing and workout statistics calculations.
 
 ### Phase 4: Backend Cross-Cutting Enhancements
 

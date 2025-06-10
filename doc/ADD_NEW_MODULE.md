@@ -6,11 +6,12 @@ This document provides step-by-step instructions for adding new modules to the d
 
 1. [Overview](#overview)
 2. [Module Structure](#module-structure)
-3. [Step-by-Step Instructions](#step-by-step-instructions)
-4. [Code Templates](#code-templates)
-5. [Integration Steps](#integration-steps)
-6. [Testing Your Module](#testing-your-module)
-7. [Best Practices](#best-practices)
+3. [Generic Module Discovery System](#generic-module-discovery-system)
+4. [Step-by-Step Instructions](#step-by-step-instructions)
+5. [Code Templates](#code-templates)
+6. [Integration Steps](#integration-steps)
+7. [Testing Your Module](#testing-your-module)
+8. [Best Practices](#best-practices)
 
 ## Overview
 
@@ -20,7 +21,40 @@ The dotFitness application follows a **Modular Monolith** architecture where eac
 - **Infrastructure Layer**: Repository implementations, handlers, and external integrations
 - **Tests**: Unit and integration tests
 
-Each module is automatically discovered and registered through the [`ModuleRegistry`](../src/dotFitness.WorkoutTracker/dotFitness.Api/Infrastructure/ModuleRegistry.cs) system.
+Each module is automatically discovered and registered through the advanced [`ModuleRegistry`](../src/dotFitness.WorkoutTracker/dotFitness.Api/Infrastructure/ModuleRegistry.cs) system.
+
+## Generic Module Discovery System
+
+The dotFitness application features a sophisticated **automatic module discovery and registration system** that:
+
+### ✅ **Key Features**
+- **Zero Configuration**: Add module name to array, everything else is automatic
+- **Clean Architecture Compliance**: API only references Application layers
+- **Graceful Degradation**: Missing modules don't break the system
+- **Comprehensive Logging**: Full visibility into registration process
+- **MediatR Integration**: Automatic handler discovery and registration
+- **MongoDB Integration**: Automatic index configuration per module
+- **Scalable Pattern**: Supports unlimited modules without code changes
+
+### 🔧 **How It Works**
+1. **Module Discovery**: Scans [`ModuleRegistry.ModuleNames`](../src/dotFitness.WorkoutTracker/dotFitness.Api/Infrastructure/ModuleRegistry.cs) array
+2. **Assembly Loading**: Loads both Application and Infrastructure assemblies via reflection
+3. **Service Registration**: Invokes each module's registration method automatically
+4. **MediatR Registration**: Registers all commands, queries, and handlers
+5. **Index Configuration**: Configures MongoDB indexes for module entities
+6. **Error Handling**: Logs warnings for missing modules but continues operation
+
+### 📋 **Registration Logs**
+When working correctly, you'll see logs like:
+```bash
+[INF] Loaded Users Application assembly for MediatR
+[INF] Loaded Users Infrastructure assembly for MediatR  
+[INF] Registered MediatR services from assembly: dotFitness.Modules.Users.Application
+[INF] Registered MediatR services from assembly: dotFitness.Modules.Users.Infrastructure
+[INF] Successfully registered module: Users
+[INF] Successfully configured indexes for module: Users
+[INF] MediatR registration completed for X module assemblies
+```
 
 ## Module Structure
 
@@ -52,19 +86,25 @@ Modules/
 
 ### Step 1: Update Module Registry
 
-First, add your new module to the automatic discovery system:
+The **only configuration change needed** is adding your module name to the discovery array:
 
 ```csharp
 // File: dotFitness.Api/Infrastructure/ModuleRegistry.cs
 public static readonly string[] ModuleNames = 
 {
-    "Users",
-    "Exercises", 
-    "Routines",
-    "WorkoutLogs",
-    "YourNewModule"  // Add your module name here
+    "Users",           // ✅ Already implemented
+    "Exercises",       // ⏳ Coming next  
+    "Routines",        // ⏳ Planned
+    "WorkoutLogs",     // ⏳ Planned
+    "YourNewModule"    // ← Add your module name here
 };
 ```
+
+That's it! The system will automatically:
+- ✅ Discover your module assemblies
+- ✅ Register MediatR handlers  
+- ✅ Configure MongoDB indexes
+- ✅ Handle missing modules gracefully
 
 ### Step 2: Create Project Structure
 
@@ -128,6 +168,8 @@ Add reference from the API project to your module's Application layer:
 cd ../../../dotFitness.Api
 dotnet add reference ../Modules/YourNewModule/dotFitness.Modules.YourNewModule.Application/dotFitness.Modules.YourNewModule.Application.csproj
 ```
+
+**Important**: The API project should **only** reference the Application layer to maintain Clean Architecture principles.
 
 ### Step 5: Install Required NuGet Packages
 
