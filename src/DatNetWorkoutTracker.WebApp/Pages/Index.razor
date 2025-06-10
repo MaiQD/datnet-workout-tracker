@@ -353,12 +353,19 @@
 
     /* ===== HERO SECTION ===== */
     .hero-section {
-        background: var(--gradient-hero);
+        background: var(--bg-accent);
         border-radius: var(--radius-2xl);
         padding: var(--space-12) var(--space-8);
         margin-bottom: var(--space-8);
-        color: white;
+        color: var(--text-primary);
         display: flex;
+    }
+
+    /* Dark theme: use gradient for hero section */
+    [data-theme="dark"] .hero-section {
+        background: var(--gradient-hero);
+        color: white;
+    }
         align-items: center;
         justify-content: space-between;
         min-height: 200px;

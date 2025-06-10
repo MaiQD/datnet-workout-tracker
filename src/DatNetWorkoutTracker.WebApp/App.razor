@@ -6,8 +6,8 @@
                     @if (context.User.Identity?.IsAuthenticated != true)
                     {
                         <PageTitle>Login Required - DatNet Workout Tracker</PageTitle>
-                        <div class="d-flex justify-content-center align-items-center" style="height: 100vh; background: var(--gradient-hero);">
-                            <div class="card text-center login-required-card" style="padding: 2rem; box-shadow: var(--card-shadow);">
+                        <div class="d-flex justify-content-center align-items-center auth-login-container">
+                            <div class="card text-center login-required-card">
                                 <h3>🔒 Login Required</h3>
                                 <p>Please log in to access the DatNet Workout Tracker.</p>
                                 <a href="/login" class="btn btn-primary">Go to Login</a>

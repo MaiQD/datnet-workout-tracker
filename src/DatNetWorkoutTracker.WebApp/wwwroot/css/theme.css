@@ -794,4 +794,74 @@ div:not(.nav-menu):not(.brand-section):not(.logo-icon) {
     border-color: var(--border) !important;
 }
 
+/* ===== LOGIN AND AUTHENTICATION PAGES ===== */
+/* Fix login required div and authentication backgrounds */
+.auth-login-container {
+    height: 100vh;
+    background: var(--bg-secondary) !important;
+}
+
+.d-flex[style*="background: var(--gradient-hero)"],
+.d-flex[style*="gradient-hero"] {
+    background: var(--bg-secondary) !important;
+}
+
+/* Login required card theme adaptation */
+.login-required-card {
+    padding: 2rem;
+    box-shadow: var(--card-shadow);
+    background: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border) !important;
+}
+
+.login-required-card h3 {
+    color: var(--text-primary) !important;
+}
+
+.login-required-card p {
+    color: var(--text-secondary) !important;
+}
+
+/* Authentication pages background */
+.auth-container,
+.login-container,
+div[style*="height: 100vh"] {
+    background: var(--bg-secondary) !important;
+}
+
+/* Override any inline gradient backgrounds in authentication flows */
+div[style*="var(--gradient-hero)"] {
+    background: var(--bg-secondary) !important;
+}
+
+div[style*="var(--gradient-background)"] {
+    background: var(--bg-secondary) !important;
+}
+
+div[style*="var(--gradient-primary)"] {
+    background: var(--bg-secondary) !important;
+}
+
+div[style*="var(--gradient-secondary)"] {
+    background: var(--bg-secondary) !important;
+}
+
+/* Dark theme: Use subtle gradient for authentication pages */
+[data-theme="dark"] .auth-login-container {
+    background: var(--gradient-hero) !important;
+}
+
+[data-theme="dark"] .d-flex[style*="background: var(--gradient-hero)"],
+[data-theme="dark"] .d-flex[style*="gradient-hero"],
+[data-theme="dark"] .auth-container,
+[data-theme="dark"] .login-container,
+[data-theme="dark"] div[style*="height: 100vh"] {
+    background: var(--gradient-hero) !important;
+}
+
+[data-theme="dark"] div[style*="var(--gradient-hero)"] {
+    background: var(--gradient-hero) !important;
+}
+
 /* ===== EXISTING COMPONENTS AND STYLES ===== */
