@@ -1,6 +1,8 @@
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using dotFitness.SharedKernel.Interfaces;
+using UnitsNet;
+using UnitsNet.Units;
 
 namespace dotFitness.Modules.Users.Domain.Entities;
 
@@ -44,19 +46,24 @@ public class UserMetric : IEntity
             return;
         }
 
-        double weightInKg = Weight.Value;
-        double heightInMeters = Height.Value;
+        Mass weight;
+        Length height;
 
-        // Convert to metric if needed
+        // Create UnitsNet objects based on user preference
         if (unitPreference == UnitPreference.Imperial)
         {
-            weightInKg = Weight.Value * 0.453592; // lbs to kg
-            heightInMeters = Height.Value * 0.0254; // inches to meters
+            weight = Mass.FromPounds(Weight.Value);
+            height = Length.FromInches(Height.Value);
         }
         else
         {
-            heightInMeters = Height.Value / 100; // cm to meters
+            weight = Mass.FromKilograms(Weight.Value);
+            height = Length.FromCentimeters(Height.Value);
         }
+
+        // Convert to metric for BMI calculation (kg/m²)
+        var weightInKg = weight.Kilograms;
+        var heightInMeters = height.Meters;
 
         Bmi = Math.Round(weightInKg / (heightInMeters * heightInMeters), 2);
         UpdatedAt = DateTime.UtcNow;
@@ -88,5 +95,51 @@ public class UserMetric : IEntity
             Notes = notes;
 
         UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Gets the weight in the specified unit preference
+    /// </summary>
+    public double? GetWeightInUnit(UnitPreference unitPreference)
+    {
+        if (!Weight.HasValue) return null;
+
+        // Assume stored weight is in the same unit as specified
+        return Weight.Value;
+    }
+
+    /// <summary>
+    /// Gets the height in the specified unit preference
+    /// </summary>
+    public double? GetHeightInUnit(UnitPreference unitPreference)
+    {
+        if (!Height.HasValue) return null;
+
+        // Assume stored height is in the same unit as specified
+        return Height.Value;
+    }
+
+    /// <summary>
+    /// Converts weight from one unit to another
+    /// </summary>
+    public static double ConvertWeight(double weight, UnitPreference from, UnitPreference to)
+    {
+        if (from == to) return weight;
+
+        return from == UnitPreference.Imperial 
+            ? Mass.FromPounds(weight).Kilograms
+            : Mass.FromKilograms(weight).Pounds;
+    }
+
+    /// <summary>
+    /// Converts height from one unit to another
+    /// </summary>
+    public static double ConvertHeight(double height, UnitPreference from, UnitPreference to)
+    {
+        if (from == to) return height;
+
+        return from == UnitPreference.Imperial 
+            ? Length.FromInches(height).Centimeters
+            : Length.FromCentimeters(height).Inches;
     }
 }
