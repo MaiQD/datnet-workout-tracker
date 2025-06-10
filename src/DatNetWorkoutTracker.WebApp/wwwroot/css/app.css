@@ -457,27 +457,27 @@ main {
 
 /* Button Styles */
 .btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--gradient-primary);
     border: none;
-    border-radius: 8px;
-    padding: 0.5rem 1.5rem;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    border-radius: var(--radius-lg);
+    padding: var(--space-3) var(--space-6);
+    font-weight: 600;
+    transition: all var(--transition-fast);
+    box-shadow: 0 4px 15px rgba(232, 69, 69, 0.3);
     color: white;
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+    box-shadow: 0 6px 20px rgba(232, 69, 69, 0.4);
+    background: linear-gradient(135deg, #d63b3b 0%, #7d3041 100%);
     color: white;
 }
 
 .btn-primary:focus,
 .btn-primary:active {
-    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    background: linear-gradient(135deg, #d63b3b 0%, #7d3041 100%);
+    box-shadow: 0 6px 20px rgba(232, 69, 69, 0.4);
     color: white;
 }
 

@@ -169,10 +169,21 @@
         color: var(--text-primary);
         line-height: 1;
         margin-bottom: var(--space-1);
-        background: var(--gradient-primary);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+        /* Fallback for better contrast */
+        background: none;
+        -webkit-text-fill-color: var(--text-primary);
+    }
+
+    /* Only apply gradient text if browser supports it and not in high contrast mode */
+    @@supports (-webkit-background-clip: text) {
+        @@media (prefers-contrast: no-preference) {
+            .stat-value {
+                background: var(--gradient-primary);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+            }
+        }
     }
 
     .stat-card.gradient .stat-value {

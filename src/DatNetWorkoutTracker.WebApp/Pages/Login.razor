@@ -43,17 +43,73 @@
         justify-content: center;
         align-items: center;
         min-height: 100vh;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: var(--gradient-hero);
     }
 
     .login-card {
-        background: white;
+        background: var(--card-bg);
         padding: 3rem;
-        border-radius: 12px;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-        max-width: 400px;
+        border-radius: var(--radius-xl);
+        box-shadow: var(--card-shadow-lg);
+        max-width: 600px;
         width: 100%;
         margin: 2rem;
+        border: 1px solid var(--border);
+    }
+
+    .login-card h1 {
+        color: var(--text-primary);
+        font-weight: 700;
+        margin-bottom: var(--space-3);
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .login-card .lead {
+        color: var(--text-secondary);
+        font-size: var(--font-size-lg);
+        margin-bottom: var(--space-6);
+    }
+
+    .login-card .features h4 {
+        color: var(--text-primary);
+        font-weight: 600;
+        margin-bottom: var(--space-4);
+    }
+
+    .login-card .features li {
+        color: var(--text-secondary);
+        padding: 0.5rem 0;
+    }
+
+    .features {
+        border-top: 1px solid var(--border);
+        padding-top: 1.5rem;
+    }
+
+    /* Responsive adjustments */
+    @@media (min-width: 768px) {
+        .login-card {
+            padding: 4rem;
+            max-width: 500px;
+        }
+    }
+
+    @@media (min-width: 1024px) {
+        .login-card {
+            max-width: 600px;
+            padding: 4rem 5rem;
+        }
+    }
+
+    @@media (max-width: 576px) {
+        .login-card {
+            margin: 1rem;
+            padding: 2rem;
+            max-width: 100%;
+        }
     }
 
     .google-login-btn {
@@ -73,19 +129,9 @@
         height: 20px;
     }
 
-    .features {
-        border-top: 1px solid #eee;
-        padding-top: 1.5rem;
-    }
-
     .features ul {
         padding-left: 0;
         list-style: none;
-    }
-
-    .features li {
-        padding: 0.5rem 0;
-        color: #666;
     }
 </style>
 

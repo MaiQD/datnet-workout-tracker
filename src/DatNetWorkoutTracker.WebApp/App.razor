@@ -6,8 +6,8 @@
                     @if (context.User.Identity?.IsAuthenticated != true)
                     {
                         <PageTitle>Login Required - DatNet Workout Tracker</PageTitle>
-                        <div class="d-flex justify-content-center align-items-center" style="height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                            <div class="card text-center" style="max-width: 400px; padding: 2rem;">
+                        <div class="d-flex justify-content-center align-items-center" style="height: 100vh; background: var(--gradient-hero);">
+                            <div class="card text-center login-required-card" style="padding: 2rem; box-shadow: var(--card-shadow);">
                                 <h3>🔒 Login Required</h3>
                                 <p>Please log in to access the DatNet Workout Tracker.</p>
                                 <a href="/login" class="btn btn-primary">Go to Login</a>
@@ -40,4 +40,51 @@
         </NotFound>
     </Router>
 </CascadingAuthenticationState>
+
+<style>
+    .login-required-card {
+        max-width: 600px;
+        width: 100%;
+        margin: 2rem;
+    }
+
+    .login-required-card h3 {
+        color: var(--text-primary);
+        font-weight: 700;
+        margin-bottom: var(--space-4);
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .login-required-card p {
+        color: var(--text-secondary);
+        font-size: var(--font-size-lg);
+        margin-bottom: var(--space-6);
+    }
+
+    /* Responsive adjustments for login required card */
+    @@media (min-width: 768px) {
+        .login-required-card {
+            max-width: 500px;
+            padding: 3rem !important;
+        }
+    }
+
+    @@media (min-width: 1024px) {
+        .login-required-card {
+            max-width: 600px;
+            padding: 4rem !important;
+        }
+    }
+
+    @@media (max-width: 576px) {
+        .login-required-card {
+            margin: 1rem;
+            padding: 1.5rem !important;
+            max-width: 100%;
+        }
+    }
+</style>
 
