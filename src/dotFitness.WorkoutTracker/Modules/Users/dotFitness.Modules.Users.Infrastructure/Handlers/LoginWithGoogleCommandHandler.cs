@@ -10,6 +10,7 @@ using dotFitness.Modules.Users.Application.Commands;
 using dotFitness.Modules.Users.Application.DTOs;
 using dotFitness.Modules.Users.Domain.Entities;
 using dotFitness.Modules.Users.Domain.Repositories;
+using dotFitness.Modules.Users.Infrastructure.Settings;
 using dotFitness.SharedKernel.Results;
 
 namespace dotFitness.Modules.Users.Infrastructure.Handlers;
@@ -138,18 +139,4 @@ public class LoginWithGoogleCommandHandler : IRequestHandler<LoginWithGoogleComm
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
-}
-
-// Configuration classes for dependency injection
-public class JwtSettings
-{
-    public string SecretKey { get; set; } = string.Empty;
-    public string Issuer { get; set; } = string.Empty;
-    public string Audience { get; set; } = string.Empty;
-    public int ExpirationHours { get; set; } = 24;
-}
-
-public class AdminSettings
-{
-    public List<string> AdminEmails { get; set; } = new();
 }
