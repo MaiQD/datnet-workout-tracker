@@ -15,19 +15,18 @@ public class GetUserByIdQueryHandlerTests
 {
     private readonly Mock<IUserRepository> _userRepositoryMock;
     private readonly Mock<UserMapper> _userMapperMock;
-    private readonly Mock<ILogger<GetUserByIdQueryHandler>> _loggerMock;
     private readonly GetUserByIdQueryHandler _handler;
 
     public GetUserByIdQueryHandlerTests()
     {
         _userRepositoryMock = new Mock<IUserRepository>();
         _userMapperMock = new Mock<UserMapper>();
-        _loggerMock = new Mock<ILogger<GetUserByIdQueryHandler>>();
+        var loggerMock = new Mock<ILogger<GetUserByIdQueryHandler>>();
 
         _handler = new GetUserByIdQueryHandler(
             _userRepositoryMock.Object,
             _userMapperMock.Object,
-            _loggerMock.Object
+            loggerMock.Object
         );
     }
 
@@ -72,7 +71,7 @@ public class GetUserByIdQueryHandlerTests
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value.Id.Should().Be("user123");
+        result.Value!.Id.Should().Be("user123");
         result.Value.Email.Should().Be("test@example.com");
         result.Value.DisplayName.Should().Be("Test User");
 

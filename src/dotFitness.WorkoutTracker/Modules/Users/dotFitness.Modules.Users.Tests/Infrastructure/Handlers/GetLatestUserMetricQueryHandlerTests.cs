@@ -74,7 +74,7 @@ public class GetLatestUserMetricQueryHandlerTests
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value.UserId.Should().Be("user123");
+        result.Value!.UserId.Should().Be("user123");
         result.Value.Weight.Should().Be(72.0);
         result.Value.Height.Should().Be(175.0);
         result.Value.Bmi.Should().Be(23.51);

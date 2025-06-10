@@ -15,19 +15,18 @@ public class GetUserMetricsQueryHandlerTests
 {
     private readonly Mock<IUserMetricsRepository> _userMetricsRepositoryMock;
     private readonly Mock<UserMetricMapper> _userMetricMapperMock;
-    private readonly Mock<ILogger<GetUserMetricsQueryHandler>> _loggerMock;
     private readonly GetUserMetricsQueryHandler _handler;
 
     public GetUserMetricsQueryHandlerTests()
     {
         _userMetricsRepositoryMock = new Mock<IUserMetricsRepository>();
         _userMetricMapperMock = new Mock<UserMetricMapper>();
-        _loggerMock = new Mock<ILogger<GetUserMetricsQueryHandler>>();
+        var loggerMock = new Mock<ILogger<GetUserMetricsQueryHandler>>();
 
         _handler = new GetUserMetricsQueryHandler(
             _userMetricsRepositoryMock.Object,
             _userMetricMapperMock.Object,
-            _loggerMock.Object
+            loggerMock.Object
         );
     }
 
@@ -164,7 +163,7 @@ public class GetUserMetricsQueryHandlerTests
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().HaveCount(1);
-        result.Value.First().Date.Should().Be(new DateTime(2024, 1, 15));
+        result.Value!.First().Date.Should().Be(new DateTime(2024, 1, 15));
 
         _userMetricsRepositoryMock.Verify(x => x.GetByUserIdAndDateRangeAsync("user123", fromDate, toDate, It.IsAny<CancellationToken>()), Times.Once);
         _userMetricsRepositoryMock.Verify(x => x.GetByUserIdAsync(It.IsAny<string>(), 0, 50, It.IsAny<CancellationToken>()), Times.Never);
@@ -257,8 +256,8 @@ public class GetUserMetricsQueryHandlerTests
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().HaveCount(1);
-        result.Value.First().Date.Should().BeBefore(toDate.AddDays(1));
-        result.Value.First().Date.Should().BeOnOrAfter(fromDate);
+        result.Value!.First().Date.Should().BeBefore(toDate.AddDays(1));
+        result.Value!.First().Date.Should().BeOnOrAfter(fromDate);
 
         _userMetricsRepositoryMock.Verify(
             x => x.GetByUserIdAndDateRangeAsync("user123", fromDate, toDate, It.IsAny<CancellationToken>()),

@@ -46,7 +46,7 @@ public class UpdateUserProfileCommandValidatorTests
             displayName: "Valid Name",
             gender: null,
             dateOfBirth: null,
-            unitPreference: null
+            unitPreference: string.Empty
         );
 
         // Act
@@ -68,7 +68,7 @@ public class UpdateUserProfileCommandValidatorTests
             displayName: invalidDisplayName,
             gender: null,
             dateOfBirth: null,
-            unitPreference: null
+            unitPreference: string.Empty
         );
 
         // Act
@@ -85,10 +85,10 @@ public class UpdateUserProfileCommandValidatorTests
         // Arrange
         var command = new UpdateUserProfileCommand(
             userId: "user123",
-            displayName: null,
+            displayName: string.Empty,
             gender: nameof(Gender.Male),
             dateOfBirth: null,
-            unitPreference: null
+            unitPreference: string.Empty
         );
 
         // Act
@@ -108,7 +108,7 @@ public class UpdateUserProfileCommandValidatorTests
             displayName: longName,
             gender: null,
             dateOfBirth: null,
-            unitPreference: null
+            unitPreference: string.Empty
         );
 
         // Act
@@ -129,7 +129,7 @@ public class UpdateUserProfileCommandValidatorTests
             displayName: "Valid Name",
             gender: null,
             dateOfBirth: futureDate,
-            unitPreference: null
+            unitPreference: string.Empty
         );
 
         // Act
@@ -150,7 +150,7 @@ public class UpdateUserProfileCommandValidatorTests
             displayName: "Valid Name",
             gender: null,
             dateOfBirth: veryOldDate,
-            unitPreference: null
+            unitPreference: string.Empty
         );
 
         // Act
@@ -195,10 +195,10 @@ public class UpdateUserProfileCommandValidatorTests
         // Arrange
         var command = new UpdateUserProfileCommand(
             userId: "user123",
-            displayName: null,
+            displayName: string.Empty,
             gender: null,
             dateOfBirth: null,
-            unitPreference: null
+            unitPreference: string.Empty
         );
 
         // Act
@@ -215,10 +215,10 @@ public class UpdateUserProfileCommandValidatorTests
         var validDate = new DateTime(1990, 5, 15);
         var command = new UpdateUserProfileCommand(
             userId: "user123",
-            displayName: null,
+            displayName: string.Empty,
             gender: null,
             dateOfBirth: validDate,
-            unitPreference: null
+            unitPreference: string.Empty
         );
 
         // Act
@@ -238,10 +238,10 @@ public class UpdateUserProfileCommandValidatorTests
         // Arrange
         var command = new UpdateUserProfileCommand(
             userId: "user123",
-            displayName: null,
+            displayName: string.Empty,
             gender: gender.ToString(),
             dateOfBirth: null,
-            unitPreference: null
+            unitPreference: string.Empty
         );
 
         // Act
@@ -259,7 +259,7 @@ public class UpdateUserProfileCommandValidatorTests
         // Arrange
         var command = new UpdateUserProfileCommand(
             userId: "user123",
-            displayName: null,
+            displayName: string.Empty,
             gender: null,
             dateOfBirth: null,
             unitPreference: unitPreference.ToString()

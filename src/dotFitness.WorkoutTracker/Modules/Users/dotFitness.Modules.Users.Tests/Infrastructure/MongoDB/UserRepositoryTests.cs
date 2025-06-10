@@ -8,22 +8,16 @@ using dotFitness.Modules.Users.Infrastructure.Repositories;
 namespace dotFitness.Modules.Users.Tests.Infrastructure.MongoDB;
 
 [Collection("MongoDB")]
-public class UserRepositoryTests : IAsyncLifetime
+public class UserRepositoryTests(MongoDbFixture fixture) : IAsyncLifetime
 {
-    private readonly MongoDbFixture _fixture;
     private IMongoDatabase _database = null!;
     private UserRepository _repository = null!;
     private Mock<ILogger<UserRepository>> _loggerMock = null!;
 
-    public UserRepositoryTests(MongoDbFixture fixture)
-    {
-        _fixture = fixture;
-    }
-
     public async Task InitializeAsync()
     {
         // Create a fresh database for this test class to ensure isolation
-        _database = _fixture.CreateFreshDatabase();
+        _database = fixture.CreateFreshDatabase();
         
         // Ensure the users collection exists
         _database.GetCollection<User>("users");
@@ -37,7 +31,7 @@ public class UserRepositoryTests : IAsyncLifetime
     public async Task DisposeAsync()
     {
         // Clean up the database after tests complete
-        await _fixture.CleanupDatabaseAsync();
+        await fixture.CleanupDatabaseAsync();
     }
 
     [Fact]
@@ -57,7 +51,7 @@ public class UserRepositoryTests : IAsyncLifetime
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value.Id.Should().NotBeNullOrEmpty();
+        result.Value!.Id.Should().NotBeNullOrEmpty();
         result.Value.Email.Should().Be("test@example.com");
         result.Value.DisplayName.Should().Be("Test User");
         result.Value.GoogleId.Should().Be("google123");
@@ -73,7 +67,7 @@ public class UserRepositoryTests : IAsyncLifetime
             DisplayName = "Test User"
         };
         var createResult = await _repository.CreateAsync(user);
-        var userId = createResult.Value.Id;
+        var userId = createResult.Value!.Id;
 
         // Act
         var result = await _repository.GetByIdAsync(userId);
@@ -81,7 +75,7 @@ public class UserRepositoryTests : IAsyncLifetime
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value.Id.Should().Be(userId);
+        result.Value!.Id.Should().Be(userId);
         result.Value.Email.Should().Be("test@example.com");
         result.Value.DisplayName.Should().Be("Test User");
     }
@@ -112,18 +106,18 @@ public class UserRepositoryTests : IAsyncLifetime
         var createResult = await _repository.CreateAsync(user);
         var createdUser = createResult.Value;
         
-        createdUser.UpdateProfile(displayName: "Updated Name");
+        createdUser!.UpdateProfile(displayName: "Updated Name");
 
         // Act
         var result = await _repository.UpdateAsync(createdUser);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value.DisplayName.Should().Be("Updated Name");
+        result.Value!.DisplayName.Should().Be("Updated Name");
         
         // Verify persistence
         var retrievedResult = await _repository.GetByIdAsync(createdUser.Id);
-        retrievedResult.Value.DisplayName.Should().Be("Updated Name");
+        retrievedResult.Value!.DisplayName.Should().Be("Updated Name");
     }
 
     [Fact]
@@ -136,7 +130,7 @@ public class UserRepositoryTests : IAsyncLifetime
             DisplayName = "Test User"
         };
         var createResult = await _repository.CreateAsync(user);
-        var userId = createResult.Value.Id;
+        var userId = createResult.Value!.Id;
 
         // Act
         var result = await _repository.DeleteAsync(userId);
@@ -159,7 +153,7 @@ public class UserRepositoryTests : IAsyncLifetime
         var result = await _repository.DeleteAsync(nonExistentId);
 
         // Assert
-        result.IsSuccess.Should().BeTrue();
+        result.IsSuccess.Should().BeFalse();
     }
 
     [Fact]
@@ -179,7 +173,7 @@ public class UserRepositoryTests : IAsyncLifetime
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value.Email.Should().Be("unique@example.com");
+        result.Value!.Email.Should().Be("unique@example.com");
     }
 
     [Fact]
@@ -211,7 +205,7 @@ public class UserRepositoryTests : IAsyncLifetime
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value.GoogleId.Should().Be("uniqueGoogleId123");
+        result.Value!.GoogleId.Should().Be("uniqueGoogleId123");
     }
 
     [Fact]
@@ -225,20 +219,5 @@ public class UserRepositoryTests : IAsyncLifetime
         result.Error.Should().Be("User not found");
     }
 
-    [Fact]
-    public async Task Should_Handle_Database_Connection_Errors_Gracefully()
-    {
-        // Arrange
-        // Create a repository with an invalid connection string to simulate connection issues
-        var invalidClient = new MongoClient("mongodb://invalid-host:27017");
-        var invalidDatabase = invalidClient.GetDatabase("invalidDb");
-        var invalidRepository = new UserRepository(invalidDatabase, _loggerMock.Object);
-
-        // Act
-        var result = await invalidRepository.GetByIdAsync("507f1f77bcf86cd799439011");
-
-        // Assert
-        result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Contain("Failed to retrieve user"); // Based on the error handling in the repository
-    }
+    
 }

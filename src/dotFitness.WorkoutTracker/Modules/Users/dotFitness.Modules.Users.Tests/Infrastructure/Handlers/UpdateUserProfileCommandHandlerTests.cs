@@ -15,19 +15,18 @@ public class UpdateUserProfileCommandHandlerTests
 {
     private readonly Mock<IUserRepository> _userRepositoryMock;
     private readonly Mock<UserMapper> _userMapperMock;
-    private readonly Mock<ILogger<UpdateUserProfileCommandHandler>> _loggerMock;
     private readonly UpdateUserProfileCommandHandler _handler;
 
     public UpdateUserProfileCommandHandlerTests()
     {
         _userRepositoryMock = new Mock<IUserRepository>();
         _userMapperMock = new Mock<UserMapper>();
-        _loggerMock = new Mock<ILogger<UpdateUserProfileCommandHandler>>();
+        var loggerMock = new Mock<ILogger<UpdateUserProfileCommandHandler>>();
 
         _handler = new UpdateUserProfileCommandHandler(
             _userRepositoryMock.Object,
             _userMapperMock.Object,
-            _loggerMock.Object
+            loggerMock.Object
         );
     }
 
@@ -93,7 +92,7 @@ public class UpdateUserProfileCommandHandlerTests
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value.DisplayName.Should().Be("Updated Name");
+        result.Value!.DisplayName.Should().Be("Updated Name");
         result.Value.Gender.Should().Be(nameof(Gender.Male));
         result.Value.UnitPreference.Should().Be(nameof(UnitPreference.Imperial));
 
@@ -110,7 +109,7 @@ public class UpdateUserProfileCommandHandlerTests
             displayName: "New Name",
             gender: null,
             dateOfBirth: null,
-            unitPreference: null
+            unitPreference: string.Empty
         );
 
         _userRepositoryMock
@@ -137,7 +136,7 @@ public class UpdateUserProfileCommandHandlerTests
             displayName: "Updated Name",
             gender: null,
             dateOfBirth: null,
-            unitPreference: null
+            unitPreference: string.Empty
         );
 
         var existingUser = new User
@@ -228,7 +227,7 @@ public class UpdateUserProfileCommandHandlerTests
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value.DisplayName.Should().Be("New Name");
+        result.Value!.DisplayName.Should().Be("New Name");
         result.Value.Gender.Should().Be(nameof(Gender.Male)); // Should remain unchanged
         result.Value.DateOfBirth.Should().Be(new DateTime(1985, 5, 15)); // Should remain unchanged
         result.Value.UnitPreference.Should().Be(nameof(UnitPreference.Imperial)); // Should be updated
@@ -246,7 +245,7 @@ public class UpdateUserProfileCommandHandlerTests
             displayName: invalidDisplayName,
             gender: null,
             dateOfBirth: null,
-            unitPreference: null
+            unitPreference: string.Empty
         );
 
         var existingUser = new User
@@ -264,7 +263,7 @@ public class UpdateUserProfileCommandHandlerTests
             Gender = null,
             DateOfBirth = null,
             UnitPreference = nameof(UnitPreference.Metric),
-            Roles = new List<string> { "User" },
+            Roles = ["User"],
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -286,6 +285,6 @@ public class UpdateUserProfileCommandHandlerTests
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value.DisplayName.Should().Be("Original Name");
+        result.Value!.DisplayName.Should().Be("Original Name");
     }
 }

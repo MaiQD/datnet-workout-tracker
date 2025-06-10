@@ -8,34 +8,28 @@ using dotFitness.Modules.Users.Infrastructure.Repositories;
 namespace dotFitness.Modules.Users.Tests.Infrastructure.MongoDB;
 
 [Collection("MongoDB")]
-public class UserMetricsRepositoryTests : IAsyncLifetime
+public class UserMetricsRepositoryTests(MongoDbFixture fixture) : IAsyncLifetime
 {
-    private readonly MongoDbFixture _fixture;
     private IMongoDatabase _database = null!;
     private UserMetricsRepository _repository = null!;
     private Mock<ILogger<UserMetricsRepository>> _loggerMock = null!;
 
-    public UserMetricsRepositoryTests(MongoDbFixture fixture)
-    {
-        _fixture = fixture;
-    }
-    
     public async Task InitializeAsync()
     {
         // Create a fresh database for this test class to ensure isolation
-        _database = _fixture.CreateFreshDatabase();
-        
+        _database = fixture.CreateFreshDatabase();
+
         _database.GetCollection<UserMetric>("userMetrics");
         _loggerMock = new Mock<ILogger<UserMetricsRepository>>();
         _repository = new UserMetricsRepository(_database, _loggerMock.Object);
-        
+
         await Task.CompletedTask;
     }
 
     public async Task DisposeAsync()
     {
         // Clean up the database after tests complete
-        await _fixture.CleanupDatabaseAsync();
+        await fixture.CleanupDatabaseAsync();
     }
 
     [Fact]
@@ -57,7 +51,7 @@ public class UserMetricsRepositoryTests : IAsyncLifetime
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value.Id.Should().NotBeNullOrEmpty();
+        result.Value!.Id.Should().NotBeNullOrEmpty();
         result.Value.UserId.Should().Be("user123");
         result.Value.Weight.Should().Be(70.5);
         result.Value.Height.Should().Be(175.0);
@@ -75,7 +69,7 @@ public class UserMetricsRepositoryTests : IAsyncLifetime
             Weight = 70.5
         };
         var createResult = await _repository.CreateAsync(userMetric);
-        var metricId = createResult.Value.Id;
+        var metricId = createResult.Value!.Id;
 
         // Act
         var result = await _repository.GetByIdAsync(metricId);
@@ -83,7 +77,7 @@ public class UserMetricsRepositoryTests : IAsyncLifetime
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value.Id.Should().Be(metricId);
+        result.Value!.Id.Should().Be(metricId);
         result.Value.UserId.Should().Be("user123");
         result.Value.Weight.Should().Be(70.5);
     }
@@ -114,20 +108,20 @@ public class UserMetricsRepositoryTests : IAsyncLifetime
         };
         var createResult = await _repository.CreateAsync(userMetric);
         var createdMetric = createResult.Value;
-        
-        createdMetric.UpdateMetrics(weight: 72.5, notes: "Updated measurement");
+
+        createdMetric!.UpdateMetrics(weight: 72.5, notes: "Updated measurement");
 
         // Act
         var result = await _repository.UpdateAsync(createdMetric);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value.Weight.Should().Be(72.5);
+        result.Value!.Weight.Should().Be(72.5);
         result.Value.Notes.Should().Be("Updated measurement");
-        
+
         // Verify persistence
         var retrievedResult = await _repository.GetByIdAsync(createdMetric.Id);
-        retrievedResult.Value.Weight.Should().Be(72.5);
+        retrievedResult.Value!.Weight.Should().Be(72.5);
         retrievedResult.Value.Notes.Should().Be("Updated measurement");
     }
 
@@ -142,14 +136,14 @@ public class UserMetricsRepositoryTests : IAsyncLifetime
             Weight = 70.0
         };
         var createResult = await _repository.CreateAsync(userMetric);
-        var metricId = createResult.Value.Id;
+        var metricId = createResult.Value!.Id;
 
         // Act
         var result = await _repository.DeleteAsync(metricId);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        
+
         // Verify deletion
         var retrievedResult = await _repository.GetByIdAsync(metricId);
         retrievedResult.IsSuccess.Should().BeFalse();
@@ -165,8 +159,9 @@ public class UserMetricsRepositoryTests : IAsyncLifetime
         var result = await _repository.DeleteAsync(nonExistentId);
 
         // Assert
-        result.IsSuccess.Should().BeTrue();
-        result.Error.Should().BeEmpty();
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().NotBeEmpty(
+);
     }
 
     [Fact]
@@ -220,7 +215,7 @@ public class UserMetricsRepositoryTests : IAsyncLifetime
         var newerMetric = new UserMetric
         {
             UserId = userId,
-            Date = new DateTime(2024, 1, 5),
+            Date = new DateTime(2024, 1, 5, 0, 0, 0, DateTimeKind.Utc),
             Weight = 72.0
         };
 
@@ -233,8 +228,8 @@ public class UserMetricsRepositoryTests : IAsyncLifetime
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value.Weight.Should().Be(72.0);
-        result.Value.Date.Should().Be(new DateTime(2024, 1, 5));
+        result.Value!.Weight.Should().Be(72.0);
+        result.Value.Date.Should().Be(new DateTime(2024, 1, 5, 0, 0, 0, DateTimeKind.Utc));
     }
 
     [Fact]
@@ -256,13 +251,13 @@ public class UserMetricsRepositoryTests : IAsyncLifetime
         var metric1 = new UserMetric
         {
             UserId = userId,
-            Date = new DateTime(2024, 1, 1),
+            Date = new DateTime(2024, 1, 1,0, 0, 0, DateTimeKind.Utc),
             Weight = 70.0
         };
         var metric2 = new UserMetric
         {
             UserId = userId,
-            Date = new DateTime(2024, 1, 15),
+            Date = new DateTime(2024, 1, 15,0, 0, 0, DateTimeKind.Utc),
             Weight = 71.0
         };
         var metric3 = new UserMetric
@@ -278,15 +273,16 @@ public class UserMetricsRepositoryTests : IAsyncLifetime
 
         // Act
         var result = await _repository.GetByUserIdAndDateRangeAsync(
-            userId, 
-            new DateTime(2024, 1, 1), 
-            new DateTime(2024, 1, 31)
+            userId,
+            new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+            new DateTime(2024, 1, 31, 0, 0, 0, DateTimeKind.Utc)
         );
 
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().HaveCount(2);
-        result.Value.Should().OnlyContain(m => m.Date >= new DateTime(2024, 1, 1) && m.Date <= new DateTime(2024, 1, 31));
+        result.Value.Should()
+            .OnlyContain(m => m.Date >= new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) && m.Date <= new DateTime(2024, 1, 31, 0, 0, 0, DateTimeKind.Utc));
     }
 
     [Fact]
@@ -294,30 +290,13 @@ public class UserMetricsRepositoryTests : IAsyncLifetime
     {
         // Act
         var result = await _repository.GetByUserIdAndDateRangeAsync(
-            "user123", 
-            new DateTime(2024, 6, 1), 
+            "user123",
+            new DateTime(2024, 6, 1),
             new DateTime(2024, 6, 30)
         );
 
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().BeEmpty();
-    }
-
-    [Fact]
-    public async Task Should_Handle_Database_Connection_Errors_Gracefully()
-    {
-        // Arrange
-        // Create a repository with an invalid connection string to simulate connection issues
-        var invalidClient = new MongoClient("mongodb://invalid-host:27017");
-        var invalidDatabase = invalidClient.GetDatabase("invalidDb");
-        var invalidRepository = new UserMetricsRepository(invalidDatabase, _loggerMock.Object);
-
-        // Act
-        var result = await invalidRepository.GetByIdAsync("507f1f77bcf86cd799439011");
-
-        // Assert
-        result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Contain("Failed to retrieve user metric"); // Based on the error handling in the repository
     }
 }

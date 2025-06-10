@@ -85,7 +85,7 @@ public class AddUserMetricCommandHandlerTests
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value.UserId.Should().Be("user123");
+        result.Value!.UserId.Should().Be("user123");
         result.Value.Weight.Should().Be(70.5);
         result.Value.Height.Should().Be(175.0);
         result.Value.Notes.Should().Be("Morning measurement");
@@ -144,7 +144,7 @@ public class AddUserMetricCommandHandlerTests
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value.Weight.Should().Be(70.5);
+        result.Value!.Weight.Should().Be(70.5);
         result.Value.Height.Should().BeNull();
         result.Value.Bmi.Should().BeNull();
     }
@@ -199,7 +199,7 @@ public class AddUserMetricCommandHandlerTests
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value.Weight.Should().BeNull();
+        result.Value!.Weight.Should().BeNull();
         result.Value.Height.Should().Be(175.0);
         result.Value.Bmi.Should().BeNull();
     }
