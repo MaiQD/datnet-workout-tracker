@@ -7,6 +7,7 @@ using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Mvc;
 using dotFitness.SharedKernel.Outbox;
 using dotFitness.Modules.Users.Domain.Entities;
+using dotFitness.Modules.Users.Infrastructure.Configuration;
 
 // Configure Serilog
 Log.Logger = new LoggerConfiguration()
@@ -129,6 +130,9 @@ builder.Services.AddFluentValidationAutoValidation()
 
 // Add MediatR (will be configured to scan assemblies when modules are added)
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
+
+// Register Users Module Infrastructure
+builder.Services.AddUsersInfrastructure();
 
 var app = builder.Build();
 

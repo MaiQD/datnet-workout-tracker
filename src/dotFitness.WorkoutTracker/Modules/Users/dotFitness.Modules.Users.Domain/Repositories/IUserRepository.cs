@@ -15,4 +15,5 @@ public interface IUserRepository
     Task<Result<bool>> EmailExistsAsync(string email, CancellationToken cancellationToken = default);
     Task<Result<IEnumerable<User>>> GetAllAsync(int skip = 0, int take = 50, CancellationToken cancellationToken = default);
     Task<Result<long>> GetCountAsync(CancellationToken cancellationToken = default);
+    Task<Result<IEnumerable<User>>> GetByRoleAsync(string role, CancellationToken cancellationToken = default);
 }
