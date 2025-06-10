@@ -2,44 +2,40 @@ using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using Moq;
-using Testcontainers.MongoDb;
 using dotFitness.Modules.Users.Domain.Entities;
 using dotFitness.Modules.Users.Infrastructure.Repositories;
 
 namespace dotFitness.Modules.Users.Tests.Infrastructure.MongoDB;
 
+[Collection("MongoDB")]
 public class UserMetricsRepositoryTests : IAsyncLifetime
 {
-    private readonly MongoDbContainer _mongoContainer;
+    private readonly MongoDbFixture _fixture;
     private IMongoDatabase _database = null!;
     private UserMetricsRepository _repository = null!;
     private Mock<ILogger<UserMetricsRepository>> _loggerMock = null!;
 
-    public UserMetricsRepositoryTests()
+    public UserMetricsRepositoryTests(MongoDbFixture fixture)
     {
-        _mongoContainer = new MongoDbBuilder()
-            .WithImage("mongo:8.0")
-            .WithPortBinding(0, true)
-            .Build();
+        _fixture = fixture;
     }
     
     public async Task InitializeAsync()
     {
-        await _mongoContainer.StartAsync();
-        
-        var connectionString = _mongoContainer.GetConnectionString();
-        var client = new MongoClient(connectionString);
-        _database = client.GetDatabase("testDb");
+        // Create a fresh database for this test class to ensure isolation
+        _database = _fixture.CreateFreshDatabase();
         
         _database.GetCollection<UserMetric>("userMetrics");
         _loggerMock = new Mock<ILogger<UserMetricsRepository>>();
         _repository = new UserMetricsRepository(_database, _loggerMock.Object);
+        
+        await Task.CompletedTask;
     }
 
     public async Task DisposeAsync()
     {
-        await _mongoContainer.StopAsync();
-        await _mongoContainer.DisposeAsync();
+        // Clean up the database after tests complete
+        await _fixture.CleanupDatabaseAsync();
     }
 
     [Fact]
@@ -312,10 +308,10 @@ public class UserMetricsRepositoryTests : IAsyncLifetime
     public async Task Should_Handle_Database_Connection_Errors_Gracefully()
     {
         // Arrange
-        var invalidRepository = new UserMetricsRepository(_database, _loggerMock.Object);
-        
-        // Force a connection issue by stopping the container
-        await _mongoContainer.StopAsync();
+        // Create a repository with an invalid connection string to simulate connection issues
+        var invalidClient = new MongoClient("mongodb://invalid-host:27017");
+        var invalidDatabase = invalidClient.GetDatabase("invalidDb");
+        var invalidRepository = new UserMetricsRepository(invalidDatabase, _loggerMock.Object);
 
         // Act
         var result = await invalidRepository.GetByIdAsync("507f1f77bcf86cd799439011");
