@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\dotFitness.Modules.Users.Domain\dotFitness.Modules.Users.Domain.csproj" />
+    <ProjectReference Include="..\dotFitness.Modules.Users.Application\dotFitness.Modules.Users.Application.csproj" />
+    <ProjectReference Include="..\..\..\dotFitness.SharedKernel\dotFitness.SharedKernel.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>
