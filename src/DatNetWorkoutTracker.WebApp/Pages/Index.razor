@@ -346,9 +346,27 @@
 <style>
     /* ===== DASHBOARD LAYOUT ===== */
     .dashboard-container {
+        width: 100%;
         max-width: 1400px;
         margin: 0 auto;
-        padding: var(--space-4) 0;
+        padding: var(--space-4);
+        /* Ensure proper centering within the main content area */
+        position: relative;
+        box-sizing: border-box;
+        overflow-x: hidden;
+    }
+
+    /* Prevent Bootstrap grid overflow */
+    .dashboard-container .row {
+        margin-left: 0;
+        margin-right: 0;
+        overflow-x: hidden;
+    }
+
+    .dashboard-container .row > * {
+        padding-left: calc(var(--bs-gutter-x) * 0.5);
+        padding-right: calc(var(--bs-gutter-x) * 0.5);
+        overflow-x: hidden;
     }
 
     /* ===== HERO SECTION ===== */
@@ -359,6 +377,11 @@
         margin-bottom: var(--space-8);
         color: var(--text-primary);
         display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 200px;
+        position: relative;
+        overflow: hidden;
     }
 
     /* Dark theme: use gradient for hero section */
@@ -366,11 +389,6 @@
         background: var(--gradient-hero);
         color: white;
     }
-        align-items: center;
-        justify-content: space-between;
-        min-height: 200px;
-        position: relative;
-        overflow: hidden;
     }
 
     .hero-section::before {
@@ -396,10 +414,30 @@
         font-size: 3rem;
         font-weight: 800;
         margin-bottom: var(--space-3);
-        background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
+        /* Theme-aware text color instead of gradient */
+        color: var(--text-primary) !important;
+        /* Fallback with better contrast */
+        background: var(--gradient-primary);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
+    }
+    
+    /* Light theme: use dark text instead of transparent gradient */
+    [data-theme="light"] .hero-title {
+        background: none !important;
+        -webkit-background-clip: unset !important;
+        -webkit-text-fill-color: var(--text-primary) !important;
+        color: var(--text-primary) !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    /* Dark theme: keep gradient effect */
+    [data-theme="dark"] .hero-title {
+        background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%) !important;
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+        background-clip: text !important;
     }
 
     .hero-subtitle {
@@ -407,6 +445,7 @@
         opacity: 0.9;
         margin-bottom: var(--space-6);
         font-weight: 500;
+        color: var(--text-secondary) !important;
     }
 
     .hero-actions {
@@ -441,6 +480,13 @@
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.2);
     }
+    
+    /* Light theme: use solid background and dark text for quick stats */
+    [data-theme="light"] .quick-stat {
+        background: var(--bg-primary) !important;
+        border: 1px solid var(--border) !important;
+        box-shadow: var(--card-shadow) !important;
+    }
 
     .stat-number {
         font-size: 2rem;
@@ -448,11 +494,21 @@
         color: white;
         margin-bottom: var(--space-1);
     }
+    
+    /* Light theme: use dark text for stat numbers */
+    [data-theme="light"] .stat-number {
+        color: var(--text-primary) !important;
+    }
 
     .stat-text {
         font-size: var(--font-size-sm);
         color: rgba(255, 255, 255, 0.8);
         font-weight: 500;
+    }
+    
+    /* Light theme: use dark text for stat text */
+    [data-theme="light"] .stat-text {
+        color: var(--text-secondary) !important;
     }
 
     /* ===== SECTION STYLES ===== */
@@ -553,6 +609,9 @@
         border: 1px solid var(--border);
         height: 100%;
         transition: all var(--transition-normal);
+        overflow: hidden;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
     }
 
     .content-card:hover {
@@ -814,11 +873,27 @@
 
     @@media (max-width: 768px) {
         .dashboard-container {
-            padding: var(--space-3) var(--space-2);
+            padding: var(--space-2);
+            width: 100%;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .dashboard-container .row {
+            margin-left: -var(--space-1);
+            margin-right: -var(--space-1);
+        }
+
+        .dashboard-container .row > * {
+            padding-left: var(--space-1);
+            padding-right: var(--space-1);
         }
 
         .hero-section {
             padding: var(--space-8) var(--space-4);
+            margin-left: -var(--space-2);
+            margin-right: -var(--space-2);
+            width: calc(100% + var(--space-4));
         }
 
         .hero-title {
@@ -859,145 +934,6 @@
         .stat-card-icon {
             margin-bottom: var(--space-2);
         }
-    }
-</style>
-
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="dashboard-content">
-                <div class="row">
-            <!-- Active Workout -->
-            <div class="col-md-6 mb-4">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>Current Workout</h5>
-                    </div>
-                    <div class="card-body">
-                        @if (activeWorkout != null)
-                        {
-                            <h6>@activeWorkout.Name</h6>
-                            <p>Started: @activeWorkout.StartTime.ToString("HH:mm")</p>
-                            <button class="btn btn-success" @onclick="() => ContinueWorkout(activeWorkout.Id)">
-                                <i class="fas fa-play"></i>
-                                Continue Workout
-                            </button>
-                        }
-                        else
-                        {
-                            <p>No active workout</p>
-                            <button class="btn btn-primary" @onclick="StartNewWorkout">
-                                <i class="fas fa-plus"></i>
-                                Start New Workout
-                            </button>
-                        }
-                    </div>
-                </div>
-            </div>
-
-            <!-- Recent Workouts -->
-            <div class="col-md-6 mb-4">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>Recent Workouts</h5>
-                    </div>
-                    <div class="card-body">
-                        @if (recentWorkouts.Any())
-                        {
-                            @foreach (var workout in recentWorkouts.Take(3))
-                            {
-                                <div class="recent-workout-item">
-                                    <div>
-                                        <strong>@workout.Name</strong>
-                                        <small class="text-muted d-block">@workout.StartTime.ToString("MMM dd, yyyy")</small>
-                                    </div>
-                                    <span class="badge bg-success">@workout.Status</span>
-                                </div>
-                            }
-                        }
-                        else
-                        {
-                            <p>No recent workouts</p>
-                        }
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Workout Frequency Chart -->
-        <div class="row">
-            <div class="col-12 mb-4">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>Workout Frequency (Last 30 Days)</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="chart-placeholder">
-                            <i class="fas fa-chart-line chart-icon"></i>
-                            <h5>Daily Workout Trends</h5>
-                            <p>Track your workout consistency over time</p>
-                            @if (workoutFrequencyData.Any())
-                            {
-                                <div class="chart-data">
-                                    <p>Most active day: @workoutFrequencyData.OrderByDescending(x => x.WorkoutCount).First().Date.ToString("MMM dd")</p>
-                                    <p>Total workouts: @statistics.TotalWorkouts</p>
-                                </div>
-                            }
-                            else
-                            {
-                                <p class="text-muted">Start your first workout to see trends</p>
-                            }
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    }
-</div>
-            </div>
-        </div>
-    </div>
-
-<style>
-    .dashboard {
-        padding: 2rem 0;
-    }
-
-    .welcome-section {
-        margin-bottom: 2rem;
-        text-align: center;
-    }
-
-    .stat-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 1.5rem;
-        border-radius: 12px;
-        text-align: center;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    }
-
-    .stat-value {
-        font-size: 2.5rem;
-        font-weight: bold;
-        margin-bottom: 0.5rem;
-    }
-
-    .stat-label {
-        font-size: 0.9rem;
-        opacity: 0.9;
-    }
-
-    .recent-workout-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.75rem 0;
-        border-bottom: 1px solid #eee;
-    }
-
-    .recent-workout-item:last-child {
-        border-bottom: none;
     }
 </style>
 

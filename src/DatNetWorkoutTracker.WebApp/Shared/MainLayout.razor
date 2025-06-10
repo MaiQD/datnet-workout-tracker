@@ -1,7 +1,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @inherits LayoutComponentBase
 
-<div class="app-layout">
+<div class="app-layout overflow-debug">
     <!-- Mobile menu overlay -->
     <div class="mobile-overlay @(isMobileMenuOpen ? "show" : "")" @onclick="CloseMobileMenu"></div>
     
@@ -100,6 +100,9 @@
         display: flex;
         min-height: 100vh;
         background: var(--bg-secondary);
+        overflow-x: hidden;
+        position: relative;
+        box-sizing: border-box;
     }
 
     .sidebar {
@@ -136,6 +139,9 @@
         flex-direction: column;
         min-height: 100vh;
         transition: margin-left var(--transition-normal);
+        box-sizing: border-box;
+        position: relative;
+        overflow-x: hidden;
     }
 
     /* ===== TOP NAVBAR ===== */
@@ -155,6 +161,8 @@
         justify-content: space-between;
         padding: var(--space-4) var(--space-6);
         max-width: 100%;
+        box-sizing: border-box;
+        overflow-x: hidden;
     }
 
     .mobile-menu-toggle {
@@ -346,12 +354,117 @@
         flex: 1;
         padding: var(--space-6);
         overflow-y: auto;
+        overflow-x: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: calc(100vh - 70px); /* Account for navbar height */
+        box-sizing: border-box;
+        width: 100%;
+        max-width: 100%;
+        position: relative;
     }
 
     .content-container {
+        width: 100%;
         max-width: 1400px;
         margin: 0 auto;
+        padding: 0;
         animation: fadeIn 0.6s ease-out;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        min-height: 100%;
+        box-sizing: border-box;
+        position: relative;
+        /* Ensure content doesn't overflow horizontally */
+        overflow-x: hidden;
+    }
+
+    /* Visual debugging helper - remove in production */
+    .content-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 1px;
+        height: 20px;
+        background: transparent;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        z-index: 9999;
+    }
+
+    /* Show center line on hover for debugging - remove in production */
+    .main-content:hover .content-container::before {
+        opacity: 0.3;
+        background: var(--color-red);
+    }
+
+    /* Allow specific content sections to override centering if needed */
+    .content-container > .dashboard-container,
+    .content-container > .routines-page,
+    .content-container > .analytics-page,
+    .content-container > .workouts-page,
+    .content-container > .exercises-page,
+    .content-container > .calendar-page,
+    .content-container > .container-fluid,
+    .content-container > .full-width-content {
+        width: 100%;
+        max-width: 100%;
+        align-self: stretch;
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        overflow-x: hidden;
+    }
+
+    /* Ensure dashboard content is properly centered and spaced */
+    .dashboard-container,
+    .routines-page,
+    .analytics-page,
+    .workouts-page,
+    .exercises-page,
+    .calendar-page {
+        width: 100%;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: var(--space-4);
+        box-sizing: border-box;
+        position: relative;
+        overflow-x: hidden;
+    }
+
+    /* Additional centering support for large screens */
+    @@media (min-width: 1600px) {
+        .content-container {
+            max-width: 1200px;
+        }
+        
+        .dashboard-container {
+            max-width: 1200px;
+        }
+    }
+
+    /* Utility classes for content centering control */
+    .content-center {
+        text-align: center;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .content-left {
+        text-align: left;
+        align-items: flex-start;
+        justify-content: flex-start;
+    }
+
+    .content-stretch {
+        width: 100%;
+        max-width: 100%;
+        align-self: stretch;
     }
 
     /* ===== MOBILE STYLES ===== */
@@ -366,6 +479,9 @@
 
         .main-content {
             margin-left: 0;
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
         }
 
         .mobile-menu-toggle {
@@ -396,6 +512,38 @@
 
         .page-content {
             padding: var(--space-4);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .content-container {
+            width: 100%;
+            max-width: 100%;
+            padding: 0;
+            margin: 0;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dashboard-container {
+            padding: var(--space-2);
+            margin: 0;
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        .dashboard-container,
+        .routines-page,
+        .analytics-page,
+        .workouts-page,
+        .exercises-page,
+        .calendar-page {
+            padding: var(--space-2);
+            margin: 0;
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
         }
 
         .user-name {
@@ -420,6 +568,32 @@
 
         .page-content {
             padding: var(--space-3);
+            justify-content: center;
+        }
+
+        .content-container {
+            width: 100%;
+            max-width: 100%;
+            padding: 0 var(--space-2);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dashboard-container {
+            padding: 0 var(--space-1);
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        .dashboard-container,
+        .routines-page,
+        .analytics-page,
+        .workouts-page,
+        .exercises-page,
+        .calendar-page {
+            padding: 0 var(--space-1);
+            max-width: 100%;
+            overflow-x: hidden;
         }
 
         .user-profile-btn {
@@ -433,8 +607,108 @@
     }
 
     /* ===== ANIMATIONS ===== */
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes slideIn {
+        from {
+            transform: translateX(-100%);
+        }
+        to {
+            transform: translateX(0);
+        }
+    }
+
     .sidebar.mobile-open {
         animation: slideIn 0.3s ease-out;
+    }
+
+    /* ===== GLOBAL OVERFLOW PROTECTION ===== */
+    /* Prevent Bootstrap grid overflow */
+    .container,
+    .container-fluid,
+    .container-sm,
+    .container-md,
+    .container-lg,
+    .container-xl,
+    .container-xxl {
+        max-width: 100%;
+        overflow-x: hidden;
+        box-sizing: border-box;
+        padding-left: calc(var(--bs-gutter-x) * 0.5);
+        padding-right: calc(var(--bs-gutter-x) * 0.5);
+    }
+
+    .row {
+        margin-left: calc(var(--bs-gutter-x) * -0.5);
+        margin-right: calc(var(--bs-gutter-x) * -0.5);
+        max-width: calc(100% + var(--bs-gutter-x));
+        overflow-x: hidden;
+        box-sizing: border-box;
+    }
+
+    [class*="col-"] {
+        padding-left: calc(var(--bs-gutter-x) * 0.5);
+        padding-right: calc(var(--bs-gutter-x) * 0.5);
+        box-sizing: border-box;
+        max-width: 100%;
+        overflow-x: hidden;
+        min-width: 0; /* Prevent flexbox overflow */
+    }
+
+    /* Additional overflow fixes */
+    .main-content .row {
+        margin-left: calc(var(--bs-gutter-x) * -0.5);
+        margin-right: calc(var(--bs-gutter-x) * -0.5);
+        max-width: none;
+    }
+
+    /* Debugging - Temporary overflow detection */
+    .overflow-debug * {
+        outline: 1px solid red !important;
+    }
+    
+    .overflow-debug [class*="col-"]:hover {
+        background: rgba(255, 0, 0, 0.1) !important;
+    }
+    
+    /* Force all elements to respect container bounds */
+    .main-content * {
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+    
+    .content-container * {
+        box-sizing: border-box;
+    }
+
+    /* Prevent tables from causing overflow */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Prevent code blocks and pre elements from causing overflow */
+    pre,
+    code {
+        word-wrap: break-word;
+        white-space: pre-wrap;
+        overflow-wrap: break-word;
+        max-width: 100%;
+    }
+
+    /* Prevent images from causing overflow */
+    img {
+        max-width: 100%;
+        height: auto;
     }
 
     /* ===== DARK THEME ADJUSTMENTS ===== */
