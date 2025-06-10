@@ -1,13 +1,10 @@
 using Serilog;
 using MongoDB.Driver;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Mvc;
 using dotFitness.SharedKernel.Outbox;
-using dotFitness.Modules.Users.Domain.Entities;
-using dotFitness.Modules.Users.Infrastructure.Configuration;
+using dotFitness.Modules.Users.Application.Configuration;
+using dotFitness.Api.Infrastructure;
 
 // Configure Serilog
 Log.Logger = new LoggerConfiguration()
@@ -83,60 +80,33 @@ builder.Services.AddSingleton<IMongoDatabase>(sp =>
     return client.GetDatabase("dotFitnessDb");
 });
 
-// Register MongoDB Collections
+// Register base MongoDB Collections for shared types
 builder.Services.AddSingleton(sp =>
 {
     var database = sp.GetRequiredService<IMongoDatabase>();
     return database.GetCollection<OutboxMessage>("outboxMessages");
 });
 
-builder.Services.AddSingleton(sp =>
-{
-    var database = sp.GetRequiredService<IMongoDatabase>();
-    return database.GetCollection<User>("users");
-});
-
-builder.Services.AddSingleton(sp =>
-{
-    var database = sp.GetRequiredService<IMongoDatabase>();
-    return database.GetCollection<UserMetric>("userMetrics");
-});
-
-// Configure JWT Authentication
-var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var secretKey = jwtSettings["SecretKey"];
-
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtSettings["Issuer"],
-            ValidAudience = jwtSettings["Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey!)),
-            ClockSkew = TimeSpan.Zero
-        };
-    });
-
-builder.Services.AddAuthorization();
-
 // Add FluentValidation
 builder.Services.AddFluentValidationAutoValidation()
     .AddFluentValidationClientsideAdapters();
 
-// Add MediatR (will be configured to scan assemblies when modules are added)
-builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
+// Add MediatR with automatic module assembly discovery
+builder.Services.AddMediatR(cfg => 
+{
+    // Register API assembly
+    cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
+    
+    // Auto-discover and register all module assemblies
+    ModuleRegistry.RegisterModuleAssemblies(cfg);
+});
 
-// Register Users Module Infrastructure
-builder.Services.AddUsersInfrastructure();
+// Register all modules automatically
+ModuleRegistry.RegisterAllModules(builder.Services, builder.Configuration);
 
 var app = builder.Build();
 
-// Configure MongoDB Indexes
+// Configure MongoDB Indexes (shared + module-specific)
 await ConfigureMongoDbIndexes(app.Services);
 
 // Configure the HTTP request pipeline
@@ -163,7 +133,7 @@ static async Task ConfigureMongoDbIndexes(IServiceProvider services)
     using var scope = services.CreateScope();
     var database = scope.ServiceProvider.GetRequiredService<IMongoDatabase>();
     
-    // Create indexes for OutboxMessage collection
+    // Create indexes for shared/global collections (OutboxMessage)
     var outboxCollection = database.GetCollection<OutboxMessage>("outboxMessages");
     var outboxIndexBuilder = Builders<OutboxMessage>.IndexKeys;
     
@@ -171,31 +141,9 @@ static async Task ConfigureMongoDbIndexes(IServiceProvider services)
     {
         new CreateIndexModel<OutboxMessage>(outboxIndexBuilder.Ascending(x => x.IsProcessed)),
         new CreateIndexModel<OutboxMessage>(outboxIndexBuilder.Ascending(x => x.CreatedAt)),
-        new CreateIndexModel<OutboxMessage>(outboxIndexBuilder.Ascending(x => x.EventType))
-    });
-
-    // Create indexes for User collection
-    var userCollection = database.GetCollection<User>("users");
-    var userIndexBuilder = Builders<User>.IndexKeys;
-    
-    await userCollection.Indexes.CreateManyAsync(new[]
-    {
-        new CreateIndexModel<User>(userIndexBuilder.Ascending(x => x.Email), new CreateIndexOptions { Unique = true }),
-        new CreateIndexModel<User>(userIndexBuilder.Ascending(x => x.GoogleId)),
-        new CreateIndexModel<User>(userIndexBuilder.Ascending(x => x.CreatedAt)),
-        new CreateIndexModel<User>(userIndexBuilder.Ascending(x => x.Roles))
-    });
-
-    // Create indexes for UserMetric collection
-    var userMetricCollection = database.GetCollection<UserMetric>("userMetrics");
-    var userMetricIndexBuilder = Builders<UserMetric>.IndexKeys;
-      await userMetricCollection.Indexes.CreateManyAsync(new[]
-    {
-        new CreateIndexModel<UserMetric>(userMetricIndexBuilder.Ascending(x => x.UserId)),
-        new CreateIndexModel<UserMetric>(userMetricIndexBuilder.Ascending(x => x.Date)),
-        new CreateIndexModel<UserMetric>(userMetricIndexBuilder.Ascending(x => x.UserId).Descending(x => x.Date)),
-        new CreateIndexModel<UserMetric>(userMetricIndexBuilder.Ascending(x => x.UserId).Ascending(x => x.Date), new CreateIndexOptions { Unique = true })
-    });
+        new CreateIndexModel<OutboxMessage>(outboxIndexBuilder.Ascending(x => x.EventType))    });    
+    // Configure module-specific indexes for all modules
+    await ModuleRegistry.ConfigureAllModuleIndexes(services);
     
     Log.Information("MongoDB indexes configured successfully");
 }

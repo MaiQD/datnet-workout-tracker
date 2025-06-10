@@ -16,22 +16,17 @@ using dotFitness.Modules.Users.Application.Commands;
 using dotFitness.Modules.Users.Application.Queries;
 using dotFitness.Modules.Users.Application.Validators;
 using dotFitness.Modules.Users.Application.DTOs;
+using dotFitness.Modules.Users.Application.Abstractions;
 using dotFitness.SharedKernel.Results;
 
-namespace dotFitness.Modules.Users.Infrastructure.Configuration;
+namespace dotFitness.Modules.Users.Infrastructure.Installers;
 
 /// <summary>
-/// Configuration class for Users module infrastructure services
+/// Implementation of IUsersModuleInstaller that registers all Users module services
 /// </summary>
-public static class UsersInfrastructureModule
+public class UsersModuleInstaller : IUsersModuleInstaller
 {
-    /// <summary>
-    /// Adds all Users module services and configuration to the dependency injection container
-    /// </summary>
-    /// <param name="services">The service collection</param>
-    /// <param name="configuration">The configuration to bind settings from</param>
-    /// <returns>The service collection for chaining</returns>
-    public static IServiceCollection AddUsersModule(this IServiceCollection services, IConfiguration configuration)
+    public IServiceCollection Install(IServiceCollection services, IConfiguration configuration)
     {
         // Configure User Module Settings
         services.Configure<JwtSettings>(configuration.GetSection("JwtSettings"));
@@ -94,15 +89,13 @@ public static class UsersInfrastructureModule
         services.AddScoped<UserMapper>();
         services.AddScoped<UserMetricMapper>();
 
+        // Register the installer itself so it can be resolved
+        services.AddSingleton<IUsersModuleInstaller, UsersModuleInstaller>();
+
         return services;
     }
 
-    /// <summary>
-    /// Configures MongoDB indexes for Users module entities
-    /// </summary>
-    /// <param name="services">The service provider</param>
-    /// <returns>Task representing the async operation</returns>
-    public static async Task ConfigureUsersModuleIndexes(IServiceProvider services)
+    public async Task ConfigureIndexes(IServiceProvider services)
     {
         using var scope = services.CreateScope();
         var database = scope.ServiceProvider.GetRequiredService<IMongoDatabase>();

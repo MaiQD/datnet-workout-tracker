@@ -4,22 +4,17 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-  </PropertyGroup>
-
-  <ItemGroup>
+  </PropertyGroup>  <ItemGroup>
+    <ProjectReference Include="..\dotFitness.SharedKernel\dotFitness.SharedKernel.csproj" />
     <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.1" />
     <PackageReference Include="MediatR" Version="12.5.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.11" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" Version="5.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.15" />
     <PackageReference Include="MongoDB.Driver" Version="3.4.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Modules\Users\dotFitness.Modules.Users.Application\dotFitness.Modules.Users.Application.csproj" />
-    <ProjectReference Include="..\Modules\Users\dotFitness.Modules.Users.Domain\dotFitness.Modules.Users.Domain.csproj" />
+    <!-- Temporary reference to ensure Infrastructure assemblies are copied to output directory -->
     <ProjectReference Include="..\Modules\Users\dotFitness.Modules.Users.Infrastructure\dotFitness.Modules.Users.Infrastructure.csproj" />
   </ItemGroup>
 
