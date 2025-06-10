@@ -7,6 +7,17 @@ namespace dotFitness.Modules.Users.Application.Queries;
 
 public class GetUserMetricsQuery : IRequest<Result<IEnumerable<UserMetricDto>>>
 {
+    public GetUserMetricsQuery()
+    {
+        
+    }
+
+    public GetUserMetricsQuery(string userId, DateTime? fromDate, DateTime? toDate)
+    {
+        UserId = userId;
+        StartDate = fromDate;
+        EndDate = toDate;
+    }
     [Required]
     public string UserId { get; set; } = string.Empty;
     

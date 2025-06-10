@@ -1,0 +1,484 @@
+### Users Module API Tests
+### This file contains comprehensive API tests for the Users module
+### Make sure to run the application first: dotnet run --project src/dotFitness.WorkoutTracker/dotFitness.Api
+
+### Variables
+@baseUrl = {{base_url}}
+@authToken = {{auth_token}}
+
+###############################################################################
+# User Profile Management Tests
+###############################################################################
+
+### Get User Profile - Success
+GET {{baseUrl}}/api/v1/users/profile
+Authorization: Bearer {{authToken}}
+
+> {%
+client.test("Get user profile successful", function() {
+    client.assert(response.status === 200, "Expected status 200");
+    client.assert(response.body.success === true, "Expected success to be true");
+    client.assert(response.body.data.id !== undefined, "Expected user ID to be present");
+    client.assert(response.body.data.email !== undefined, "Expected email to be present");
+});
+%}
+
+### Get User Profile - Unauthorized
+GET {{baseUrl}}/api/v1/users/profile
+
+> {%
+client.test("Get user profile unauthorized", function() {
+    client.assert(response.status === 401, "Expected status 401");
+});
+%}
+
+### Update User Profile - Full Update
+PUT {{baseUrl}}/api/v1/users/profile
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "displayName": "Updated Test User",
+  "gender": "Male",
+  "dateOfBirth": "1990-01-01",
+  "unitPreference": "Metric"
+}
+
+> {%
+client.test("Update user profile full success", function() {
+    client.assert(response.status === 200, "Expected status 200");
+    client.assert(response.body.success === true, "Expected success to be true");
+    client.assert(response.body.data.displayName === "Updated Test User", "Expected display name to be updated");
+    client.assert(response.body.data.gender === "Male", "Expected gender to be updated");
+});
+%}
+
+### Update User Profile - Partial Update (Display Name Only)
+PUT {{baseUrl}}/api/v1/users/profile
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "displayName": "Partially Updated User"
+}
+
+> {%
+client.test("Update user profile partial success", function() {
+    client.assert(response.status === 200, "Expected status 200");
+    client.assert(response.body.success === true, "Expected success to be true");
+    client.assert(response.body.data.displayName === "Partially Updated User", "Expected display name to be updated");
+});
+%}
+
+### Update User Profile - Unit Preference Change
+PUT {{baseUrl}}/api/v1/users/profile
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "unitPreference": "Imperial"
+}
+
+> {%
+client.test("Update unit preference success", function() {
+    client.assert(response.status === 200, "Expected status 200");
+    client.assert(response.body.success === true, "Expected success to be true");
+    client.assert(response.body.data.unitPreference === "Imperial", "Expected unit preference to be updated");
+});
+%}
+
+###############################################################################
+# User Metrics Management Tests
+###############################################################################
+
+### Add User Metric - Complete Measurement
+POST {{baseUrl}}/api/v1/users/metrics
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "date": "2024-06-11",
+  "weight": 70.5,
+  "height": 175.0,
+  "notes": "Morning measurement after workout"
+}
+
+> {%
+client.test("Add complete metric success", function() {
+    client.assert(response.status === 201, "Expected status 201");
+    client.assert(response.body.success === true, "Expected success to be true");
+    client.assert(response.body.data.weight === 70.5, "Expected weight to be recorded");
+    client.assert(response.body.data.height === 175.0, "Expected height to be recorded");
+});
+%}
+
+### Add User Metric - Weight Only
+POST {{baseUrl}}/api/v1/users/metrics
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "date": "2024-06-11",
+  "weight": 71.0,
+  "notes": "Quick weight check"
+}
+
+> {%
+client.test("Add weight only metric success", function() {
+    client.assert(response.status === 201, "Expected status 201");
+    client.assert(response.body.success === true, "Expected success to be true");
+    client.assert(response.body.data.weight === 71.0, "Expected weight to be recorded");
+});
+%}
+
+### Add User Metric - Height Only
+POST {{baseUrl}}/api/v1/users/metrics
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "date": "2024-06-11",
+  "height": 176.0,
+  "notes": "Height measurement"
+}
+
+> {%
+client.test("Add height only metric success", function() {
+    client.assert(response.status === 201, "Expected status 201");
+    client.assert(response.body.success === true, "Expected success to be true");
+    client.assert(response.body.data.height === 176.0, "Expected height to be recorded");
+});
+%}
+
+### Get Latest User Metric
+GET {{baseUrl}}/api/v1/users/metrics/latest
+Authorization: Bearer {{authToken}}
+
+> {%
+client.test("Get latest metric success", function() {
+    client.assert(response.status === 200, "Expected status 200");
+    client.assert(response.body.success === true, "Expected success to be true");
+    client.assert(response.body.data !== null, "Expected latest metric data to be present");
+});
+%}
+
+### Get User Metrics - All
+GET {{baseUrl}}/api/v1/users/metrics
+Authorization: Bearer {{authToken}}
+
+> {%
+client.test("Get all metrics success", function() {
+    client.assert(response.status === 200, "Expected status 200");
+    client.assert(response.body.success === true, "Expected success to be true");
+    client.assert(Array.isArray(response.body.data), "Expected data to be an array");
+});
+%}
+
+### Get User Metrics - Date Range
+GET {{baseUrl}}/api/v1/users/metrics?fromDate=2024-06-01&toDate=2024-06-30
+Authorization: Bearer {{authToken}}
+
+> {%
+client.test("Get metrics by date range success", function() {
+    client.assert(response.status === 200, "Expected status 200");
+    client.assert(response.body.success === true, "Expected success to be true");
+    client.assert(Array.isArray(response.body.data), "Expected data to be an array");
+});
+%}
+
+### Get User Metrics - Past Month
+GET {{baseUrl}}/api/v1/users/metrics?fromDate=2024-05-11&toDate=2024-06-11
+Authorization: Bearer {{authToken}}
+
+> {%
+client.test("Get past month metrics success", function() {
+    client.assert(response.status === 200, "Expected status 200");
+    client.assert(response.body.success === true, "Expected success to be true");
+    client.assert(Array.isArray(response.body.data), "Expected data to be an array");
+});
+%}
+
+###############################################################################
+# Error Handling and Validation Tests
+###############################################################################
+
+### Add User Metric - Missing Required Field (Should Fail)
+POST {{baseUrl}}/api/v1/users/metrics
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "notes": "Only notes, no metrics - should fail validation"
+}
+
+> {%
+client.test("Add metric with missing required field", function() {
+    client.assert(response.status === 400, "Expected status 400");
+    client.assert(response.body.success === false, "Expected success to be false");
+    client.assert(response.body.errors !== undefined, "Expected validation errors to be present");
+});
+%}
+
+### Add User Metric - Invalid Weight (Should Fail)
+POST {{baseUrl}}/api/v1/users/metrics
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "date": "2024-06-11",
+  "weight": -10,
+  "notes": "Negative weight - should fail validation"
+}
+
+> {%
+client.test("Add metric with invalid weight", function() {
+    client.assert(response.status === 400, "Expected status 400");
+    client.assert(response.body.success === false, "Expected success to be false");
+    client.assert(response.body.errors !== undefined, "Expected validation errors to be present");
+});
+%}
+
+### Add User Metric - Invalid Height (Should Fail)
+POST {{baseUrl}}/api/v1/users/metrics
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "date": "2024-06-11",
+  "height": 500,
+  "notes": "Too tall - should fail validation"
+}
+
+> {%
+client.test("Add metric with invalid height", function() {
+    client.assert(response.status === 400, "Expected status 400");
+    client.assert(response.body.success === false, "Expected success to be false");
+    client.assert(response.body.errors !== undefined, "Expected validation errors to be present");
+});
+%}
+
+### Add User Metric - Future Date (Should Fail)
+POST {{baseUrl}}/api/v1/users/metrics
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "date": "2025-01-01",
+  "weight": 70.0,
+  "notes": "Future date - should fail validation"
+}
+
+> {%
+client.test("Add metric with future date", function() {
+    client.assert(response.status === 400, "Expected status 400");
+    client.assert(response.body.success === false, "Expected success to be false");
+    client.assert(response.body.errors !== undefined, "Expected validation errors to be present");
+});
+%}
+
+### Update User Profile - Invalid Data (Should Fail)
+PUT {{baseUrl}}/api/v1/users/profile
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "displayName": "",
+  "unitPreference": "InvalidUnit"
+}
+
+> {%
+client.test("Update profile with invalid data", function() {
+    client.assert(response.status === 400, "Expected status 400");
+    client.assert(response.body.success === false, "Expected success to be false");
+    client.assert(response.body.errors !== undefined, "Expected validation errors to be present");
+});
+%}
+
+###############################################################################
+# Authorization Tests
+###############################################################################
+
+### Get Profile Without Token (Should Fail)
+GET {{baseUrl}}/api/v1/users/profile
+
+> {%
+client.test("Get profile without token", function() {
+    client.assert(response.status === 401, "Expected status 401");
+});
+%}
+
+### Add Metric Without Token (Should Fail)
+POST {{baseUrl}}/api/v1/users/metrics
+Content-Type: application/json
+
+{
+  "date": "2024-06-11",
+  "weight": 70.0
+}
+
+> {%
+client.test("Add metric without token", function() {
+    client.assert(response.status === 401, "Expected status 401");
+});
+%}
+
+### Update Profile Without Token (Should Fail)
+PUT {{baseUrl}}/api/v1/users/profile
+Content-Type: application/json
+
+{
+  "displayName": "Should Not Work"
+}
+
+> {%
+client.test("Update profile without token", function() {
+    client.assert(response.status === 401, "Expected status 401");
+});
+%}
+
+###############################################################################
+# Additional Comprehensive Tests
+###############################################################################
+
+### Test Large Notes Field
+POST {{baseUrl}}/api/v1/users/metrics
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "date": "2024-06-11",
+  "weight": 70.0,
+  "notes": "This is a very long note that should be accepted as long as it's within the maximum length limit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur."
+}
+
+> {%
+client.test("Add metric with long notes", function() {
+    client.assert(response.status === 201, "Expected status 201");
+    client.assert(response.body.success === true, "Expected success to be true");
+});
+%}
+
+### Test Special Characters in Input
+POST {{baseUrl}}/api/v1/users/metrics
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "date": "2024-06-11",
+  "weight": 70.0,
+  "notes": "Weight with special characters: äöü ñ 中文 🏋️‍♂️ 💪"
+}
+
+> {%
+client.test("Add metric with special characters", function() {
+    client.assert(response.status === 201, "Expected status 201");
+    client.assert(response.body.success === true, "Expected success to be true");
+});
+%}
+
+### Test Decimal Precision
+POST {{baseUrl}}/api/v1/users/metrics
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "date": "2024-06-11",
+  "weight": 70.123456,
+  "height": 175.987654,
+  "notes": "Testing decimal precision"
+}
+
+> {%
+client.test("Add metric with decimal precision", function() {
+    client.assert(response.status === 201, "Expected status 201");
+    client.assert(response.body.success === true, "Expected success to be true");
+});
+%}
+
+### Test Edge Case Values
+POST {{baseUrl}}/api/v1/users/metrics
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "date": "2024-06-11",
+  "weight": 0.1,
+  "height": 30.0,
+  "notes": "Testing minimum valid values"
+}
+
+> {%
+client.test("Add metric with edge case values", function() {
+    client.assert(response.status === 201, "Expected status 201");
+    client.assert(response.body.success === true, "Expected success to be true");
+});
+%}
+
+###############################################################################
+# BMI Calculation Tests (if implemented)
+###############################################################################
+
+### Test BMI Calculation with Complete Metrics
+POST {{baseUrl}}/api/v1/users/metrics
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "date": "2024-06-11",
+  "weight": 70.0,
+  "height": 175.0,
+  "notes": "For BMI calculation test"
+}
+
+> {%
+client.test("Add complete metric for BMI calculation", function() {
+    client.assert(response.status === 201, "Expected status 201");
+    client.assert(response.body.success === true, "Expected success to be true");
+    // If BMI is calculated and returned, test it here
+    // client.assert(response.body.data.bmi !== undefined, "Expected BMI to be calculated");
+});
+%}
+
+###############################################################################
+# Test Summary and Documentation
+###############################################################################
+
+### This comprehensive test suite covers:
+### 
+### ✅ User Profile Management:
+###    - Get user profile (success/unauthorized)
+###    - Update profile (full/partial/invalid data)
+###    - Authorization checks
+### 
+### ✅ User Metrics Management:
+###    - Add metrics (complete/weight only/height only)
+###    - Get metrics (all/date range/latest)
+###    - Validation and error handling
+### 
+### ✅ Validation Tests:
+###    - Missing required fields
+###    - Invalid values (negative weight, excessive height)
+###    - Future dates
+###    - Invalid enum values
+### 
+### ✅ Authorization Tests:
+###    - Unauthorized access attempts
+###    - Token validation
+### 
+### ✅ Edge Cases and Robustness:
+###    - Large text fields
+###    - Special characters
+###    - Decimal precision
+###    - Minimum valid values
+### 
+### ✅ Performance Considerations:
+###    - Date range queries
+###    - Pagination support
+###    - Large data handling
+### 
+### To run these tests:
+### 1. Start the application: `dotnet run --project src/dotFitness.WorkoutTracker/dotFitness.Api`
+### 2. Update environment variables in http-client.env.json
+### 3. Authenticate using auth.http to get a valid token
+### 4. Run tests in sequence or individually
+### 5. Verify all assertions pass

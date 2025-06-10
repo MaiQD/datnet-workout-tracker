@@ -4,6 +4,7 @@ namespace dotFitness.Modules.Users.Application.DTOs;
 
 public class UserDto
 {
+    
     [Required]
     public string Id { get; set; } = string.Empty;
     

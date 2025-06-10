@@ -1,0 +1,33 @@
+### Login with Google (Mock for testing)
+POST {{baseUrl}}/api/v1/auth/google-login
+Content-Type: application/json
+
+{
+  "googleTokenId": "mock_google_token_for_{{adminEmail}}"
+}
+
+> {%
+  client.global.set("authToken", response.body.token);
+  client.global.set("userId", response.body.user.id);
+%}
+
+### Verify Authentication
+GET {{baseUrl}}/api/v1/users/profile
+Authorization: Bearer {{authToken}}
+
+### Test User Login (for non-admin testing)
+POST {{baseUrl}}/api/v1/auth/google-login
+Content-Type: application/json
+
+{
+  "googleTokenId": "mock_google_token_for_{{testUserEmail}}"
+}
+
+> {%
+  client.global.set("testAuthToken", response.body.token);
+  client.global.set("testUserId", response.body.user.id);
+%}
+
+### Verify Test User Authentication
+GET {{baseUrl}}/api/v1/users/profile
+Authorization: Bearer {{testAuthToken}}

@@ -5,8 +5,4 @@ using System.ComponentModel.DataAnnotations;
 
 namespace dotFitness.Modules.Users.Application.Queries;
 
-public class GetUserByIdQuery : IRequest<Result<UserDto>>
-{
-    [Required]
-    public string UserId { get; set; } = string.Empty;
-}
+public record GetUserByIdQuery(string UserId) : IRequest<Result<UserDto>>;
