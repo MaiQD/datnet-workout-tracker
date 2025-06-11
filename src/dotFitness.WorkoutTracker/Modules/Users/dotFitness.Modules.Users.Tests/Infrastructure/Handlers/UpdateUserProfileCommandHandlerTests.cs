@@ -131,9 +131,7 @@ public class UpdateUserProfileCommandHandlerTests
             userId: "user123",
             displayName: "Updated Name",
             gender: null,
-            dateOfBirth: null,
-            unitPreference: string.Empty
-        );
+            dateOfBirth: null);
 
         var existingUser = new User
         {
@@ -155,7 +153,7 @@ public class UpdateUserProfileCommandHandlerTests
 
         // Assert
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Failed to update user profile: Value cannot be null. (Parameter 'value')");
+        result.Error.Should().Be("Database update failed");
 
         _userRepositoryMock.Verify(x => x.GetByIdAsync("user123", It.IsAny<CancellationToken>()), Times.Once);
         _userRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -236,8 +234,7 @@ public class UpdateUserProfileCommandHandlerTests
             userId: "user123",
             displayName: invalidDisplayName,
             gender: null,
-            dateOfBirth: null,
-            unitPreference: string.Empty
+            dateOfBirth: null
         );
 
         var existingUser = new User

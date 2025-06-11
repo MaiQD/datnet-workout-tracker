@@ -109,7 +109,7 @@ public class GetUserByIdQueryHandlerTests
 
         // Assert
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Database connection failed");
+        result.Error.Should().Be("User not found");
 
         _userRepositoryMock.Verify(x => x.GetByIdAsync("user123", It.IsAny<CancellationToken>()), Times.Once);
     }

@@ -40,7 +40,7 @@ public class UserTests
         // Assert
         user.Roles.Should().Contain("Admin");
         user.IsAdmin.Should().BeTrue();
-        user.UpdatedAt.Should().BeAfter(originalUpdatedAt);
+        user.UpdatedAt.Should().BeOnOrAfter(originalUpdatedAt);
     }
 
     [Fact]

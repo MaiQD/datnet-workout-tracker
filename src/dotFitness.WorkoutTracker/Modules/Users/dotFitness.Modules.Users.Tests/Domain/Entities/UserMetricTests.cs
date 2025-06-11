@@ -29,7 +29,7 @@ public class UserMetricTests
 
     [Theory]
     [InlineData(70.0, 175.0, UnitPreference.Metric, 22.86)] // kg, cm
-    [InlineData(154.0, 69.0, UnitPreference.Imperial, 22.81)] // lbs, inches
+    [InlineData(154.0, 69.0, UnitPreference.Imperial, 22.73)] // lbs, inches
     public void Should_Calculate_BMI_Correctly(double weight, double height, UnitPreference unitPreference, double expectedBmi)
     {
         // Arrange

@@ -13,7 +13,7 @@ public class UpdateUserProfileCommandValidator : AbstractValidator<UpdateUserPro
 
         RuleFor(x => x.DisplayName)
             .NotEmpty()
-            .When(x => x.DisplayName != null)
+            .When(x => string.IsNullOrWhiteSpace(x.DisplayName))
             .WithMessage("Display name cannot be empty when provided")
             .Length(1, 100)
             .When(x => !string.IsNullOrWhiteSpace(x.DisplayName))

@@ -85,16 +85,28 @@ public class UserMetric : IEntity
 
     public void UpdateMetrics(double? weight = null, double? height = null, string? notes = null)
     {
-        if (weight.HasValue && weight > 0)
+        var updated = false;
+    
+        if (weight is > 0)
+        {
             Weight = weight;
-
-        if (height.HasValue && height > 0)
+            updated = true;
+        }
+    
+        if (height is > 0)
+        {
             Height = height;
-
+            updated = true;
+        }
+    
         if (notes != null)
+        {
             Notes = notes;
-
-        UpdatedAt = DateTime.UtcNow;
+            updated = true;
+        }
+    
+        if (updated)
+            UpdatedAt = DateTime.UtcNow;
     }
 
     /// <summary>

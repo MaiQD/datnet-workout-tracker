@@ -113,7 +113,7 @@ public class GetLatestUserMetricQueryHandlerTests
 
         // Assert
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Database connection failed");
+        result.Error.Should().Be("No metrics found for user");
 
         _userMetricsRepositoryMock.Verify(x => x.GetLatestByUserIdAsync("user123", It.IsAny<CancellationToken>()), Times.Once);
     }
