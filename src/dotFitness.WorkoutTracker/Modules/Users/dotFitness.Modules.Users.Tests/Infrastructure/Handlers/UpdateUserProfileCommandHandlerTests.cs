@@ -14,18 +14,18 @@ namespace dotFitness.Modules.Users.Tests.Infrastructure.Handlers;
 public class UpdateUserProfileCommandHandlerTests
 {
     private readonly Mock<IUserRepository> _userRepositoryMock;
-    private readonly Mock<UserMapper> _userMapperMock;
+    private readonly UserMapper _userMapper;
     private readonly UpdateUserProfileCommandHandler _handler;
 
     public UpdateUserProfileCommandHandlerTests()
     {
         _userRepositoryMock = new Mock<IUserRepository>();
-        _userMapperMock = new Mock<UserMapper>();
+        _userMapper = new UserMapper();
         var loggerMock = new Mock<ILogger<UpdateUserProfileCommandHandler>>();
 
         _handler = new UpdateUserProfileCommandHandler(
             _userRepositoryMock.Object,
-            _userMapperMock.Object,
+            _userMapper,
             loggerMock.Object
         );
     }
@@ -81,10 +81,6 @@ public class UpdateUserProfileCommandHandlerTests
         _userRepositoryMock
             .Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(updatedUser));
-
-        _userMapperMock
-            .Setup(x => x.ToDto(It.IsAny<User>()))
-            .Returns(expectedDto);
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
@@ -218,10 +214,6 @@ public class UpdateUserProfileCommandHandlerTests
             .Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(updatedUser));
 
-        _userMapperMock
-            .Setup(x => x.ToDto(It.IsAny<User>()))
-            .Returns(expectedDto);
-
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
 
@@ -275,10 +267,6 @@ public class UpdateUserProfileCommandHandlerTests
         _userRepositoryMock
             .Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(existingUser));
-
-        _userMapperMock
-            .Setup(x => x.ToDto(It.IsAny<User>()))
-            .Returns(expectedDto);
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);

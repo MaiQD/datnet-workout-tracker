@@ -14,18 +14,18 @@ namespace dotFitness.Modules.Users.Tests.Infrastructure.Handlers;
 public class GetUserMetricsQueryHandlerTests
 {
     private readonly Mock<IUserMetricsRepository> _userMetricsRepositoryMock;
-    private readonly Mock<UserMetricMapper> _userMetricMapperMock;
+    private readonly UserMetricMapper _userMetricMapper;
     private readonly GetUserMetricsQueryHandler _handler;
 
     public GetUserMetricsQueryHandlerTests()
     {
         _userMetricsRepositoryMock = new Mock<IUserMetricsRepository>();
-        _userMetricMapperMock = new Mock<UserMetricMapper>();
+        _userMetricMapper = new UserMetricMapper();
         var loggerMock = new Mock<ILogger<GetUserMetricsQueryHandler>>();
 
         _handler = new GetUserMetricsQueryHandler(
             _userMetricsRepositoryMock.Object,
-            _userMetricMapperMock.Object,
+            _userMetricMapper,
             loggerMock.Object
         );
     }
@@ -89,13 +89,6 @@ public class GetUserMetricsQueryHandlerTests
             .Setup(x => x.GetByUserIdAsync("user123", 0, 50, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success<IEnumerable<UserMetric>>(metrics));
 
-        _userMetricMapperMock
-            .Setup(x => x.ToDto(metrics[0]))
-            .Returns(expectedDtos[0]);
-        _userMetricMapperMock
-            .Setup(x => x.ToDto(metrics[1]))
-            .Returns(expectedDtos[1]);
-
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
 
@@ -152,10 +145,6 @@ public class GetUserMetricsQueryHandlerTests
         _userMetricsRepositoryMock
             .Setup(x => x.GetByUserIdAndDateRangeAsync("user123", fromDate, toDate, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success<IEnumerable<UserMetric>>(metricsInRange));
-
-        _userMetricMapperMock
-            .Setup(x => x.ToDto(metricsInRange[0]))
-            .Returns(expectedDto);
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
@@ -245,10 +234,6 @@ public class GetUserMetricsQueryHandlerTests
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
-
-        _userMetricMapperMock
-            .Setup(x => x.ToDto(filteredMetrics[0]))
-            .Returns(expectedDto);
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);

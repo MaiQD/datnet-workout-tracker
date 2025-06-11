@@ -7,8 +7,8 @@ namespace dotFitness.Modules.Users.Application.Mappers;
 [Mapper]
 public partial class UserMetricMapper
 {
+    [MapProperty(nameof(@MapBmiCategory), nameof(UserMetricDto.BmiCategory))]
     public partial UserMetricDto ToDto(UserMetric userMetric);
     
-    // Custom mapping to include calculated fields
-    private string? MapBmiCategory(UserMetric userMetric) => userMetric.GetBmiCategory();
+    private string MapBmiCategory(UserMetric userMetric) => userMetric.GetBmiCategory();
 }

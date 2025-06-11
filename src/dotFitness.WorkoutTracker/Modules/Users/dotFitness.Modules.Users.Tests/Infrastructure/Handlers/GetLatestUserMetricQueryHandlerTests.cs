@@ -14,19 +14,19 @@ namespace dotFitness.Modules.Users.Tests.Infrastructure.Handlers;
 public class GetLatestUserMetricQueryHandlerTests
 {
     private readonly Mock<IUserMetricsRepository> _userMetricsRepositoryMock;
-    private readonly Mock<UserMetricMapper> _userMetricMapperMock;
+    private readonly UserMetricMapper _userMetricMapper;
     private readonly Mock<ILogger<GetLatestUserMetricQueryHandler>> _loggerMock;
     private readonly GetLatestUserMetricQueryHandler _handler;
 
     public GetLatestUserMetricQueryHandlerTests()
     {
         _userMetricsRepositoryMock = new Mock<IUserMetricsRepository>();
-        _userMetricMapperMock = new Mock<UserMetricMapper>();
+        _userMetricMapper = new UserMetricMapper();
         _loggerMock = new Mock<ILogger<GetLatestUserMetricQueryHandler>>();
 
         _handler = new GetLatestUserMetricQueryHandler(
             _userMetricsRepositoryMock.Object,
-            _userMetricMapperMock.Object,
+            _userMetricMapper,
             _loggerMock.Object
         );
     }
@@ -64,10 +64,6 @@ public class GetLatestUserMetricQueryHandlerTests
             .Setup(x => x.GetLatestByUserIdAsync("user123", It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(latestMetric));
 
-        _userMetricMapperMock
-            .Setup(x => x.ToDto(latestMetric))
-            .Returns(expectedDto);
-
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
 
@@ -80,7 +76,6 @@ public class GetLatestUserMetricQueryHandlerTests
         result.Value.Bmi.Should().Be(23.51);
 
         _userMetricsRepositoryMock.Verify(x => x.GetLatestByUserIdAsync("user123", It.IsAny<CancellationToken>()), Times.Once);
-        _userMetricMapperMock.Verify(x => x.ToDto(latestMetric), Times.Once);
     }
 
     [Fact]
@@ -101,7 +96,6 @@ public class GetLatestUserMetricQueryHandlerTests
         result.Error.Should().Be("No metrics found for user");
 
         _userMetricsRepositoryMock.Verify(x => x.GetLatestByUserIdAsync("user123", It.IsAny<CancellationToken>()), Times.Once);
-        _userMetricMapperMock.Verify(x => x.ToDto(It.IsAny<UserMetric>()), Times.Never);
     }
 
     [Fact]

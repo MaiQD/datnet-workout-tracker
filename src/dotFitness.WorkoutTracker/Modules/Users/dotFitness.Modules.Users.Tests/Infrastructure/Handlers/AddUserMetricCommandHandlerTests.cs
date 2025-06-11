@@ -15,7 +15,7 @@ public class AddUserMetricCommandHandlerTests
 {
     private readonly Mock<IUserMetricsRepository> _userMetricsRepositoryMock;
     private readonly Mock<IUserRepository> _userRepositoryMock;
-    private readonly Mock<UserMetricMapper> _userMetricMapperMock;
+    private readonly UserMetricMapper _userMetricMapper;
     private readonly Mock<ILogger<AddUserMetricCommandHandler>> _loggerMock;
     private readonly AddUserMetricCommandHandler _handler;
 
@@ -23,13 +23,13 @@ public class AddUserMetricCommandHandlerTests
     {
         _userMetricsRepositoryMock = new Mock<IUserMetricsRepository>();
         _userRepositoryMock = new Mock<IUserRepository>();
-        _userMetricMapperMock = new Mock<UserMetricMapper>();
+        _userMetricMapper = new UserMetricMapper();
         _loggerMock = new Mock<ILogger<AddUserMetricCommandHandler>>();
 
         _handler = new AddUserMetricCommandHandler(
             _userMetricsRepositoryMock.Object,
             _userRepositoryMock.Object,
-            _userMetricMapperMock.Object,
+            _userMetricMapper,
             _loggerMock.Object
         );
     }
@@ -74,10 +74,6 @@ public class AddUserMetricCommandHandlerTests
         _userMetricsRepositoryMock
             .Setup(x => x.CreateAsync(It.IsAny<UserMetric>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(createdMetric));
-
-        _userMetricMapperMock
-            .Setup(x => x.ToDto(It.IsAny<UserMetric>()))
-            .Returns(expectedDto);
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
@@ -135,10 +131,6 @@ public class AddUserMetricCommandHandlerTests
             .Setup(x => x.CreateAsync(It.IsAny<UserMetric>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(createdMetric));
 
-        _userMetricMapperMock
-            .Setup(x => x.ToDto(It.IsAny<UserMetric>()))
-            .Returns(expectedDto);
-
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
 
@@ -189,10 +181,6 @@ public class AddUserMetricCommandHandlerTests
         _userMetricsRepositoryMock
             .Setup(x => x.CreateAsync(It.IsAny<UserMetric>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(createdMetric));
-
-        _userMetricMapperMock
-            .Setup(x => x.ToDto(It.IsAny<UserMetric>()))
-            .Returns(expectedDto);
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
@@ -246,26 +234,8 @@ public class AddUserMetricCommandHandlerTests
         UserMetric? capturedMetric = null;
         _userMetricsRepositoryMock
             .Setup(x => x.CreateAsync(It.IsAny<UserMetric>(), It.IsAny<CancellationToken>()))
-            .Callback<UserMetric>(metric => capturedMetric = metric)
-            .ReturnsAsync((UserMetric metric) => Result.Success(metric));
-
-        var expectedDto = new UserMetricDto
-        {
-            Id = "metric123",
-            UserId = "user123",
-            Date = new DateTime(2024, 1, 1),
-            Weight = 70.0,
-            Height = 175.0,
-            Bmi = 22.86, // Calculated BMI
-            BmiCategory = "Normal weight",
-            Notes = "Complete measurement",
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
-
-        _userMetricMapperMock
-            .Setup(x => x.ToDto(It.IsAny<UserMetric>()))
-            .Returns(expectedDto);
+            .Callback<UserMetric, CancellationToken>((metric, token) => capturedMetric = metric)
+            .ReturnsAsync((UserMetric metric, CancellationToken token) => Result.Success(metric));
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
@@ -291,8 +261,8 @@ public class AddUserMetricCommandHandlerTests
         UserMetric? capturedMetric = null;
         _userMetricsRepositoryMock
             .Setup(x => x.CreateAsync(It.IsAny<UserMetric>(), It.IsAny<CancellationToken>()))
-            .Callback<UserMetric>(metric => capturedMetric = metric)
-            .ReturnsAsync((UserMetric metric) => Result.Success(metric));
+            .Callback<UserMetric, CancellationToken>((metric, token) => capturedMetric = metric)
+            .ReturnsAsync((UserMetric metric, CancellationToken token) => Result.Success(metric));
 
         var expectedDto = new UserMetricDto
         {
@@ -307,10 +277,6 @@ public class AddUserMetricCommandHandlerTests
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
-
-        _userMetricMapperMock
-            .Setup(x => x.ToDto(It.IsAny<UserMetric>()))
-            .Returns(expectedDto);
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);

@@ -14,18 +14,18 @@ namespace dotFitness.Modules.Users.Tests.Infrastructure.Handlers;
 public class GetUserByIdQueryHandlerTests
 {
     private readonly Mock<IUserRepository> _userRepositoryMock;
-    private readonly Mock<UserMapper> _userMapperMock;
+    private readonly UserMapper _userMapper;
     private readonly GetUserByIdQueryHandler _handler;
 
     public GetUserByIdQueryHandlerTests()
     {
         _userRepositoryMock = new Mock<IUserRepository>();
-        _userMapperMock = new Mock<UserMapper>();
+        _userMapper = new UserMapper();
         var loggerMock = new Mock<ILogger<GetUserByIdQueryHandler>>();
 
         _handler = new GetUserByIdQueryHandler(
             _userRepositoryMock.Object,
-            _userMapperMock.Object,
+            _userMapper,
             loggerMock.Object
         );
     }
@@ -61,10 +61,6 @@ public class GetUserByIdQueryHandlerTests
             .Setup(x => x.GetByIdAsync("user123", It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(user));
 
-        _userMapperMock
-            .Setup(x => x.ToDto(user))
-            .Returns(expectedDto);
-
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
 
@@ -76,7 +72,6 @@ public class GetUserByIdQueryHandlerTests
         result.Value.DisplayName.Should().Be("Test User");
 
         _userRepositoryMock.Verify(x => x.GetByIdAsync("user123", It.IsAny<CancellationToken>()), Times.Once);
-        _userMapperMock.Verify(x => x.ToDto(user), Times.Once);
     }
 
     [Fact]
@@ -97,7 +92,6 @@ public class GetUserByIdQueryHandlerTests
         result.Error.Should().Be("User not found");
 
         _userRepositoryMock.Verify(x => x.GetByIdAsync("nonexistent", It.IsAny<CancellationToken>()), Times.Once);
-        _userMapperMock.Verify(x => x.ToDto(It.IsAny<User>()), Times.Never);
     }
 
     [Fact]
