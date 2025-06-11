@@ -76,16 +76,16 @@ public class UpdateUserProfileCommandValidatorTests
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.DisplayName)
-            .WithErrorMessage("Display name cannot be empty when provided");
+            .WithErrorMessage("Display name is required");
     }
 
     [Fact]
-    public void Should_Pass_Validation_For_Null_Display_Name()
+    public void Should_Pass_Validation_For_Valid_Display_Name()
     {
         // Arrange
         var command = new UpdateUserProfileCommand(
             userId: "user123",
-            displayName: string.Empty,
+            displayName: "Valid Name",
             gender: nameof(Gender.Male),
             dateOfBirth: null,
             unitPreference: string.Empty
@@ -116,7 +116,7 @@ public class UpdateUserProfileCommandValidatorTests
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.DisplayName)
-            .WithErrorMessage("Display name cannot exceed 100 characters");
+            .WithErrorMessage("Display name must be between 1 and 100 characters");
     }
 
     [Fact]
@@ -190,12 +190,12 @@ public class UpdateUserProfileCommandValidatorTests
     }
 
     [Fact]
-    public void Should_Pass_Validation_With_All_Optional_Fields_Null()
+    public void Should_Pass_Validation_With_Required_Fields_And_Optional_Fields_Null()
     {
         // Arrange
         var command = new UpdateUserProfileCommand(
             userId: "user123",
-            displayName: string.Empty,
+            displayName: "Valid Name",
             gender: null,
             dateOfBirth: null,
             unitPreference: string.Empty
@@ -215,7 +215,7 @@ public class UpdateUserProfileCommandValidatorTests
         var validDate = new DateTime(1990, 5, 15);
         var command = new UpdateUserProfileCommand(
             userId: "user123",
-            displayName: string.Empty,
+            displayName: "Valid Name",
             gender: null,
             dateOfBirth: validDate,
             unitPreference: string.Empty
@@ -238,7 +238,7 @@ public class UpdateUserProfileCommandValidatorTests
         // Arrange
         var command = new UpdateUserProfileCommand(
             userId: "user123",
-            displayName: string.Empty,
+            displayName: "Valid Name",
             gender: gender.ToString(),
             dateOfBirth: null,
             unitPreference: string.Empty
@@ -259,7 +259,7 @@ public class UpdateUserProfileCommandValidatorTests
         // Arrange
         var command = new UpdateUserProfileCommand(
             userId: "user123",
-            displayName: string.Empty,
+            displayName: "Valid Name",
             gender: null,
             dateOfBirth: null,
             unitPreference: unitPreference.ToString()

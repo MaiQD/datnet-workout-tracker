@@ -13,11 +13,9 @@ public class UpdateUserProfileCommandValidator : AbstractValidator<UpdateUserPro
 
         RuleFor(x => x.DisplayName)
             .NotEmpty()
-            .When(x => string.IsNullOrWhiteSpace(x.DisplayName))
-            .WithMessage("Display name cannot be empty when provided")
+            .WithMessage("Display name is required")
             .Length(1, 100)
-            .When(x => !string.IsNullOrWhiteSpace(x.DisplayName))
-            .WithMessage("Display name cannot exceed 100 characters");
+            .WithMessage("Display name must be between 1 and 100 characters");
 
         RuleFor(x => x.Gender)
             .Must(gender => gender == null || new[] { "Male", "Female", "Other", "PreferNotToSay" }.Contains(gender))

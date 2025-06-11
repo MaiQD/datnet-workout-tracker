@@ -39,7 +39,12 @@ public class UpdateUserProfileCommandHandler : IRequestHandler<UpdateUserProfile
             var user = userResult.Value!;
 
             // Update user properties
-            user.DisplayName = request.DisplayName;
+            // Only update display name if it's not empty/whitespace
+            if (!string.IsNullOrWhiteSpace(request.DisplayName))
+            {
+                user.DisplayName = request.DisplayName;
+            }
+            
             user.Gender = string.IsNullOrEmpty(request.Gender) ? null : 
                 Enum.Parse<Gender>(request.Gender);
             user.DateOfBirth = request.DateOfBirth;
