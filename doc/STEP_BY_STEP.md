@@ -221,7 +221,7 @@ This document provides a comprehensive, sequential list of actions required to d
     - Add all new projects to `dotFitness.WorkoutTracker.sln`.
     - Add project references as per the design document.
 2. **Implement Exercises Module - Domain Layer (`dotFitness.Modules.Exercises.Domain`):**
-    - Define `Exercise.cs` entity.
+    - Define `Exercise.cs` entity with `IsGlobal` and `UserId` properties for admin/user exercise management.
     - Define `MuscleGroup.cs` entity (with `IsGlobal`, `UserId`).
     - Define `Equipment.cs` entity (with `IsGlobal`, `UserId`).
     - Define `IExerciseRepository.cs`, `IMuscleGroupRepository.cs`, `IEquipmentRepository.cs` interfaces.
@@ -235,7 +235,8 @@ This document provides a comprehensive, sequential list of actions required to d
     - Define Mapperly interfaces (`IExerciseMapper`, `IMuscleGroupMapper`, `IEquipmentMapper`).
     - Implement FluentValidation validators for Commands.
 5. **Integrate Exercises Module into `dotFitness.Api`:**
-    - Create `dotFitness.Api/Controllers/ExercisesController.cs` for user-facing exercise management (CRUD).
+    - Create `dotFitness.Api/Controllers/ExercisesController.cs` for user-facing exercise management (CRUD for both user exercises and read access to global exercises).
+    - Create `dotFitness.Api/Controllers/AdminExercisesController.cs` for global exercise management (admin-only).
     - Create `dotFitness.Api/Controllers/AdminMuscleGroupsController.cs` and `dotFitness.Api/Controllers/AdminEquipmentController.cs` for global management.
     - Apply `[Authorize]` and `[Authorize(Roles="Admin")]` appropriately.
     - Register `IMongoCollection<Exercise>`, `IMongoCollection<MuscleGroup>`, `IMongoCollection<Equipment>` in `Program.cs`.

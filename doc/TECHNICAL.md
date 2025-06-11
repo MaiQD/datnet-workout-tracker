@@ -201,12 +201,19 @@ All collections will implicitly include `_id` (ObjectId string), `createdAt` (UT
     - `bmi` (Number, calculated, optional).
     - `notes` (String, optional).
 - **`exercises`**
-    - `userId` (ObjectId): Reference to `users` collection (creator).
+    - `userId` (ObjectId, nullable): Reference to `users` collection (creator). Null for global exercises.
     - `name` (String).
     - `description` (String, optional).
-    - `muscleGroupIds` (Array of ObjectId): References to `muscleGroups`.
-    - `equipmentIds` (Array of ObjectId): References to `equipment`.
-    - `videoLink` (String).
+    - `muscleGroups` (Array of Strings): Associated muscle group names.
+    - `equipment` (Array of Strings): Required equipment names.
+    - `instructions` (Array of Strings): Step-by-step exercise instructions.
+    - `difficulty` (String): "Beginner", "Intermediate", "Advanced", "Expert".
+    - `videoUrl` (String, optional): URL to demonstration video.
+    - `imageUrl` (String, optional): URL to exercise image.
+    - `isGlobal` (Boolean): `true` for admin-defined, `false` for user-defined.
+    - `tags` (Array of Strings): Custom tags for categorization.
+    - `createdAt` (Date): UTC timestamp of creation.
+    - `updatedAt` (Date): UTC timestamp of last modification.
 - **`muscleGroups`**
     - `name` (String, unique).
     - `isGlobal` (Boolean): `true` for admin-defined, `false` for user-defined.

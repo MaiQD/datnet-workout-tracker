@@ -74,9 +74,14 @@ This document defines the requirements for the initial release of the **dotFitne
     - Associated Muscle Groups (e.g., Chest, Biceps, Quads).
     - Required Equipment (e.g., Dumbbells, Resistance Band, Bodyweight).
     - A Video Link for demonstration.
-- **EM-003: Exercise Listing & Search:** The system SHALL allow users to view a list of their custom exercises, with options to search and filter by name, muscle group, or equipment.
-- **EM-004: Exercise Editing/Deletion:** The system SHALL allow users to edit or delete their custom exercises.
+    - Exercise Instructions (step-by-step guide).
+    - Difficulty Level (Beginner, Intermediate, Advanced, Expert).
+    - Optional Exercise Image.
+    - Tags for categorization.
+- **EM-003: Exercise Listing & Search:** The system SHALL allow users to view a combined list of their custom exercises and global exercises, with options to search and filter by name, muscle group, equipment, or difficulty level.
+- **EM-004: Exercise Editing/Deletion:** The system SHALL allow users to edit or delete their custom exercises. Users SHALL NOT be able to edit or delete global exercises.
 - **EM-005: Custom Muscle Groups/Equipment:** The system SHALL allow users to add new muscle group and equipment tags that are not already present in the global list, for their personal use.
+- **EM-006: Global Exercise Access:** The system SHALL provide users access to a library of global exercises created by administrators, which can be used in routines but cannot be modified by regular users.
 
 ### 2.3. Routine Management (RM)
 
@@ -114,6 +119,7 @@ This document defines the requirements for the initial release of the **dotFitne
 
 - **SA-001: Global Muscle Group Management:** The system SHALL allow authenticated administrators to add, edit, or delete global muscle group definitions.
 - **SA-002: Global Equipment Management:** The system SHALL allow authenticated administrators to add, edit, or delete global equipment definitions.
+- **SA-003: Global Exercise Management:** The system SHALL allow authenticated administrators to add, edit, or delete global exercise definitions that will be available to all users.
 
 ## 3. Non-Functional Requirements (NFR)
 
