@@ -55,6 +55,21 @@ public static class ModuleRegistry
             var applicationAssemblyName = $"dotFitness.Modules.{moduleName}.Application";
             var applicationAssembly = System.Reflection.Assembly.Load(applicationAssemblyName);
             
+            // Pre-load Infrastructure assembly from the file system
+            var infrastructureAssemblyPath = Path.Combine(AppContext.BaseDirectory, $"dotFitness.Modules.{moduleName}.Infrastructure.dll");
+            if (File.Exists(infrastructureAssemblyPath))
+            {
+                try
+                {
+                    System.Reflection.Assembly.LoadFrom(infrastructureAssemblyPath);
+                    Log.Information("Loaded Infrastructure assembly for module: {ModuleName}", moduleName);
+                }
+                catch (Exception ex)
+                {
+                    Log.Warning("Could not load Infrastructure assembly for module {ModuleName}: {Error}", moduleName, ex.Message);
+                }
+            }
+            
             // Look for module registration class
             var registrationTypeName = $"dotFitness.Modules.{moduleName}.Application.Configuration.{moduleName}ModuleRegistration";
             var registrationType = applicationAssembly.GetType(registrationTypeName);
@@ -164,29 +179,44 @@ public static class ModuleRegistry
     {
         try
         {
-            // Try to load the Application assembly and find the index configuration method
-            var applicationAssemblyName = $"dotFitness.Modules.{moduleName}.Application";
-            var applicationAssembly = System.Reflection.Assembly.Load(applicationAssemblyName);
-            
-            // Look for module registration class
-            var registrationTypeName = $"dotFitness.Modules.{moduleName}.Application.Configuration.{moduleName}ModuleRegistration";
-            var registrationType = applicationAssembly.GetType(registrationTypeName);
-            
-            if (registrationType != null)
+            // Pre-load Infrastructure assembly from the file system
+            var infrastructureAssemblyPath = Path.Combine(AppContext.BaseDirectory, $"dotFitness.Modules.{moduleName}.Infrastructure.dll");
+            if (File.Exists(infrastructureAssemblyPath))
             {
-                // Look for Configure*ModuleIndexes method
-                var configureIndexesMethod = registrationType.GetMethod($"Configure{moduleName}ModuleIndexes", 
-                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
-                
-                if (configureIndexesMethod != null)
+                try
                 {
-                    var task = (Task?)configureIndexesMethod.Invoke(null, new object[] { services });
-                    if (task != null)
+                    var infrastructureAssembly = System.Reflection.Assembly.LoadFrom(infrastructureAssemblyPath);
+                    
+                    // Look for Infrastructure module configuration class
+                    var configurationTypeName = $"dotFitness.Modules.{moduleName}.Infrastructure.Configuration.{moduleName}InfrastructureModule";
+                    var configurationType = infrastructureAssembly.GetType(configurationTypeName);
+                    
+                    if (configurationType != null)
                     {
-                        await task;
-                        Log.Information("Successfully configured indexes for module: {ModuleName}", moduleName);
+                        // Look for Configure*ModuleIndexes method
+                        var configureIndexesMethod = configurationType.GetMethod($"Configure{moduleName}ModuleIndexes", 
+                            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                        
+                        if (configureIndexesMethod != null)
+                        {
+                            var task = (Task?)configureIndexesMethod.Invoke(null, new object[] { services });
+                            if (task != null)
+                            {
+                                await task;
+                                Log.Information("Successfully configured indexes for module: {ModuleName}", moduleName);
+                                return;
+                            }
+                        }
                     }
                 }
+                catch (Exception ex)
+                {
+                    Log.Warning("Could not configure {ModuleName} module indexes: {Error}", moduleName, ex.Message);
+                }
+            }
+            else
+            {
+                Log.Warning("Infrastructure assembly not found for module: {ModuleName}", moduleName);
             }
         }
         catch (Exception ex)

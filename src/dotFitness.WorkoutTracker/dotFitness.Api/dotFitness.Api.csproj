@@ -14,8 +14,16 @@
     <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     <ProjectReference Include="..\Modules\Users\dotFitness.Modules.Users.Application\dotFitness.Modules.Users.Application.csproj" />
-    <!-- Temporary reference to ensure Infrastructure assemblies are copied to output directory -->
-    <ProjectReference Include="..\Modules\Users\dotFitness.Modules.Users.Infrastructure\dotFitness.Modules.Users.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Exercises\dotFitness.Modules.Exercises.Application\dotFitness.Modules.Exercises.Application.csproj" />
   </ItemGroup>
+
+  <!-- Runtime assemblies for reflection-based module loading -->
+  <Target Name="CopyModuleInfrastructureAssemblies" AfterTargets="Build">
+    <ItemGroup>
+      <InfrastructureAssemblies Include="..\Modules\Users\dotFitness.Modules.Users.Infrastructure\bin\$(Configuration)\net8.0\dotFitness.Modules.Users.Infrastructure.dll" />
+      <InfrastructureAssemblies Include="..\Modules\Exercises\dotFitness.Modules.Exercises.Infrastructure\bin\$(Configuration)\net8.0\dotFitness.Modules.Exercises.Infrastructure.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(InfrastructureAssemblies)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />
+  </Target>
 
 </Project>

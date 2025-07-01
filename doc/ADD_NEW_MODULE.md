@@ -38,17 +38,27 @@ The dotFitness application features a sophisticated **automatic module discovery
 
 ### 🔧 **How It Works**
 1. **Module Discovery**: Scans [`ModuleRegistry.ModuleNames`](../src/dotFitness.WorkoutTracker/dotFitness.Api/Infrastructure/ModuleRegistry.cs) array
-2. **Assembly Loading**: Loads both Application and Infrastructure assemblies via reflection
-3. **Service Registration**: Invokes each module's registration method automatically
-4. **MediatR Registration**: Registers all commands, queries, and handlers
-5. **Index Configuration**: Configures MongoDB indexes for module entities
-6. **Error Handling**: Logs warnings for missing modules but continues operation
+2. **Assembly Loading**: Loads Application assemblies via `Assembly.Load()` and Infrastructure via `Assembly.LoadFrom()` for Clean Architecture compliance
+3. **Service Registration**: Uses reflection to find and invoke `Add{ModuleName}Module()` methods automatically
+4. **MediatR Registration**: Registers all commands, queries, and handlers from discovered assemblies
+5. **Index Configuration**: Invokes `Configure{ModuleName}ModuleIndexes()` methods for MongoDB optimization
+6. **Error Handling**: Logs warnings for missing modules but continues operation gracefully
+
+### 🔬 **Implementation Patterns (Based on Exercises Module)**
+- **Static Mappers**: Use `[Mapper]` attribute with static methods for compile-time performance
+- **Clean Architecture**: API project uses MSBuild targets to copy Infrastructure assemblies without direct references
+- **Assembly Resolution**: Infrastructure assemblies loaded from file system paths, then resolved via `AppDomain.GetAssemblies()`
+- **Result Pattern**: All operations return `Result<T>` instead of throwing exceptions
+- **User Ownership**: Entities support both global (admin) and user-specific instances
+- **UTC Timestamps**: All `CreatedAt`/`UpdatedAt` properties use UTC `DateTime`
 
 ### 📋 **Registration Logs**
 When working correctly, you'll see logs like:
 ```bash
-[INF] Loaded Users Application assembly for MediatR
-[INF] Loaded Users Infrastructure assembly for MediatR  
+[INF] Loaded Exercises Application assembly for MediatR
+[INF] Loaded Infrastructure assembly for module: Exercises
+[INF] Successfully registered module: Exercises
+[INF] Successfully configured indexes for module: Exercises  
 [INF] Registered MediatR services from assembly: dotFitness.Modules.Users.Application
 [INF] Registered MediatR services from assembly: dotFitness.Modules.Users.Infrastructure
 [INF] Successfully registered module: Users
@@ -318,7 +328,7 @@ public class CreateYourEntityCommandValidator : AbstractValidator<CreateYourEnti
 ### Mapper Template
 
 ```csharp
-// File: Mappers/IYourEntityMapper.cs
+// File: Mappers/YourEntityMapper.cs
 using Riok.Mapperly.Abstractions;
 using dotFitness.Modules.YourNewModule.Domain.Entities;
 using dotFitness.Modules.YourNewModule.Application.DTOs;
@@ -326,12 +336,20 @@ using dotFitness.Modules.YourNewModule.Application.DTOs;
 namespace dotFitness.Modules.YourNewModule.Application.Mappers;
 
 [Mapper]
-public partial class YourEntityMapper
+public static partial class YourEntityMapper
 {
-    public partial YourEntityDto ToDto(YourEntity entity);
-    public partial YourEntity ToEntity(YourEntityDto dto);
+    public static partial YourEntityDto ToDto(YourEntity entity);
+    
+    // Add custom mapping methods if needed
+    // private static string MapCustomProperty(SomeType value) => value.ToString();
 }
 ```
+
+**Important Notes:**
+- Use `static partial class` for performance (no instance creation needed)
+- Riok.Mapperly generates implementation at compile-time
+- Add custom mapping methods as `private static` for complex conversions
+- DO NOT register static mappers in DI container - call directly: `YourEntityMapper.ToDto(entity)`
 
 ### Repository Implementation Template
 
@@ -458,16 +476,13 @@ namespace dotFitness.Modules.YourNewModule.Infrastructure.Handlers;
 public class CreateYourEntityCommandHandler : IRequestHandler<CreateYourEntityCommand, Result<YourEntityDto>>
 {
     private readonly IYourEntityRepository _repository;
-    private readonly YourEntityMapper _mapper;
     private readonly ILogger<CreateYourEntityCommandHandler> _logger;
 
     public CreateYourEntityCommandHandler(
         IYourEntityRepository repository,
-        YourEntityMapper mapper,
         ILogger<CreateYourEntityCommandHandler> logger)
     {
         _repository = repository;
-        _mapper = mapper;
         _logger = logger;
     }
 
@@ -481,15 +496,16 @@ public class CreateYourEntityCommandHandler : IRequestHandler<CreateYourEntityCo
                 Description = request.Description
             };
 
-            var createResult = await _repository.CreateAsync(entity);
+            var createResult = await _repository.CreateAsync(entity, cancellationToken);
             
             if (createResult.IsFailure)
             {
                 _logger.LogWarning("Failed to create entity: {Error}", createResult.Error);
-                return Result.Failure<YourEntityDto>(createResult.Error);
+                return Result.Failure<YourEntityDto>(createResult.Error!);
             }
 
-            var dto = _mapper.ToDto(createResult.Value);
+            // Use static mapper (no DI registration needed)
+            var dto = YourEntityMapper.ToDto(createResult.Value!);
             _logger.LogInformation("Successfully created entity with id {Id}", dto.Id);
             
             return Result.Success(dto);
@@ -516,8 +532,14 @@ public static class YourNewModuleRegistration
 {
     public static IServiceCollection AddYourNewModuleModule(this IServiceCollection services, IConfiguration configuration)
     {
-        // Use reflection to find and invoke the Infrastructure layer's registration
-        var infrastructureAssembly = System.Reflection.Assembly.Load("dotFitness.Modules.YourNewModule.Infrastructure");
+        // Find the Infrastructure assembly that should already be loaded by ModuleRegistry
+        var infrastructureAssembly = System.AppDomain.CurrentDomain.GetAssemblies()
+            .FirstOrDefault(a => a.GetName().Name == "dotFitness.Modules.YourNewModule.Infrastructure");
+        
+        if (infrastructureAssembly == null)
+        {
+            throw new InvalidOperationException("YourNewModule Infrastructure assembly not found in loaded assemblies");
+        }
         var moduleType = infrastructureAssembly.GetType("dotFitness.Modules.YourNewModule.Infrastructure.Configuration.YourNewModuleInfrastructureModule");
         var addModuleMethod = moduleType?.GetMethod("AddYourNewModuleModule", 
             System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
@@ -536,8 +558,14 @@ public static class YourNewModuleRegistration
 
     public static async Task ConfigureYourNewModuleModuleIndexes(IServiceProvider services)
     {
-        // Use reflection to find and invoke the Infrastructure layer's index configuration
-        var infrastructureAssembly = System.Reflection.Assembly.Load("dotFitness.Modules.YourNewModule.Infrastructure");
+        // Find the Infrastructure assembly that should already be loaded by ModuleRegistry
+        var infrastructureAssembly = System.AppDomain.CurrentDomain.GetAssemblies()
+            .FirstOrDefault(a => a.GetName().Name == "dotFitness.Modules.YourNewModule.Infrastructure");
+        
+        if (infrastructureAssembly == null)
+        {
+            throw new InvalidOperationException("YourNewModule Infrastructure assembly not found in loaded assemblies");
+        }
         var moduleType = infrastructureAssembly.GetType("dotFitness.Modules.YourNewModule.Infrastructure.Configuration.YourNewModuleInfrastructureModule");
         var configureIndexesMethod = moduleType?.GetMethod("ConfigureYourNewModuleModuleIndexes", 
             System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
@@ -601,8 +629,8 @@ public static class YourNewModuleInfrastructureModule
         // Register validators
         services.AddScoped<IValidator<CreateYourEntityCommand>, CreateYourEntityCommandValidator>();
 
-        // Register mappers
-        services.AddScoped<YourEntityMapper>();
+        // NOTE: Do NOT register static mappers - they are called directly
+        // Static mappers like YourEntityMapper.ToDto() don't need DI registration
 
         return services;
     }
@@ -699,16 +727,35 @@ The ModuleRegistry will automatically:
 4. ✅ Configure MongoDB indexes
 5. ✅ Log the registration process
 
+**Example: Successful Exercises Module Registration**
+```bash
+[INF] Loaded Exercises Application assembly for MediatR
+[INF] Loaded Infrastructure assembly for module: Exercises
+[INF] Successfully registered module: Exercises
+[INF] Successfully configured indexes for module: Exercises
+[INF] Now listening on: http://localhost:5207
+```
+
 ## Testing Your Module
 
 ### Step 7: Test API Endpoints
 
+**Access Swagger Documentation:**
+```bash
+# Start the API
+dotnet run --project dotFitness.Api
+
+# Open browser to view auto-generated API documentation
+open http://localhost:5207/swagger
+```
+
+**Test with HTTP Client:**
 ```bash
 # Test your new endpoints using the API
-curl -X GET "https://localhost:7001/api/v1/YourNewModule/{id}" \
+curl -X GET "https://localhost:5207/api/v1/YourNewModule/{id}" \
   -H "Authorization: Bearer {jwt-token}"
 
-curl -X POST "https://localhost:7001/api/v1/YourNewModule" \
+curl -X POST "https://localhost:5207/api/v1/YourNewModule" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer {jwt-token}" \
   -d '{
