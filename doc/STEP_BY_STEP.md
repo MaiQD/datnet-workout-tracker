@@ -1,6 +1,8 @@
-## dotFitness: Full Step-by-Step Development Actions for AI Agent
+# dotFitness Development: Step-by-Step Guide
 
-This document provides a comprehensive, sequential list of actions required to develop the `dotFitness` application from initial setup through deployment, based on all agreed-upon architectural, design, and implementation details.
+> Based on modular monolith best practices from [modular-monolith-with-ddd](https://github.com/MaiQD/modular-monolith-with-ddd/blob/master/README.md)
+
+This guide provides a comprehensive step-by-step approach to developing features in the dotFitness modular monolith architecture.
 
 ---
 

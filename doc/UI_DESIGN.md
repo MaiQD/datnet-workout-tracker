@@ -245,3 +245,866 @@ The UI will be built using Vue.js's component-based architecture.
     - **Chart Colors:** Chart elements (lines, bars, text, grids) will adapt their colors to be clearly visible and harmonious within the active theme.
     - **Icons/Illustrations:** Will be chosen or styled to appear well in both themes.
 - **Implementation:** Tailwind CSS's built-in `dark:` variant will be extensively used for styling. A root class on the `<html>` element (e.g., `dark`) will control the active theme.
+
+# dotFitness UI Design: Frontend Architecture
+
+> Based on modular monolith best practices from [modular-monolith-with-ddd](https://github.com/MaiQD/modular-monolith-with-ddd/blob/master/README.md)
+
+This document outlines the frontend architecture and design principles for the dotFitness workout tracker application.
+
+## 🎯 Frontend Architecture Overview
+
+The dotFitness frontend follows a **modular architecture** that mirrors the backend's modular monolith structure, providing:
+
+- **Module-based organization**: Each backend module has corresponding frontend components
+- **Clean separation**: UI components are organized by business domain
+- **Scalable design**: Easy to add new modules without affecting existing ones
+- **Consistent UX**: Unified design system across all modules
+
+## 🏗️ Frontend Project Structure
+
+```
+dotFitness.WebUI/
+├── src/
+│   ├── components/
+│   │   ├── shared/              # 🔗 Shared Components
+│   │   │   ├── layout/
+│   │   │   ├── navigation/
+│   │   │   ├── forms/
+│   │   │   └── charts/
+│   │   ├── users/               # 👤 User Module Components
+│   │   │   ├── auth/
+│   │   │   ├── profile/
+│   │   │   └── metrics/
+│   │   ├── exercises/           # 💪 Exercise Module Components
+│   │   │   ├── management/
+│   │   │   ├── search/
+│   │   │   └── details/
+│   │   ├── routines/            # 📋 Routine Module Components
+│   │   │   ├── builder/
+│   │   │   ├── templates/
+│   │   │   └── execution/
+│   │   └── workout-logs/        # 📊 Workout Log Module Components
+│   │       ├── tracking/
+│   │       ├── analytics/
+│   │       └── progress/
+│   ├── services/
+│   │   ├── api/                 # API Integration
+│   │   │   ├── users/
+│   │   │   ├── exercises/
+│   │   │   ├── routines/
+│   │   │   └── workout-logs/
+│   │   ├── auth/                # Authentication
+│   │   └── storage/             # Local Storage
+│   ├── stores/                  # State Management
+│   │   ├── auth/
+│   │   ├── users/
+│   │   ├── exercises/
+│   │   ├── routines/
+│   │   └── workout-logs/
+│   ├── utils/                   # Utilities
+│   ├── styles/                  # Styling
+│   └── assets/                  # Static Assets
+├── public/
+└── tests/
+    ├── unit/
+    ├── integration/
+    └── e2e/
+```
+
+## 🎨 Design System
+
+### Color Palette
+```css
+:root {
+  /* Primary Colors */
+  --primary-50: #eff6ff;
+  --primary-100: #dbeafe;
+  --primary-500: #3b82f6;
+  --primary-600: #2563eb;
+  --primary-700: #1d4ed8;
+  
+  /* Secondary Colors */
+  --secondary-50: #f0fdf4;
+  --secondary-100: #dcfce7;
+  --secondary-500: #22c55e;
+  --secondary-600: #16a34a;
+  
+  /* Neutral Colors */
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-500: #6b7280;
+  --gray-700: #374151;
+  --gray-900: #111827;
+  
+  /* Semantic Colors */
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --info: #3b82f6;
+}
+```
+
+### Typography
+```css
+:root {
+  /* Font Families */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  
+  /* Font Sizes */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  
+  /* Font Weights */
+  --font-light: 300;
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+}
+```
+
+### Spacing System
+```css
+:root {
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+}
+```
+
+## 🧩 Component Architecture
+
+### Shared Components
+
+#### Layout Components
+```vue
+<!-- components/shared/layout/AppLayout.vue -->
+<template>
+  <div class="min-h-screen bg-gray-50">
+    <AppHeader />
+    <main class="container mx-auto px-4 py-8">
+      <slot />
+    </main>
+    <AppFooter />
+  </div>
+</template>
+```
+
+#### Navigation Components
+```vue
+<!-- components/shared/navigation/Sidebar.vue -->
+<template>
+  <nav class="bg-white shadow-lg">
+    <div class="px-4 py-6">
+      <div class="flex items-center justify-between">
+        <h1 class="text-xl font-bold text-gray-900">dotFitness</h1>
+        <button @click="$emit('toggle')" class="lg:hidden">
+          <MenuIcon class="h-6 w-6" />
+        </button>
+      </div>
+      
+      <div class="mt-6">
+        <nav class="space-y-2">
+          <SidebarLink 
+            v-for="item in navigationItems" 
+            :key="item.name"
+            :item="item"
+            :active="item.name === activeModule"
+          />
+        </nav>
+      </div>
+    </div>
+  </nav>
+</template>
+
+<script setup>
+const navigationItems = [
+  { name: 'Dashboard', href: '/', icon: HomeIcon },
+  { name: 'Exercises', href: '/exercises', icon: DumbbellIcon },
+  { name: 'Routines', href: '/routines', icon: CalendarIcon },
+  { name: 'Workout Logs', href: '/workout-logs', icon: ChartIcon },
+  { name: 'Profile', href: '/profile', icon: UserIcon }
+];
+</script>
+```
+
+#### Form Components
+```vue
+<!-- components/shared/forms/BaseInput.vue -->
+<template>
+  <div class="form-group">
+    <label v-if="label" :for="id" class="form-label">
+      {{ label }}
+      <span v-if="required" class="text-red-500">*</span>
+    </label>
+    <input
+      :id="id"
+      :type="type"
+      :value="modelValue"
+      :placeholder="placeholder"
+      :required="required"
+      :disabled="disabled"
+      class="form-input"
+      :class="{ 'form-input-error': hasError }"
+      @input="$emit('update:modelValue', $event.target.value)"
+      @blur="$emit('blur')"
+    />
+    <p v-if="error" class="form-error">{{ error }}</p>
+  </div>
+</template>
+
+<script setup>
+defineProps({
+  modelValue: String,
+  label: String,
+  id: String,
+  type: { type: String, default: 'text' },
+  placeholder: String,
+  required: Boolean,
+  disabled: Boolean,
+  error: String
+});
+
+defineEmits(['update:modelValue', 'blur']);
+</script>
+```
+
+### Module-Specific Components
+
+#### Users Module
+```vue
+<!-- components/users/auth/LoginForm.vue -->
+<template>
+  <div class="max-w-md mx-auto">
+    <div class="bg-white rounded-lg shadow-md p-8">
+      <h2 class="text-2xl font-bold text-center mb-6">Welcome to dotFitness</h2>
+      
+      <button
+        @click="handleGoogleLogin"
+        :disabled="isLoading"
+        class="w-full btn btn-primary"
+      >
+        <GoogleIcon class="w-5 h-5 mr-2" />
+        {{ isLoading ? 'Signing in...' : 'Continue with Google' }}
+      </button>
+      
+      <p class="text-sm text-gray-600 text-center mt-4">
+        By continuing, you agree to our Terms of Service and Privacy Policy
+      </p>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue';
+import { useAuthStore } from '@/stores/auth';
+
+const authStore = useAuthStore();
+const isLoading = ref(false);
+
+const handleGoogleLogin = async () => {
+  isLoading.value = true;
+  try {
+    await authStore.loginWithGoogle();
+  } catch (error) {
+    console.error('Login failed:', error);
+  } finally {
+    isLoading.value = false;
+  }
+};
+</script>
+```
+
+#### Exercises Module
+```vue
+<!-- components/exercises/management/ExerciseCard.vue -->
+<template>
+  <div class="bg-white rounded-lg shadow-md overflow-hidden">
+    <div class="p-6">
+      <div class="flex items-start justify-between">
+        <div class="flex-1">
+          <h3 class="text-lg font-semibold text-gray-900">{{ exercise.name }}</h3>
+          <p class="text-gray-600 mt-1">{{ exercise.description }}</p>
+          
+          <div class="mt-4 flex flex-wrap gap-2">
+            <span
+              v-for="muscleGroup in exercise.muscleGroups"
+              :key="muscleGroup"
+              class="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded"
+            >
+              {{ muscleGroup }}
+            </span>
+          </div>
+          
+          <div class="mt-4 flex flex-wrap gap-2">
+            <span
+              v-for="equipment in exercise.equipment"
+              :key="equipment"
+              class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded"
+            >
+              {{ equipment }}
+            </span>
+          </div>
+        </div>
+        
+        <div class="flex space-x-2">
+          <button
+            @click="$emit('edit', exercise)"
+            class="btn btn-secondary btn-sm"
+          >
+            Edit
+          </button>
+          <button
+            @click="$emit('delete', exercise.id)"
+            class="btn btn-danger btn-sm"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+      
+      <div v-if="exercise.videoUrl" class="mt-4">
+        <a
+          :href="exercise.videoUrl"
+          target="_blank"
+          class="text-blue-600 hover:text-blue-800 text-sm"
+        >
+          Watch Demo Video →
+        </a>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+defineProps({
+  exercise: {
+    type: Object,
+    required: true
+  }
+});
+
+defineEmits(['edit', 'delete']);
+</script>
+```
+
+## 🔌 API Integration
+
+### API Service Structure
+```javascript
+// services/api/base.js
+class ApiService {
+  constructor(baseURL) {
+    this.baseURL = baseURL;
+    this.client = axios.create({
+      baseURL,
+      timeout: 10000,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    this.setupInterceptors();
+  }
+  
+  setupInterceptors() {
+    // Request interceptor for authentication
+    this.client.interceptors.request.use(
+      (config) => {
+        const token = localStorage.getItem('auth_token');
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
+    
+    // Response interceptor for error handling
+    this.client.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          // Handle unauthorized access
+          this.handleUnauthorized();
+        }
+        return Promise.reject(error);
+      }
+    );
+  }
+  
+  handleUnauthorized() {
+    localStorage.removeItem('auth_token');
+    window.location.href = '/login';
+  }
+}
+
+// services/api/exercises.js
+class ExercisesApiService extends ApiService {
+  constructor() {
+    super('/api/v1/exercises');
+  }
+  
+  async getAll(params = {}) {
+    const response = await this.client.get('', { params });
+    return response.data;
+  }
+  
+  async getById(id) {
+    const response = await this.client.get(`/${id}`);
+    return response.data;
+  }
+  
+  async create(exercise) {
+    const response = await this.client.post('', exercise);
+    return response.data;
+  }
+  
+  async update(id, exercise) {
+    const response = await this.client.put(`/${id}`, exercise);
+    return response.data;
+  }
+  
+  async delete(id) {
+    await this.client.delete(`/${id}`);
+  }
+}
+
+export const exercisesApi = new ExercisesApiService();
+```
+
+### State Management
+```javascript
+// stores/exercises.js
+import { defineStore } from 'pinia';
+import { exercisesApi } from '@/services/api/exercises';
+
+export const useExercisesStore = defineStore('exercises', {
+  state: () => ({
+    exercises: [],
+    loading: false,
+    error: null,
+    filters: {
+      search: '',
+      muscleGroups: [],
+      equipment: []
+    }
+  }),
+  
+  getters: {
+    filteredExercises: (state) => {
+      let filtered = state.exercises;
+      
+      if (state.filters.search) {
+        filtered = filtered.filter(exercise =>
+          exercise.name.toLowerCase().includes(state.filters.search.toLowerCase()) ||
+          exercise.description.toLowerCase().includes(state.filters.search.toLowerCase())
+        );
+      }
+      
+      if (state.filters.muscleGroups.length > 0) {
+        filtered = filtered.filter(exercise =>
+          state.filters.muscleGroups.some(group =>
+            exercise.muscleGroups.includes(group)
+          )
+        );
+      }
+      
+      if (state.filters.equipment.length > 0) {
+        filtered = filtered.filter(exercise =>
+          state.filters.equipment.some(equipment =>
+            exercise.equipment.includes(equipment)
+          )
+        );
+      }
+      
+      return filtered;
+    }
+  },
+  
+  actions: {
+    async fetchExercises() {
+      this.loading = true;
+      this.error = null;
+      
+      try {
+        const exercises = await exercisesApi.getAll();
+        this.exercises = exercises;
+      } catch (error) {
+        this.error = error.message;
+      } finally {
+        this.loading = false;
+      }
+    },
+    
+    async createExercise(exercise) {
+      try {
+        const newExercise = await exercisesApi.create(exercise);
+        this.exercises.push(newExercise);
+        return newExercise;
+      } catch (error) {
+        this.error = error.message;
+        throw error;
+      }
+    },
+    
+    async updateExercise(id, updates) {
+      try {
+        const updatedExercise = await exercisesApi.update(id, updates);
+        const index = this.exercises.findIndex(e => e.id === id);
+        if (index !== -1) {
+          this.exercises[index] = updatedExercise;
+        }
+        return updatedExercise;
+      } catch (error) {
+        this.error = error.message;
+        throw error;
+      }
+    },
+    
+    async deleteExercise(id) {
+      try {
+        await exercisesApi.delete(id);
+        this.exercises = this.exercises.filter(e => e.id !== id);
+      } catch (error) {
+        this.error = error.message;
+        throw error;
+      }
+    },
+    
+    setFilters(filters) {
+      this.filters = { ...this.filters, ...filters };
+    }
+  }
+});
+```
+
+## 📱 Responsive Design
+
+### Mobile-First Approach
+```css
+/* Base styles for mobile */
+.container {
+  padding: 1rem;
+}
+
+.exercise-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+/* Tablet styles */
+@media (min-width: 768px) {
+  .container {
+    padding: 2rem;
+  }
+  
+  .exercise-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+/* Desktop styles */
+@media (min-width: 1024px) {
+  .exercise-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+}
+```
+
+### Navigation Responsiveness
+```vue
+<!-- components/shared/navigation/ResponsiveNav.vue -->
+<template>
+  <nav class="bg-white shadow-lg">
+    <!-- Mobile menu button -->
+    <div class="lg:hidden">
+      <button
+        @click="isMobileMenuOpen = !isMobileMenuOpen"
+        class="p-2 rounded-md text-gray-600 hover:text-gray-900"
+      >
+        <MenuIcon v-if="!isMobileMenuOpen" class="h-6 w-6" />
+        <XIcon v-else class="h-6 w-6" />
+      </button>
+    </div>
+    
+    <!-- Desktop navigation -->
+    <div class="hidden lg:flex lg:items-center lg:space-x-8">
+      <NavLink
+        v-for="item in navigationItems"
+        :key="item.name"
+        :item="item"
+        :active="item.name === activeModule"
+      />
+    </div>
+    
+    <!-- Mobile navigation -->
+    <div
+      v-show="isMobileMenuOpen"
+      class="lg:hidden absolute top-full left-0 w-full bg-white shadow-lg"
+    >
+      <div class="px-2 pt-2 pb-3 space-y-1">
+        <MobileNavLink
+          v-for="item in navigationItems"
+          :key="item.name"
+          :item="item"
+          :active="item.name === activeModule"
+          @click="isMobileMenuOpen = false"
+        />
+      </div>
+    </div>
+  </nav>
+</template>
+```
+
+## 🎯 User Experience Patterns
+
+### Loading States
+```vue
+<!-- components/shared/LoadingSpinner.vue -->
+<template>
+  <div class="flex items-center justify-center p-8">
+    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+    <span class="ml-2 text-gray-600">{{ message || 'Loading...' }}</span>
+  </div>
+</template>
+
+<script setup>
+defineProps({
+  message: String
+});
+</script>
+```
+
+### Error Handling
+```vue
+<!-- components/shared/ErrorMessage.vue -->
+<template>
+  <div class="bg-red-50 border border-red-200 rounded-md p-4">
+    <div class="flex">
+      <ExclamationCircleIcon class="h-5 w-5 text-red-400" />
+      <div class="ml-3">
+        <h3 class="text-sm font-medium text-red-800">
+          {{ title || 'An error occurred' }}
+        </h3>
+        <div class="mt-2 text-sm text-red-700">
+          <p>{{ message }}</p>
+        </div>
+        <div v-if="retry" class="mt-4">
+          <button
+            @click="$emit('retry')"
+            class="btn btn-secondary btn-sm"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+defineProps({
+  title: String,
+  message: String,
+  retry: Boolean
+});
+
+defineEmits(['retry']);
+</script>
+```
+
+### Success Feedback
+```vue
+<!-- components/shared/SuccessMessage.vue -->
+<template>
+  <div class="bg-green-50 border border-green-200 rounded-md p-4">
+    <div class="flex">
+      <CheckCircleIcon class="h-5 w-5 text-green-400" />
+      <div class="ml-3">
+        <h3 class="text-sm font-medium text-green-800">
+          {{ title || 'Success!' }}
+        </h3>
+        <div class="mt-2 text-sm text-green-700">
+          <p>{{ message }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+defineProps({
+  title: String,
+  message: String
+});
+</script>
+```
+
+## 🧪 Testing Strategy
+
+### Unit Testing
+```javascript
+// tests/unit/components/exercises/ExerciseCard.test.js
+import { mount } from '@vue/test-utils';
+import ExerciseCard from '@/components/exercises/management/ExerciseCard.vue';
+
+describe('ExerciseCard', () => {
+  const mockExercise = {
+    id: '1',
+    name: 'Push-ups',
+    description: 'Basic push-ups',
+    muscleGroups: ['Chest', 'Triceps'],
+    equipment: ['None'],
+    videoUrl: 'https://example.com/video'
+  };
+
+  it('renders exercise information correctly', () => {
+    const wrapper = mount(ExerciseCard, {
+      props: { exercise: mockExercise }
+    });
+
+    expect(wrapper.text()).toContain('Push-ups');
+    expect(wrapper.text()).toContain('Basic push-ups');
+    expect(wrapper.text()).toContain('Chest');
+    expect(wrapper.text()).toContain('Triceps');
+  });
+
+  it('emits edit event when edit button is clicked', async () => {
+    const wrapper = mount(ExerciseCard, {
+      props: { exercise: mockExercise }
+    });
+
+    await wrapper.find('[data-testid="edit-button"]').trigger('click');
+    expect(wrapper.emitted('edit')).toBeTruthy();
+    expect(wrapper.emitted('edit')[0]).toEqual([mockExercise]);
+  });
+});
+```
+
+### Integration Testing
+```javascript
+// tests/integration/exercises/ExerciseManagement.test.js
+import { mount } from '@vue/test-utils';
+import { createPinia, setActivePinia } from 'pinia';
+import ExerciseManagement from '@/views/exercises/ExerciseManagement.vue';
+import { useExercisesStore } from '@/stores/exercises';
+
+describe('ExerciseManagement Integration', () => {
+  let pinia;
+
+  beforeEach(() => {
+    pinia = createPinia();
+    setActivePinia(pinia);
+  });
+
+  it('loads and displays exercises from store', async () => {
+    const store = useExercisesStore();
+    store.exercises = [
+      { id: '1', name: 'Push-ups', description: 'Basic push-ups' },
+      { id: '2', name: 'Squats', description: 'Basic squats' }
+    ];
+
+    const wrapper = mount(ExerciseManagement, {
+      global: { plugins: [pinia] }
+    });
+
+    await wrapper.vm.$nextTick();
+    expect(wrapper.text()).toContain('Push-ups');
+    expect(wrapper.text()).toContain('Squats');
+  });
+});
+```
+
+## 🚀 Performance Optimization
+
+### Code Splitting
+```javascript
+// router/index.js
+import { createRouter, createWebHistory } from 'vue-router';
+
+const routes = [
+  {
+    path: '/',
+    name: 'Dashboard',
+    component: () => import('@/views/Dashboard.vue')
+  },
+  {
+    path: '/exercises',
+    name: 'Exercises',
+    component: () => import('@/views/exercises/ExerciseManagement.vue')
+  },
+  {
+    path: '/routines',
+    name: 'Routines',
+    component: () => import('@/views/routines/RoutineManagement.vue')
+  },
+  {
+    path: '/workout-logs',
+    name: 'WorkoutLogs',
+    component: () => import('@/views/workout-logs/WorkoutLogManagement.vue')
+  }
+];
+
+export default createRouter({
+  history: createWebHistory(),
+  routes
+});
+```
+
+### Lazy Loading
+```vue
+<!-- components/exercises/ExerciseVideo.vue -->
+<template>
+  <div class="video-container">
+    <video
+      v-if="isLoaded"
+      :src="videoUrl"
+      controls
+      class="w-full rounded-lg"
+    ></video>
+    <div v-else class="video-placeholder">
+      <button @click="loadVideo" class="btn btn-primary">
+        Load Video
+      </button>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue';
+
+const props = defineProps({
+  videoUrl: String
+});
+
+const isLoaded = ref(false);
+
+const loadVideo = () => {
+  isLoaded.value = true;
+};
+</script>
+```
+
+## 📚 References
+
+- [Modular Monolith with DDD](https://github.com/MaiQD/modular-monolith-with-ddd/blob/master/README.md) - Backend architecture reference
+- [Vue.js Best Practices](https://vuejs.org/guide/best-practices/) - Vue.js development guidelines
+- [Tailwind CSS](https://tailwindcss.com/docs) - Utility-first CSS framework
+- [Pinia State Management](https://pinia.vuejs.org/) - Vue.js state management
+- [Vue Test Utils](https://test-utils.vuejs.org/) - Vue.js testing utilities

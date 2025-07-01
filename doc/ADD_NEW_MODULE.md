@@ -1,834 +1,716 @@
-# Adding New Modules to dotFitness Modular Monolith
+# Adding a New Module to dotFitness
 
-This document provides step-by-step instructions for adding new modules to the dotFitness workout tracker application, following Clean Architecture and Modular Monolith principles.
+> Based on modular monolith best practices from [modular-monolith-with-ddd](https://github.com/MaiQD/modular-monolith-with-ddd/blob/master/README.md)
 
-## Table of Contents
+This guide walks you through creating a new module in the dotFitness modular monolith architecture. Each module follows Clean Architecture principles with Domain-Driven Design (DDD) patterns.
 
-1. [Overview](#overview)
-2. [Module Structure](#module-structure)
-3. [Generic Module Discovery System](#generic-module-discovery-system)
-4. [Step-by-Step Instructions](#step-by-step-instructions)
-5. [Code Templates](#code-templates)
-6. [Integration Steps](#integration-steps)
-7. [Testing Your Module](#testing-your-module)
-8. [Best Practices](#best-practices)
+## 🎯 Module Architecture Overview
 
-## Overview
+Each module is a **vertical slice** that contains:
+- **Domain Layer**: Business entities, domain events, and repository interfaces
+- **Application Layer**: Commands, queries, DTOs, and mappers
+- **Infrastructure Layer**: Command/query handlers and repository implementations
+- **Tests**: Comprehensive test coverage for all layers
 
-The dotFitness application follows a **Modular Monolith** architecture where each module is self-contained with its own:
-- **Domain Layer**: Entities, value objects, domain events, and repository interfaces
-- **Application Layer**: Commands, queries, DTOs, validators, and mappers
-- **Infrastructure Layer**: Repository implementations, handlers, and external integrations
-- **Tests**: Unit and integration tests
+## 📁 Module Structure Template
 
-Each module is automatically discovered and registered through the advanced [`ModuleRegistry`](../src/dotFitness.WorkoutTracker/dotFitness.Api/Infrastructure/ModuleRegistry.cs) system.
+```
+dotFitness.Modules.{ModuleName}/
+├── dotFitness.Modules.{ModuleName}.Domain/
+│   ├── Entities/
+│   ├── Events/
+│   └── Repositories/
+├── dotFitness.Modules.{ModuleName}.Application/
+│   ├── Commands/
+│   ├── Queries/
+│   ├── DTOs/
+│   ├── Mappers/
+│   ├── Validators/
+│   └── Configuration/
+├── dotFitness.Modules.{ModuleName}.Infrastructure/
+│   ├── Handlers/
+│   ├── Repositories/
+│   ├── Configuration/
+│   └── Settings/
+└── dotFitness.Modules.{ModuleName}.Tests/
+    ├── Domain/
+    ├── Application/
+    ├── Infrastructure/
+    └── MongoDB/
+```
 
-## Generic Module Discovery System
+## 🚀 Step-by-Step Module Creation
 
-The dotFitness application features a sophisticated **automatic module discovery and registration system** that:
+### Step 1: Create Module Projects
 
-### ✅ **Key Features**
-- **Zero Configuration**: Add module name to array, everything else is automatic
-- **Clean Architecture Compliance**: API only references Application layers
-- **Graceful Degradation**: Missing modules don't break the system
-- **Comprehensive Logging**: Full visibility into registration process
-- **MediatR Integration**: Automatic handler discovery and registration
-- **MongoDB Integration**: Automatic index configuration per module
-- **Scalable Pattern**: Supports unlimited modules without code changes
+Create the four core projects for your module:
 
-### 🔧 **How It Works**
-1. **Module Discovery**: Scans [`ModuleRegistry.ModuleNames`](../src/dotFitness.WorkoutTracker/dotFitness.Api/Infrastructure/ModuleRegistry.cs) array
-2. **Assembly Loading**: Loads Application assemblies via `Assembly.Load()` and Infrastructure via `Assembly.LoadFrom()` for Clean Architecture compliance
-3. **Service Registration**: Uses reflection to find and invoke `Add{ModuleName}Module()` methods automatically
-4. **MediatR Registration**: Registers all commands, queries, and handlers from discovered assemblies
-5. **Index Configuration**: Invokes `Configure{ModuleName}ModuleIndexes()` methods for MongoDB optimization
-6. **Error Handling**: Logs warnings for missing modules but continues operation gracefully
-
-### 🔬 **Implementation Patterns (Based on Exercises Module)**
-- **Static Mappers**: Use `[Mapper]` attribute with static methods for compile-time performance
-- **Clean Architecture**: API project uses MSBuild targets to copy Infrastructure assemblies without direct references
-- **Assembly Resolution**: Infrastructure assemblies loaded from file system paths, then resolved via `AppDomain.GetAssemblies()`
-- **Result Pattern**: All operations return `Result<T>` instead of throwing exceptions
-- **User Ownership**: Entities support both global (admin) and user-specific instances
-- **UTC Timestamps**: All `CreatedAt`/`UpdatedAt` properties use UTC `DateTime`
-
-### 📋 **Registration Logs**
-When working correctly, you'll see logs like:
 ```bash
-[INF] Loaded Exercises Application assembly for MediatR
-[INF] Loaded Infrastructure assembly for module: Exercises
-[INF] Successfully registered module: Exercises
-[INF] Successfully configured indexes for module: Exercises  
-[INF] Registered MediatR services from assembly: dotFitness.Modules.Users.Application
-[INF] Registered MediatR services from assembly: dotFitness.Modules.Users.Infrastructure
-[INF] Successfully registered module: Users
-[INF] Successfully configured indexes for module: Users
-[INF] MediatR registration completed for X module assemblies
+# Create Domain project
+dotnet new classlib -n dotFitness.Modules.{ModuleName}.Domain
+dotnet new classlib -n dotFitness.Modules.{ModuleName}.Application
+dotnet new classlib -n dotFitness.Modules.{ModuleName}.Infrastructure
+dotnet new xunit -n dotFitness.Modules.{ModuleName}.Tests
 ```
 
-## Module Structure
+### Step 2: Set Up Project References
 
-Every module follows this consistent structure:
+```bash
+# Domain project references
+dotnet add dotFitness.Modules.{ModuleName}.Domain/dotFitness.Modules.{ModuleName}.Domain.csproj reference dotFitness.SharedKernel/dotFitness.SharedKernel.csproj
 
-```
-Modules/
-└── {ModuleName}/
-    ├── dotFitness.Modules.{ModuleName}.Domain/
-    │   ├── Entities/
-    │   ├── Events/
-    │   └── Repositories/
-    ├── dotFitness.Modules.{ModuleName}.Application/
-    │   ├── Commands/
-    │   ├── Queries/
-    │   ├── DTOs/
-    │   ├── Validators/
-    │   ├── Mappers/
-    │   └── Configuration/
-    ├── dotFitness.Modules.{ModuleName}.Infrastructure/
-    │   ├── Repositories/
-    │   ├── Handlers/
-    │   ├── Settings/
-    │   └── Configuration/
-    └── dotFitness.Modules.{ModuleName}.Tests/
+# Application project references
+dotnet add dotFitness.Modules.{ModuleName}.Application/dotFitness.Modules.{ModuleName}.Application.csproj reference dotFitness.Modules.{ModuleName}.Domain/dotFitness.Modules.{ModuleName}.Domain.csproj
+dotnet add dotFitness.Modules.{ModuleName}.Application/dotFitness.Modules.{ModuleName}.Application.csproj reference dotFitness.SharedKernel/dotFitness.SharedKernel.csproj
+
+# Infrastructure project references
+dotnet add dotFitness.Modules.{ModuleName}.Infrastructure/dotFitness.Modules.{ModuleName}.Infrastructure.csproj reference dotFitness.Modules.{ModuleName}.Domain/dotFitness.Modules.{ModuleName}.Domain.csproj
+dotnet add dotFitness.Modules.{ModuleName}.Infrastructure/dotFitness.Modules.{ModuleName}.Infrastructure.csproj reference dotFitness.Modules.{ModuleName}.Application/dotFitness.Modules.{ModuleName}.Application.csproj
+dotnet add dotFitness.Modules.{ModuleName}.Infrastructure/dotFitness.Modules.{ModuleName}.Infrastructure.csproj reference dotFitness.SharedKernel/dotFitness.SharedKernel.csproj
+
+# Tests project references
+dotnet add dotFitness.Modules.{ModuleName}.Tests/dotFitness.Modules.{ModuleName}.Tests.csproj reference dotFitness.Modules.{ModuleName}.Domain/dotFitness.Modules.{ModuleName}.Domain.csproj
+dotnet add dotFitness.Modules.{ModuleName}.Tests/dotFitness.Modules.{ModuleName}.Tests.csproj reference dotFitness.Modules.{ModuleName}.Application/dotFitness.Modules.{ModuleName}.Application.csproj
+dotnet add dotFitness.Modules.{ModuleName}.Tests/dotFitness.Modules.{ModuleName}.Tests.csproj reference dotFitness.Modules.{ModuleName}.Infrastructure/dotFitness.Modules.{ModuleName}.Infrastructure.csproj
+dotnet add dotFitness.Modules.{ModuleName}.Tests/dotFitness.Modules.{ModuleName}.Tests.csproj reference dotFitness.SharedKernel/dotFitness.SharedKernel.csproj
 ```
 
-## Step-by-Step Instructions
+### Step 3: Add Required NuGet Packages
 
-### Step 1: Update Module Registry
+#### Domain Project
+```xml
+<ItemGroup>
+    <PackageReference Include="MediatR" Version="12.2.0" />
+</ItemGroup>
+```
 
-The **only configuration change needed** is adding your module name to the discovery array:
+#### Application Project
+```xml
+<ItemGroup>
+    <PackageReference Include="MediatR" Version="12.2.0" />
+    <PackageReference Include="FluentValidation" Version="11.8.1" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.8.1" />
+</ItemGroup>
+```
 
+#### Infrastructure Project
+```xml
+<ItemGroup>
+    <PackageReference Include="MediatR" Version="12.2.0" />
+    <PackageReference Include="MongoDB.Driver" Version="2.23.1" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
+</ItemGroup>
+```
+
+#### Tests Project
+```xml
+<ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="xunit" Version="2.6.6" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.6" />
+    <PackageReference Include="FluentAssertions" Version="6.12.0" />
+    <PackageReference Include="Moq" Version="4.20.70" />
+    <PackageReference Include="Testcontainers.MongoDb" Version="3.7.0" />
+</ItemGroup>
+```
+
+### Step 4: Create Domain Layer
+
+#### 1. Create Domain Entity
 ```csharp
-// File: dotFitness.Api/Infrastructure/ModuleRegistry.cs
-public static readonly string[] ModuleNames = 
-{
-    "Users",           // ✅ Already implemented
-    "Exercises",       // ⏳ Coming next  
-    "Routines",        // ⏳ Planned
-    "WorkoutLogs",     // ⏳ Planned
-    "YourNewModule"    // ← Add your module name here
-};
-```
-
-That's it! The system will automatically:
-- ✅ Discover your module assemblies
-- ✅ Register MediatR handlers  
-- ✅ Configure MongoDB indexes
-- ✅ Handle missing modules gracefully
-
-### Step 2: Create Project Structure
-
-Create the four main projects for your module:
-
-```bash
-# Navigate to the Modules directory
-cd src/dotFitness.WorkoutTracker/Modules
-
-# Create module directory
-mkdir YourNewModule
-cd YourNewModule
-
-# Create the four core projects
-dotnet new classlib -n dotFitness.Modules.YourNewModule.Domain -f net8.0
-dotnet new classlib -n dotFitness.Modules.YourNewModule.Application -f net8.0
-dotnet new classlib -n dotFitness.Modules.YourNewModule.Infrastructure -f net8.0
-dotnet new xunit -n dotFitness.Modules.YourNewModule.Tests -f net8.0
-```
-
-### Step 3: Add Project References
-
-Add the projects to the solution and set up references:
-
-```bash
-# Add projects to solution
-cd ../../
-dotnet sln add Modules/YourNewModule/dotFitness.Modules.YourNewModule.Domain/dotFitness.Modules.YourNewModule.Domain.csproj
-dotnet sln add Modules/YourNewModule/dotFitness.Modules.YourNewModule.Application/dotFitness.Modules.YourNewModule.Application.csproj
-dotnet sln add Modules/YourNewModule/dotFitness.Modules.YourNewModule.Infrastructure/dotFitness.Modules.YourNewModule.Infrastructure.csproj
-dotnet sln add Modules/YourNewModule/dotFitness.Modules.YourNewModule.Tests/dotFitness.Modules.YourNewModule.Tests.csproj
-
-# Set up project references - Domain layer
-cd Modules/YourNewModule/dotFitness.Modules.YourNewModule.Domain
-dotnet add reference ../../../dotFitness.SharedKernel/dotFitness.SharedKernel.csproj
-
-# Set up project references - Application layer
-cd ../dotFitness.Modules.YourNewModule.Application
-dotnet add reference ../../../dotFitness.SharedKernel/dotFitness.SharedKernel.csproj
-dotnet add reference ../dotFitness.Modules.YourNewModule.Domain/dotFitness.Modules.YourNewModule.Domain.csproj
-
-# Set up project references - Infrastructure layer
-cd ../dotFitness.Modules.YourNewModule.Infrastructure
-dotnet add reference ../../../dotFitness.SharedKernel/dotFitness.SharedKernel.csproj
-dotnet add reference ../dotFitness.Modules.YourNewModule.Domain/dotFitness.Modules.YourNewModule.Domain.csproj
-dotnet add reference ../dotFitness.Modules.YourNewModule.Application/dotFitness.Modules.YourNewModule.Application.csproj
-
-# Set up project references - Tests
-cd ../dotFitness.Modules.YourNewModule.Tests
-dotnet add reference ../../../dotFitness.SharedKernel/dotFitness.SharedKernel.csproj
-dotnet add reference ../dotFitness.Modules.YourNewModule.Domain/dotFitness.Modules.YourNewModule.Domain.csproj
-dotnet add reference ../dotFitness.Modules.YourNewModule.Application/dotFitness.Modules.YourNewModule.Application.csproj
-dotnet add reference ../dotFitness.Modules.YourNewModule.Infrastructure/dotFitness.Modules.YourNewModule.Infrastructure.csproj
-```
-
-### Step 4: Add API Project Reference
-
-Add reference from the API project to your module's Application layer:
-
-```bash
-cd ../../../dotFitness.Api
-dotnet add reference ../Modules/YourNewModule/dotFitness.Modules.YourNewModule.Application/dotFitness.Modules.YourNewModule.Application.csproj
-```
-
-**Important**: The API project should **only** reference the Application layer to maintain Clean Architecture principles.
-
-### Step 5: Install Required NuGet Packages
-
-Add necessary packages to each project:
-
-```bash
-# Application Layer Packages
-cd ../Modules/YourNewModule/dotFitness.Modules.YourNewModule.Application
-dotnet add package MediatR --version 12.5.0
-dotnet add package FluentValidation --version 12.0.0
-dotnet add package Riok.Mapperly --version 4.2.1
-dotnet add package Microsoft.Extensions.Configuration.Abstractions --version 8.0.0
-dotnet add package Microsoft.Extensions.DependencyInjection.Abstractions --version 8.0.2
-
-# Infrastructure Layer Packages
-cd ../dotFitness.Modules.YourNewModule.Infrastructure
-dotnet add package MediatR --version 12.5.0
-dotnet add package FluentValidation --version 12.0.0
-dotnet add package MongoDB.Driver --version 3.4.0
-dotnet add package Microsoft.Extensions.Options --version 8.0.2
-dotnet add package Microsoft.Extensions.Configuration.Abstractions --version 8.0.0
-dotnet add package Microsoft.Extensions.DependencyInjection.Abstractions --version 8.0.2
-
-# Tests Project Packages
-cd ../dotFitness.Modules.YourNewModule.Tests
-dotnet add package Moq --version 4.20.72
-dotnet add package FluentAssertions --version 7.0.0
-```
-
-## Code Templates
-
-### Domain Entity Template
-
-```csharp
-// File: Entities/YourEntity.cs
+// dotFitness.Modules.{ModuleName}.Domain/Entities/{EntityName}.cs
 using dotFitness.SharedKernel.Interfaces;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
 
-namespace dotFitness.Modules.YourNewModule.Domain.Entities;
+namespace dotFitness.Modules.{ModuleName}.Domain.Entities;
 
-public class YourEntity : IEntity
+public class {EntityName} : IEntity
 {
-    [BsonId]
-    [BsonRepresentation(BsonType.ObjectId)]
-    public string Id { get; set; } = ObjectId.GenerateNewId().ToString();
-    
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime? UpdatedAt { get; set; }
-    
-    // Add your domain properties here
+    public string Id { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+
+    // Business logic methods
+    public void UpdateName(string newName)
+    {
+        if (string.IsNullOrWhiteSpace(newName))
+            throw new ArgumentException("Name cannot be empty");
+        
+        Name = newName;
+        UpdatedAt = DateTime.UtcNow;
+    }
+}
+```
+
+#### 2. Create Domain Events
+```csharp
+// dotFitness.Modules.{ModuleName}.Domain/Events/{EntityName}CreatedEvent.cs
+using MediatR;
+
+namespace dotFitness.Modules.{ModuleName}.Domain.Events;
+
+public class {EntityName}CreatedEvent : INotification
+{
+    public string {EntityName}Id { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+}
+```
+
+#### 3. Create Repository Interface
+```csharp
+// dotFitness.Modules.{ModuleName}.Domain/Repositories/I{EntityName}Repository.cs
+namespace dotFitness.Modules.{ModuleName}.Domain.Repositories;
+
+public interface I{EntityName}Repository
+{
+    Task<{EntityName}?> GetByIdAsync(string id);
+    Task<IEnumerable<{EntityName}>> GetAllAsync();
+    Task<{EntityName}?> GetByNameAsync(string name);
+    Task CreateAsync({EntityName} {entityName});
+    Task UpdateAsync({EntityName} {entityName});
+    Task DeleteAsync(string id);
+    Task<bool> ExistsAsync(string id);
+}
+```
+
+### Step 5: Create Application Layer
+
+#### 1. Create Commands
+```csharp
+// dotFitness.Modules.{ModuleName}.Application/Commands/Create{EntityName}Command.cs
+using MediatR;
+using dotFitness.SharedKernel.Results;
+using dotFitness.Modules.{ModuleName}.Application.DTOs;
+
+namespace dotFitness.Modules.{ModuleName}.Application.Commands;
+
+public class Create{EntityName}Command : IRequest<Result<{EntityName}Dto>>
+{
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
 }
 ```
 
-### Repository Interface Template
-
+#### 2. Create Queries
 ```csharp
-// File: Repositories/IYourEntityRepository.cs
-using dotFitness.Modules.YourNewModule.Domain.Entities;
+// dotFitness.Modules.{ModuleName}.Application/Queries/Get{EntityName}ByIdQuery.cs
+using MediatR;
 using dotFitness.SharedKernel.Results;
+using dotFitness.Modules.{ModuleName}.Application.DTOs;
 
-namespace dotFitness.Modules.YourNewModule.Domain.Repositories;
+namespace dotFitness.Modules.{ModuleName}.Application.Queries;
 
-public interface IYourEntityRepository
+public class Get{EntityName}ByIdQuery : IRequest<Result<{EntityName}Dto>>
 {
-    Task<Result<YourEntity>> GetByIdAsync(string id);
-    Task<Result<IEnumerable<YourEntity>>> GetAllAsync();
-    Task<Result<YourEntity>> CreateAsync(YourEntity entity);
-    Task<Result<YourEntity>> UpdateAsync(YourEntity entity);
-    Task<Result<bool>> DeleteAsync(string id);
+    public string Id { get; set; } = string.Empty;
 }
 ```
 
-### Command Template
-
+#### 3. Create DTOs
 ```csharp
-// File: Commands/CreateYourEntityCommand.cs
-using MediatR;
-using dotFitness.Modules.YourNewModule.Application.DTOs;
-using dotFitness.SharedKernel.Results;
+// dotFitness.Modules.{ModuleName}.Application/DTOs/{EntityName}Dto.cs
+namespace dotFitness.Modules.{ModuleName}.Application.DTOs;
 
-namespace dotFitness.Modules.YourNewModule.Application.Commands;
-
-public record CreateYourEntityCommand(
-    string Name,
-    string Description
-) : IRequest<Result<YourEntityDto>>;
-```
-
-### Query Template
-
-```csharp
-// File: Queries/GetYourEntityByIdQuery.cs
-using MediatR;
-using dotFitness.Modules.YourNewModule.Application.DTOs;
-using dotFitness.SharedKernel.Results;
-
-namespace dotFitness.Modules.YourNewModule.Application.Queries;
-
-public record GetYourEntityByIdQuery(string Id) : IRequest<Result<YourEntityDto>>;
-```
-
-### DTO Template
-
-```csharp
-// File: DTOs/YourEntityDto.cs
-namespace dotFitness.Modules.YourNewModule.Application.DTOs;
-
-public record YourEntityDto(
-    string Id,
-    string Name,
-    string Description,
-    DateTime CreatedAt,
-    DateTime? UpdatedAt
-);
-```
-
-### Validator Template
-
-```csharp
-// File: Validators/CreateYourEntityCommandValidator.cs
-using FluentValidation;
-using dotFitness.Modules.YourNewModule.Application.Commands;
-
-namespace dotFitness.Modules.YourNewModule.Application.Validators;
-
-public class CreateYourEntityCommandValidator : AbstractValidator<CreateYourEntityCommand>
+public class {EntityName}Dto
 {
-    public CreateYourEntityCommandValidator()
+    public string Id { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
+```
+
+#### 4. Create Static Mappers
+```csharp
+// dotFitness.Modules.{ModuleName}.Application/Mappers/{EntityName}Mapper.cs
+using dotFitness.Modules.{ModuleName}.Domain.Entities;
+using dotFitness.Modules.{ModuleName}.Application.DTOs;
+
+namespace dotFitness.Modules.{ModuleName}.Application.Mappers;
+
+public static class {EntityName}Mapper
+{
+    public static {EntityName}Dto ToDto({EntityName} {entityName}) => new()
+    {
+        Id = {entityName}.Id,
+        Name = {entityName}.Name,
+        Description = {entityName}.Description,
+        CreatedAt = {entityName}.CreatedAt,
+        UpdatedAt = {entityName}.UpdatedAt
+    };
+
+    public static {EntityName} ToEntity({EntityName}Dto dto) => new()
+    {
+        Id = dto.Id,
+        Name = dto.Name,
+        Description = dto.Description,
+        CreatedAt = dto.CreatedAt,
+        UpdatedAt = dto.UpdatedAt
+    };
+}
+```
+
+#### 5. Create Validators
+```csharp
+// dotFitness.Modules.{ModuleName}.Application/Validators/Create{EntityName}CommandValidator.cs
+using FluentValidation;
+using dotFitness.Modules.{ModuleName}.Application.Commands;
+
+namespace dotFitness.Modules.{ModuleName}.Application.Validators;
+
+public class Create{EntityName}CommandValidator : AbstractValidator<Create{EntityName}Command>
+{
+    public Create{EntityName}CommandValidator()
     {
         RuleFor(x => x.Name)
-            .NotEmpty()
-            .WithMessage("Name is required")
-            .MaximumLength(100)
-            .WithMessage("Name cannot exceed 100 characters");
+            .NotEmpty().WithMessage("Name is required")
+            .MaximumLength(100).WithMessage("Name cannot exceed 100 characters");
 
         RuleFor(x => x.Description)
-            .MaximumLength(500)
-            .WithMessage("Description cannot exceed 500 characters");
+            .MaximumLength(500).WithMessage("Description cannot exceed 500 characters");
     }
 }
 ```
 
-### Mapper Template
-
+#### 6. Create Module Registration
 ```csharp
-// File: Mappers/YourEntityMapper.cs
-using Riok.Mapperly.Abstractions;
-using dotFitness.Modules.YourNewModule.Domain.Entities;
-using dotFitness.Modules.YourNewModule.Application.DTOs;
+// dotFitness.Modules.{ModuleName}.Application/Configuration/{ModuleName}ModuleRegistration.cs
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
+using dotFitness.Modules.{ModuleName}.Application.Validators;
 
-namespace dotFitness.Modules.YourNewModule.Application.Mappers;
+namespace dotFitness.Modules.{ModuleName}.Application.Configuration;
 
-[Mapper]
-public static partial class YourEntityMapper
+public static class {ModuleName}ModuleRegistration
 {
-    public static partial YourEntityDto ToDto(YourEntity entity);
-    
-    // Add custom mapping methods if needed
-    // private static string MapCustomProperty(SomeType value) => value.ToString();
-}
-```
-
-**Important Notes:**
-- Use `static partial class` for performance (no instance creation needed)
-- Riok.Mapperly generates implementation at compile-time
-- Add custom mapping methods as `private static` for complex conversions
-- DO NOT register static mappers in DI container - call directly: `YourEntityMapper.ToDto(entity)`
-
-### Repository Implementation Template
-
-```csharp
-// File: Repositories/YourEntityRepository.cs
-using MongoDB.Driver;
-using Microsoft.Extensions.Logging;
-using dotFitness.Modules.YourNewModule.Domain.Entities;
-using dotFitness.Modules.YourNewModule.Domain.Repositories;
-using dotFitness.SharedKernel.Results;
-
-namespace dotFitness.Modules.YourNewModule.Infrastructure.Repositories;
-
-public class YourEntityRepository : IYourEntityRepository
-{
-    private readonly IMongoCollection<YourEntity> _collection;
-    private readonly ILogger<YourEntityRepository> _logger;
-
-    public YourEntityRepository(
-        IMongoCollection<YourEntity> collection,
-        ILogger<YourEntityRepository> logger)
+    public static IServiceCollection Add{ModuleName}Module(this IServiceCollection services, IConfiguration configuration)
     {
-        _collection = collection;
-        _logger = logger;
-    }
+        // Register validators
+        services.AddValidatorsFromAssemblyContaining<Create{EntityName}CommandValidator>();
 
-    public async Task<Result<YourEntity>> GetByIdAsync(string id)
-    {
-        try
-        {
-            var entity = await _collection.Find(x => x.Id == id).FirstOrDefaultAsync();
-            
-            return entity != null 
-                ? Result.Success(entity)
-                : Result.Failure<YourEntity>("Entity not found");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting entity by id {Id}", id);
-            return Result.Failure<YourEntity>("Failed to retrieve entity");
-        }
-    }
+        // Register module-specific services
+        services.Configure<{ModuleName}Settings>(configuration.GetSection("{ModuleName}"));
 
-    public async Task<Result<IEnumerable<YourEntity>>> GetAllAsync()
-    {
-        try
-        {
-            var entities = await _collection.Find(_ => true).ToListAsync();
-            return Result.Success<IEnumerable<YourEntity>>(entities);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting all entities");
-            return Result.Failure<IEnumerable<YourEntity>>("Failed to retrieve entities");
-        }
-    }
-
-    public async Task<Result<YourEntity>> CreateAsync(YourEntity entity)
-    {
-        try
-        {
-            await _collection.InsertOneAsync(entity);
-            return Result.Success(entity);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error creating entity");
-            return Result.Failure<YourEntity>("Failed to create entity");
-        }
-    }
-
-    public async Task<Result<YourEntity>> UpdateAsync(YourEntity entity)
-    {
-        try
-        {
-            entity.UpdatedAt = DateTime.UtcNow;
-            var result = await _collection.ReplaceOneAsync(x => x.Id == entity.Id, entity);
-            
-            return result.ModifiedCount > 0
-                ? Result.Success(entity)
-                : Result.Failure<YourEntity>("Entity not found or not modified");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error updating entity with id {Id}", entity.Id);
-            return Result.Failure<YourEntity>("Failed to update entity");
-        }
-    }
-
-    public async Task<Result<bool>> DeleteAsync(string id)
-    {
-        try
-        {
-            var result = await _collection.DeleteOneAsync(x => x.Id == id);
-            
-            return result.DeletedCount > 0
-                ? Result.Success(true)
-                : Result.Failure<bool>("Entity not found");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error deleting entity with id {Id}", id);
-            return Result.Failure<bool>("Failed to delete entity");
-        }
+        return services;
     }
 }
 ```
 
-### Command Handler Template
+### Step 6: Create Infrastructure Layer
 
+#### 1. Create Command Handlers
 ```csharp
-// File: Handlers/CreateYourEntityCommandHandler.cs
+// dotFitness.Modules.{ModuleName}.Infrastructure/Handlers/Create{EntityName}CommandHandler.cs
 using MediatR;
-using Microsoft.Extensions.Logging;
-using dotFitness.Modules.YourNewModule.Application.Commands;
-using dotFitness.Modules.YourNewModule.Application.DTOs;
-using dotFitness.Modules.YourNewModule.Application.Mappers;
-using dotFitness.Modules.YourNewModule.Domain.Entities;
-using dotFitness.Modules.YourNewModule.Domain.Repositories;
 using dotFitness.SharedKernel.Results;
+using dotFitness.Modules.{ModuleName}.Domain.Entities;
+using dotFitness.Modules.{ModuleName}.Domain.Repositories;
+using dotFitness.Modules.{ModuleName}.Domain.Events;
+using dotFitness.Modules.{ModuleName}.Application.Commands;
+using dotFitness.Modules.{ModuleName}.Application.DTOs;
+using dotFitness.Modules.{ModuleName}.Application.Mappers;
 
-namespace dotFitness.Modules.YourNewModule.Infrastructure.Handlers;
+namespace dotFitness.Modules.{ModuleName}.Infrastructure.Handlers;
 
-public class CreateYourEntityCommandHandler : IRequestHandler<CreateYourEntityCommand, Result<YourEntityDto>>
+public class Create{EntityName}CommandHandler : IRequestHandler<Create{EntityName}Command, Result<{EntityName}Dto>>
 {
-    private readonly IYourEntityRepository _repository;
-    private readonly ILogger<CreateYourEntityCommandHandler> _logger;
+    private readonly I{EntityName}Repository _{entityName}Repository;
+    private readonly IMediator _mediator;
 
-    public CreateYourEntityCommandHandler(
-        IYourEntityRepository repository,
-        ILogger<CreateYourEntityCommandHandler> logger)
+    public Create{EntityName}CommandHandler(I{EntityName}Repository {entityName}Repository, IMediator mediator)
     {
-        _repository = repository;
-        _logger = logger;
+        _{entityName}Repository = {entityName}Repository;
+        _mediator = mediator;
     }
 
-    public async Task<Result<YourEntityDto>> Handle(CreateYourEntityCommand request, CancellationToken cancellationToken)
+    public async Task<Result<{EntityName}Dto>> Handle(Create{EntityName}Command request, CancellationToken cancellationToken)
     {
         try
         {
-            var entity = new YourEntity
+            // Check if entity already exists
+            var existing = await _{entityName}Repository.GetByNameAsync(request.Name);
+            if (existing != null)
             {
+                return Result<{EntityName}Dto>.Failure($"A {entityName} with name '{request.Name}' already exists");
+            }
+
+            // Create new entity
+            var {entityName} = new {EntityName}
+            {
+                Id = Guid.NewGuid().ToString(),
                 Name = request.Name,
-                Description = request.Description
+                Description = request.Description,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
             };
 
-            var createResult = await _repository.CreateAsync(entity, cancellationToken);
-            
-            if (createResult.IsFailure)
-            {
-                _logger.LogWarning("Failed to create entity: {Error}", createResult.Error);
-                return Result.Failure<YourEntityDto>(createResult.Error!);
-            }
+            await _{entityName}Repository.CreateAsync({entityName});
 
-            // Use static mapper (no DI registration needed)
-            var dto = YourEntityMapper.ToDto(createResult.Value!);
-            _logger.LogInformation("Successfully created entity with id {Id}", dto.Id);
-            
-            return Result.Success(dto);
+            // Publish domain event
+            await _mediator.Publish(new {EntityName}CreatedEvent
+            {
+                {EntityName}Id = {entityName}.Id,
+                Name = {entityName}.Name,
+                CreatedAt = {entityName}.CreatedAt
+            }, cancellationToken);
+
+            return Result<{EntityName}Dto>.Success({EntityName}Mapper.ToDto({entityName}));
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error handling CreateYourEntityCommand");
-            return Result.Failure<YourEntityDto>("An error occurred while creating the entity");
+            return Result<{EntityName}Dto>.Failure($"Failed to create {entityName}: {ex.Message}");
         }
     }
 }
 ```
 
-### Module Configuration Template
-
+#### 2. Create Query Handlers
 ```csharp
-// File: Configuration/YourNewModuleRegistration.cs
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Configuration;
+// dotFitness.Modules.{ModuleName}.Infrastructure/Handlers/Get{EntityName}ByIdQueryHandler.cs
+using MediatR;
+using dotFitness.SharedKernel.Results;
+using dotFitness.Modules.{ModuleName}.Domain.Repositories;
+using dotFitness.Modules.{ModuleName}.Application.Queries;
+using dotFitness.Modules.{ModuleName}.Application.DTOs;
+using dotFitness.Modules.{ModuleName}.Application.Mappers;
 
-namespace dotFitness.Modules.YourNewModule.Application.Configuration;
+namespace dotFitness.Modules.{ModuleName}.Infrastructure.Handlers;
 
-public static class YourNewModuleRegistration
+public class Get{EntityName}ByIdQueryHandler : IRequestHandler<Get{EntityName}ByIdQuery, Result<{EntityName}Dto>>
 {
-    public static IServiceCollection AddYourNewModuleModule(this IServiceCollection services, IConfiguration configuration)
-    {
-        // Find the Infrastructure assembly that should already be loaded by ModuleRegistry
-        var infrastructureAssembly = System.AppDomain.CurrentDomain.GetAssemblies()
-            .FirstOrDefault(a => a.GetName().Name == "dotFitness.Modules.YourNewModule.Infrastructure");
-        
-        if (infrastructureAssembly == null)
-        {
-            throw new InvalidOperationException("YourNewModule Infrastructure assembly not found in loaded assemblies");
-        }
-        var moduleType = infrastructureAssembly.GetType("dotFitness.Modules.YourNewModule.Infrastructure.Configuration.YourNewModuleInfrastructureModule");
-        var addModuleMethod = moduleType?.GetMethod("AddYourNewModuleModule", 
-            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
-        
-        if (addModuleMethod != null)
-        {
-            addModuleMethod.Invoke(null, new object[] { services, configuration });
-        }
-        else
-        {
-            throw new InvalidOperationException("Could not find AddYourNewModuleModule method in YourNewModule Infrastructure layer");
-        }
+    private readonly I{EntityName}Repository _{entityName}Repository;
 
-        return services;
+    public Get{EntityName}ByIdQueryHandler(I{EntityName}Repository {entityName}Repository)
+    {
+        _{entityName}Repository = {entityName}Repository;
     }
 
-    public static async Task ConfigureYourNewModuleModuleIndexes(IServiceProvider services)
+    public async Task<Result<{EntityName}Dto>> Handle(Get{EntityName}ByIdQuery request, CancellationToken cancellationToken)
     {
-        // Find the Infrastructure assembly that should already be loaded by ModuleRegistry
-        var infrastructureAssembly = System.AppDomain.CurrentDomain.GetAssemblies()
-            .FirstOrDefault(a => a.GetName().Name == "dotFitness.Modules.YourNewModule.Infrastructure");
-        
-        if (infrastructureAssembly == null)
+        try
         {
-            throw new InvalidOperationException("YourNewModule Infrastructure assembly not found in loaded assemblies");
-        }
-        var moduleType = infrastructureAssembly.GetType("dotFitness.Modules.YourNewModule.Infrastructure.Configuration.YourNewModuleInfrastructureModule");
-        var configureIndexesMethod = moduleType?.GetMethod("ConfigureYourNewModuleModuleIndexes", 
-            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
-        
-        if (configureIndexesMethod != null)
-        {
-            var task = (Task?)configureIndexesMethod.Invoke(null, new object[] { services });
-            if (task != null)
+            var {entityName} = await _{entityName}Repository.GetByIdAsync(request.Id);
+            if ({entityName} == null)
             {
-                await task;
+                return Result<{EntityName}Dto>.Failure($"{EntityName} with ID '{request.Id}' not found");
             }
+
+            return Result<{EntityName}Dto>.Success({EntityName}Mapper.ToDto({entityName}));
         }
-        else
+        catch (Exception ex)
         {
-            throw new InvalidOperationException("Could not find ConfigureYourNewModuleModuleIndexes method in YourNewModule Infrastructure layer");
+            return Result<{EntityName}Dto>.Failure($"Failed to retrieve {entityName}: {ex.Message}");
         }
     }
 }
 ```
 
-### Infrastructure Module Template
-
+#### 3. Create Repository Implementation
 ```csharp
-// File: Configuration/YourNewModuleInfrastructureModule.cs
+// dotFitness.Modules.{ModuleName}.Infrastructure/Repositories/{EntityName}Repository.cs
+using MongoDB.Driver;
+using dotFitness.Modules.{ModuleName}.Domain.Entities;
+using dotFitness.Modules.{ModuleName}.Domain.Repositories;
+
+namespace dotFitness.Modules.{ModuleName}.Infrastructure.Repositories;
+
+public class {EntityName}Repository : I{EntityName}Repository
+{
+    private readonly IMongoCollection<{EntityName}> _collection;
+
+    public {EntityName}Repository(IMongoDatabase database)
+    {
+        _collection = database.GetCollection<{EntityName}>("{entityNames}");
+    }
+
+    public async Task<{EntityName}?> GetByIdAsync(string id)
+    {
+        return await _collection.Find(x => x.Id == id).FirstOrDefaultAsync();
+    }
+
+    public async Task<IEnumerable<{EntityName}>> GetAllAsync()
+    {
+        return await _collection.Find(_ => true).ToListAsync();
+    }
+
+    public async Task<{EntityName}?> GetByNameAsync(string name)
+    {
+        return await _collection.Find(x => x.Name == name).FirstOrDefaultAsync();
+    }
+
+    public async Task CreateAsync({EntityName} {entityName})
+    {
+        await _collection.InsertOneAsync({entityName});
+    }
+
+    public async Task UpdateAsync({EntityName} {entityName})
+    {
+        await _collection.ReplaceOneAsync(x => x.Id == {entityName}.Id, {entityName});
+    }
+
+    public async Task DeleteAsync(string id)
+    {
+        await _collection.DeleteOneAsync(x => x.Id == id);
+    }
+
+    public async Task<bool> ExistsAsync(string id)
+    {
+        return await _collection.Find(x => x.Id == id).AnyAsync();
+    }
+}
+```
+
+#### 4. Create Infrastructure Module Registration
+```csharp
+// dotFitness.Modules.{ModuleName}.Infrastructure/Configuration/{ModuleName}InfrastructureModule.cs
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
-using MediatR;
-using FluentValidation;
-using dotFitness.Modules.YourNewModule.Domain.Entities;
-using dotFitness.Modules.YourNewModule.Domain.Repositories;
-using dotFitness.Modules.YourNewModule.Infrastructure.Repositories;
-using dotFitness.Modules.YourNewModule.Infrastructure.Handlers;
-using dotFitness.Modules.YourNewModule.Application.Mappers;
-using dotFitness.Modules.YourNewModule.Application.Commands;
-using dotFitness.Modules.YourNewModule.Application.Queries;
-using dotFitness.Modules.YourNewModule.Application.Validators;
-using dotFitness.Modules.YourNewModule.Application.DTOs;
-using dotFitness.SharedKernel.Results;
+using dotFitness.Modules.{ModuleName}.Domain.Repositories;
+using dotFitness.Modules.{ModuleName}.Infrastructure.Repositories;
 
-namespace dotFitness.Modules.YourNewModule.Infrastructure.Configuration;
+namespace dotFitness.Modules.{ModuleName}.Infrastructure.Configuration;
 
-public static class YourNewModuleInfrastructureModule
+public static class {ModuleName}InfrastructureModule
 {
-    public static IServiceCollection AddYourNewModuleModule(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection Add{ModuleName}Infrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        // Register MongoDB collections
-        services.AddSingleton(sp =>
-        {
-            var database = sp.GetRequiredService<IMongoDatabase>();
-            return database.GetCollection<YourEntity>("yourEntities");
-        });
-
         // Register repositories
-        services.AddScoped<IYourEntityRepository, YourEntityRepository>();
-
-        // Register MediatR handlers
-        services.AddScoped<IRequestHandler<CreateYourEntityCommand, Result<YourEntityDto>>, CreateYourEntityCommandHandler>();
-        services.AddScoped<IRequestHandler<GetYourEntityByIdQuery, Result<YourEntityDto>>, GetYourEntityByIdQueryHandler>();
-
-        // Register validators
-        services.AddScoped<IValidator<CreateYourEntityCommand>, CreateYourEntityCommandValidator>();
-
-        // NOTE: Do NOT register static mappers - they are called directly
-        // Static mappers like YourEntityMapper.ToDto() don't need DI registration
+        services.AddScoped<I{EntityName}Repository, {EntityName}Repository>();
 
         return services;
-    }
-
-    public static async Task ConfigureYourNewModuleModuleIndexes(IServiceProvider services)
-    {
-        using var scope = services.CreateScope();
-        var database = scope.ServiceProvider.GetRequiredService<IMongoDatabase>();
-        
-        // Create indexes for YourEntity collection
-        var collection = database.GetCollection<YourEntity>("yourEntities");
-        var indexBuilder = Builders<YourEntity>.IndexKeys;
-        
-        await collection.Indexes.CreateManyAsync(new[]
-        {
-            new CreateIndexModel<YourEntity>(indexBuilder.Ascending(x => x.Name)),
-            new CreateIndexModel<YourEntity>(indexBuilder.Ascending(x => x.CreatedAt)),
-            new CreateIndexModel<YourEntity>(indexBuilder.Text(x => x.Description))
-        });
     }
 }
 ```
 
-### API Controller Template
+### Step 7: Create Tests
 
+#### 1. Domain Tests
 ```csharp
-// File: dotFitness.Api/Controllers/YourNewModuleController.cs
+// dotFitness.Modules.{ModuleName}.Tests/Domain/Entities/{EntityName}Tests.cs
+using FluentAssertions;
+using dotFitness.Modules.{ModuleName}.Domain.Entities;
+
+namespace dotFitness.Modules.{ModuleName}.Tests.Domain.Entities;
+
+public class {EntityName}Tests
+{
+    [Fact]
+    public void UpdateName_ValidName_UpdatesSuccessfully()
+    {
+        // Arrange
+        var {entityName} = new {EntityName}
+        {
+            Id = "1",
+            Name = "Old Name",
+            Description = "Test Description"
+        };
+
+        // Act
+        {entityName}.UpdateName("New Name");
+
+        // Assert
+        {entityName}.Name.Should().Be("New Name");
+        {entityName}.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+    }
+
+    [Fact]
+    public void UpdateName_EmptyName_ThrowsArgumentException()
+    {
+        // Arrange
+        var {entityName} = new {EntityName} { Id = "1", Name = "Test" };
+
+        // Act & Assert
+        var action = () => {entityName}.UpdateName("");
+        action.Should().Throw<ArgumentException>().WithMessage("Name cannot be empty");
+    }
+}
+```
+
+#### 2. Application Tests
+```csharp
+// dotFitness.Modules.{ModuleName}.Tests/Application/Validators/Create{EntityName}CommandValidatorTests.cs
+using FluentAssertions;
+using FluentValidation.TestHelper;
+using dotFitness.Modules.{ModuleName}.Application.Commands;
+using dotFitness.Modules.{ModuleName}.Application.Validators;
+
+namespace dotFitness.Modules.{ModuleName}.Tests.Application.Validators;
+
+public class Create{EntityName}CommandValidatorTests
+{
+    private readonly Create{EntityName}CommandValidator _validator;
+
+    public Create{EntityName}CommandValidatorTests()
+    {
+        _validator = new Create{EntityName}CommandValidator();
+    }
+
+    [Fact]
+    public void Validate_ValidCommand_ShouldNotHaveValidationErrors()
+    {
+        // Arrange
+        var command = new Create{EntityName}Command
+        {
+            Name = "Test {EntityName}",
+            Description = "Test Description"
+        };
+
+        // Act
+        var result = _validator.TestValidate(command);
+
+        // Assert
+        result.ShouldNotHaveAnyValidationErrors();
+    }
+
+    [Fact]
+    public void Validate_EmptyName_ShouldHaveValidationError()
+    {
+        // Arrange
+        var command = new Create{EntityName}Command
+        {
+            Name = "",
+            Description = "Test Description"
+        };
+
+        // Act
+        var result = _validator.TestValidate(command);
+
+        // Assert
+        result.ShouldHaveValidationErrorFor(x => x.Name);
+    }
+}
+```
+
+### Step 8: Register Module in Main Application
+
+#### 1. Add Module to ModuleRegistry
+```csharp
+// In dotFitness.Api/Infrastructure/ModuleRegistry.cs
+public static readonly string[] ModuleNames = 
+{
+    "Users",
+    "Exercises", 
+    "{ModuleName}",  // Add your new module here
+    "Routines",
+    "WorkoutLogs"
+};
+```
+
+#### 2. Add API Controller
+```csharp
+// dotFitness.Api/Controllers/{ModuleName}Controller.cs
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
 using MediatR;
-using dotFitness.Modules.YourNewModule.Application.Commands;
-using dotFitness.Modules.YourNewModule.Application.Queries;
+using dotFitness.Modules.{ModuleName}.Application.Commands;
+using dotFitness.Modules.{ModuleName}.Application.Queries;
 
 namespace dotFitness.Api.Controllers;
 
 [ApiController]
-[Route("api/v{version:apiVersion}/[controller]")]
-[ApiVersion("1.0")]
-[Authorize]
-public class YourNewModuleController : ControllerBase
+[Route("api/v1/[controller]")]
+public class {ModuleName}Controller : ControllerBase
 {
     private readonly IMediator _mediator;
 
-    public YourNewModuleController(IMediator mediator)
+    public {ModuleName}Controller(IMediator mediator)
     {
         _mediator = mediator;
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Create(Create{EntityName}Command command)
+    {
+        var result = await _mediator.Send(command);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(string id)
     {
-        var query = new GetYourEntityByIdQuery(id);
+        var query = new Get{EntityName}ByIdQuery { Id = id };
         var result = await _mediator.Send(query);
-
-        return result.IsSuccess 
-            ? Ok(result.Value) 
-            : NotFound(result.Error);
+        return result.IsSuccess ? Ok(result.Value) : NotFound(result.Error);
     }
-
-    [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreateYourEntityCommand command)
-    {
-        var result = await _mediator.Send(command);
-
-        return result.IsSuccess 
-            ? CreatedAtAction(nameof(GetById), new { id = result.Value.Id }, result.Value)
-            : BadRequest(result.Error);
-    }
-
-    // Add more endpoints as needed...
 }
 ```
 
-## Integration Steps
+### Step 9: Configure MongoDB Indexes
 
-### Step 6: Build and Test Integration
+```csharp
+// dotFitness.Modules.{ModuleName}.Infrastructure/Configuration/{ModuleName}IndexConfiguration.cs
+using MongoDB.Driver;
 
-```bash
-# Build the solution to ensure everything compiles
-cd src/dotFitness.WorkoutTracker
-dotnet build
+namespace dotFitness.Modules.{ModuleName}.Infrastructure.Configuration;
 
-# Run tests to ensure integration works
-dotnet test
+public static class {ModuleName}IndexConfiguration
+{
+    public static async Task ConfigureIndexes(IMongoDatabase database)
+    {
+        var collection = database.GetCollection<{EntityName}>("{entityNames}");
 
-# Run the API to test module discovery
-dotnet run --project dotFitness.Api
+        // Create indexes
+        var indexKeysDefinition = Builders<{EntityName}>.IndexKeys.Ascending(x => x.Name);
+        var indexOptions = new CreateIndexOptions { Unique = true };
+        var indexModel = new CreateIndexModel<{EntityName}>(indexKeysDefinition, indexOptions);
+
+        await collection.Indexes.CreateOneAsync(indexModel);
+    }
+}
 ```
 
-The ModuleRegistry will automatically:
-1. ✅ Discover your new module by name
-2. ✅ Register MediatR assemblies (Application + Infrastructure)
-3. ✅ Register module services via reflection
-4. ✅ Configure MongoDB indexes
-5. ✅ Log the registration process
+## 🎯 Best Practices
 
-**Example: Successful Exercises Module Registration**
-```bash
-[INF] Loaded Exercises Application assembly for MediatR
-[INF] Loaded Infrastructure assembly for module: Exercises
-[INF] Successfully registered module: Exercises
-[INF] Successfully configured indexes for module: Exercises
-[INF] Now listening on: http://localhost:5207
+### 1. **Naming Conventions**
+- Use PascalCase for class names and properties
+- Use camelCase for variables and parameters
+- Use descriptive names that reflect the domain language
+
+### 2. **Error Handling**
+- Use the Result pattern for explicit error handling
+- Don't throw exceptions for business rule violations
+- Provide meaningful error messages
+
+### 3. **Validation**
+- Validate at the application layer with FluentValidation
+- Keep domain entities focused on business logic
+- Validate input early in the request pipeline
+
+### 4. **Testing**
+- Write tests for all layers (Domain, Application, Infrastructure)
+- Use meaningful test names that describe the scenario
+- Test both success and failure cases
+
+### 5. **Performance**
+- Use static mappers for zero runtime overhead
+- Implement proper MongoDB indexes
+- Use async/await consistently
+
+## 🔧 Module Configuration
+
+### Environment Variables
+```json
+{
+  "{ModuleName}": {
+    "DatabaseName": "dotFitness",
+    "CollectionName": "{entityNames}"
+  }
+}
 ```
 
-## Testing Your Module
+### Health Checks
+The module will automatically register health checks through the ModuleRegistry system.
 
-### Step 7: Test API Endpoints
+### Metrics
+Module registration and performance metrics are automatically tracked through the ModuleMetrics system.
 
-**Access Swagger Documentation:**
-```bash
-# Start the API
-dotnet run --project dotFitness.Api
+## 📚 References
 
-# Open browser to view auto-generated API documentation
-open http://localhost:5207/swagger
-```
-
-**Test with HTTP Client:**
-```bash
-# Test your new endpoints using the API
-curl -X GET "https://localhost:5207/api/v1/YourNewModule/{id}" \
-  -H "Authorization: Bearer {jwt-token}"
-
-curl -X POST "https://localhost:5207/api/v1/YourNewModule" \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer {jwt-token}" \
-  -d '{
-    "name": "Test Entity",
-    "description": "Test Description"
-  }'
-```
-
-### Check Swagger Documentation
-
-Navigate to `https://localhost:7001/swagger` to see your new endpoints automatically documented.
-
-## Best Practices
-
-### ✅ Do's
-- **Follow naming conventions**: Use consistent naming patterns matching existing modules
-- **Use the Result pattern**: Always return `Result<T>` from handlers and repositories
-- **Implement proper logging**: Add structured logging with correlation IDs
-- **Write validators**: Use FluentValidation for all commands
-- **Use Mapperly**: Leverage compile-time mapping for performance
-- **Follow Clean Architecture**: Maintain strict layer boundaries
-- **Add unit tests**: Test handlers, validators, and repositories
-
-### ❌ Don'ts
-- **Don't reference Infrastructure from API**: API should only reference Application layer
-- **Don't skip validation**: Always validate input commands
-- **Don't ignore errors**: Properly handle and log all exceptions
-- **Don't hard-code strings**: Use constants and configuration
-- **Don't bypass the Result pattern**: Always use `Result<T>` for error handling
-
-## Module Discovery Logs
-
-When your module is successfully integrated, you should see logs like:
-
-```
-[Information] Loaded YourNewModule Application assembly for MediatR
-[Information] Loaded YourNewModule Infrastructure assembly for MediatR  
-[Information] Registered MediatR services from assembly: dotFitness.Modules.YourNewModule.Application
-[Information] Registered MediatR services from assembly: dotFitness.Modules.YourNewModule.Infrastructure
-[Information] Successfully registered module: YourNewModule
-[Information] Successfully configured indexes for module: YourNewModule
-[Information] MediatR registration completed for X module assemblies
-```
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Module not discovered**: Check that module name is added to `ModuleRegistry.ModuleNames`
-2. **Build errors**: Ensure all project references are correctly set up
-3. **Runtime errors**: Check that all required packages are installed
-4. **Handler not found**: Verify MediatR registration and handler implementation
-5. **Authorization errors**: Ensure controllers have proper `[Authorize]` attributes
-
-### Debug Commands
-
-```bash
-# Check if assemblies can be loaded
-dotnet run --project dotFitness.Api --verbosity detailed
-
-# Run with development environment for detailed logs
-ASPNETCORE_ENVIRONMENT=Development dotnet run --project dotFitness.Api
-```
-
----
-
-## Summary
-
-Following this guide ensures that your new module:
-- ✅ Follows Clean Architecture principles
-- ✅ Is automatically discovered and registered
-- ✅ Integrates seamlessly with existing infrastructure
-- ✅ Maintains proper separation of concerns
-- ✅ Supports scalable development patterns
-
-Your new module will be fully integrated into the dotFitness Modular Monolith without requiring any changes to the main API project configuration! 🎉
+- [Modular Monolith with DDD](https://github.com/MaiQD/modular-monolith-with-ddd/blob/master/README.md) - Reference implementation
+- [Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) - Architectural principles
+- [Domain-Driven Design](https://martinfowler.com/bliki/DomainDrivenDesign.html) - DDD concepts
+- [CQRS Pattern](https://martinfowler.com/bliki/CQRS.html) - Command Query Responsibility Segregation
