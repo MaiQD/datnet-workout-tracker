@@ -87,8 +87,9 @@ public static class ModuleRegistry
             var applicationAssemblyName = $"dotFitness.Modules.{moduleName}.Application";
             var applicationAssembly = System.Reflection.Assembly.Load(applicationAssemblyName);
             
-            // Pre-load Infrastructure assembly from the file system
-            var infrastructureAssemblyPath = Path.Combine(AppContext.BaseDirectory, $"dotFitness.Modules.{moduleName}.Infrastructure.dll");
+            // Pre-load Infrastructure assembly from the file system to ensure it's available
+            var infrastructureAssemblyName = $"dotFitness.Modules.{moduleName}.Infrastructure";
+            var infrastructureAssemblyPath = Path.Combine(AppContext.BaseDirectory, $"{infrastructureAssemblyName}.dll");
             if (File.Exists(infrastructureAssemblyPath))
             {
                 try
@@ -100,6 +101,10 @@ public static class ModuleRegistry
                 {
                     LogWarning("Could not load Infrastructure assembly for module {ModuleName}: {Error}", moduleName, ex.Message);
                 }
+            }
+            else
+            {
+                LogWarning("Infrastructure assembly not found at path: {Path}", infrastructureAssemblyPath);
             }
             
             // Look for module registration class
@@ -145,7 +150,21 @@ public static class ModuleRegistry
                 {
                     var applicationAssemblyName = $"dotFitness.Modules.{moduleName}.Application";
                     var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-                    var applicationAssembly = System.Reflection.Assembly.Load(applicationAssemblyName);
+                    
+                    // Use LoadFrom for Application assemblies to ensure they're loaded from the file system
+                    var applicationAssemblyPath = Path.Combine(AppContext.BaseDirectory, $"{applicationAssemblyName}.dll");
+                    System.Reflection.Assembly applicationAssembly;
+                    
+                    if (File.Exists(applicationAssemblyPath))
+                    {
+                        applicationAssembly = System.Reflection.Assembly.LoadFrom(applicationAssemblyPath);
+                    }
+                    else
+                    {
+                        // Fallback to Load if LoadFrom fails
+                        applicationAssembly = System.Reflection.Assembly.Load(applicationAssemblyName);
+                    }
+                    
                     stopwatch.Stop();
                     ModuleMetrics.RecordAssemblyLoading(applicationAssemblyName, true, stopwatch.Elapsed, _logger!);
                     moduleAssemblies.Add(applicationAssembly);
@@ -163,7 +182,21 @@ public static class ModuleRegistry
                 {
                     var infrastructureAssemblyName = $"dotFitness.Modules.{moduleName}.Infrastructure";
                     var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-                    var infrastructureAssembly = System.Reflection.Assembly.Load(infrastructureAssemblyName);
+                    
+                    // Use LoadFrom for Infrastructure assemblies to ensure they're loaded from the file system
+                    var infrastructureAssemblyPath = Path.Combine(AppContext.BaseDirectory, $"{infrastructureAssemblyName}.dll");
+                    System.Reflection.Assembly infrastructureAssembly;
+                    
+                    if (File.Exists(infrastructureAssemblyPath))
+                    {
+                        infrastructureAssembly = System.Reflection.Assembly.LoadFrom(infrastructureAssemblyPath);
+                    }
+                    else
+                    {
+                        // Fallback to Load if LoadFrom fails
+                        infrastructureAssembly = System.Reflection.Assembly.Load(infrastructureAssemblyName);
+                    }
+                    
                     stopwatch.Stop();
                     ModuleMetrics.RecordAssemblyLoading(infrastructureAssemblyName, true, stopwatch.Elapsed, _logger!);
                     moduleAssemblies.Add(infrastructureAssembly);
@@ -186,7 +219,7 @@ public static class ModuleRegistry
                 cfg.RegisterServicesFromAssembly(assembly);
                 stopwatch.Stop();
                 ModuleMetrics.RecordMediatRRegistration(assembly.GetName().Name!, handlerCount, stopwatch.Elapsed, _logger!);
-                LogInformation("Registered MediatR services from assembly: {AssemblyName}", assembly.GetName().Name);
+                LogInformation("Registered MediatR services from assembly: {AssemblyName}", assembly.GetName().Name ?? "Unknown");
             }
             
             LogInformation("MediatR registration completed for {Count} module assemblies", moduleAssemblies.Count);

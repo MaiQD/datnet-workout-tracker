@@ -107,6 +107,9 @@ if (!configurationValidation.IsValid)
     microsoftLogger.LogWarning("Module configuration validation found issues: {ValidationResult}", configurationValidation.ToJson());
 }
 
+// Register all modules automatically first
+ModuleRegistry.RegisterAllModules(builder.Services, builder.Configuration);
+
 // Add MediatR with automatic module assembly discovery
 builder.Services.AddMediatR(cfg => 
 {
@@ -116,9 +119,6 @@ builder.Services.AddMediatR(cfg =>
     // Auto-discover and register all module assemblies
     ModuleRegistry.RegisterModuleAssemblies(cfg);
 });
-
-// Register all modules automatically
-ModuleRegistry.RegisterAllModules(builder.Services, builder.Configuration);
 
 var app = builder.Build();
 
