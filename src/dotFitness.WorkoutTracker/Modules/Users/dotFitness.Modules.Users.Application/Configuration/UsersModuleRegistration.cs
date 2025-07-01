@@ -19,8 +19,16 @@ public static class UsersModuleRegistration
     {
         try
         {
-            // Load the Infrastructure assembly by name (it should be available since API references it)
-            var infrastructureAssembly = System.Reflection.Assembly.Load("dotFitness.Modules.Users.Infrastructure");
+            // Try to find the Infrastructure assembly from already loaded assemblies
+            var infrastructureAssembly = System.AppDomain.CurrentDomain.GetAssemblies()
+                .FirstOrDefault(a => a.GetName().Name == "dotFitness.Modules.Users.Infrastructure");
+            
+            if (infrastructureAssembly == null)
+            {
+                // Fallback: try to load it directly
+                infrastructureAssembly = System.Reflection.Assembly.Load("dotFitness.Modules.Users.Infrastructure");
+            }
+            
             var moduleType = infrastructureAssembly.GetType("dotFitness.Modules.Users.Infrastructure.Configuration.UsersInfrastructureModule");
             var addModuleMethod = moduleType?.GetMethod("AddUsersModule", 
                 System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
@@ -50,8 +58,16 @@ public static class UsersModuleRegistration
     {
         try
         {
-            // Load the Infrastructure assembly by name
-            var infrastructureAssembly = System.Reflection.Assembly.Load("dotFitness.Modules.Users.Infrastructure");
+            // Try to find the Infrastructure assembly from already loaded assemblies
+            var infrastructureAssembly = System.AppDomain.CurrentDomain.GetAssemblies()
+                .FirstOrDefault(a => a.GetName().Name == "dotFitness.Modules.Users.Infrastructure");
+            
+            if (infrastructureAssembly == null)
+            {
+                // Fallback: try to load it directly
+                infrastructureAssembly = System.Reflection.Assembly.Load("dotFitness.Modules.Users.Infrastructure");
+            }
+            
             var moduleType = infrastructureAssembly.GetType("dotFitness.Modules.Users.Infrastructure.Configuration.UsersInfrastructureModule");
             var configureIndexesMethod = moduleType?.GetMethod("ConfigureUsersModuleIndexes", 
                 System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);

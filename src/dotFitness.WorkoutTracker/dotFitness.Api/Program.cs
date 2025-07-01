@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using dotFitness.SharedKernel.Outbox;
 using dotFitness.Modules.Users.Application.Configuration;
 using dotFitness.Api.Infrastructure;
+using Microsoft.Extensions.Logging;
 
 // Configure Serilog
 Log.Logger = new LoggerConfiguration()
@@ -91,6 +92,21 @@ builder.Services.AddSingleton(sp =>
 builder.Services.AddFluentValidationAutoValidation()
     .AddFluentValidationClientsideAdapters();
 
+// Add health checks for modules
+builder.Services.AddModuleHealthChecks();
+
+// Set up module registry logger - convert Serilog to Microsoft.Extensions.Logging
+var loggerFactory = LoggerFactory.Create(builder => builder.AddSerilog(Log.Logger));
+var microsoftLogger = loggerFactory.CreateLogger("ModuleRegistry");
+ModuleRegistry.SetLogger(microsoftLogger);
+
+// Validate module configuration
+var configurationValidation = ModuleConfigurationValidator.ValidateModuleConfiguration(builder.Configuration, microsoftLogger);
+if (!configurationValidation.IsValid)
+{
+    microsoftLogger.LogWarning("Module configuration validation found issues: {ValidationResult}", configurationValidation.ToJson());
+}
+
 // Add MediatR with automatic module assembly discovery
 builder.Services.AddMediatR(cfg => 
 {
@@ -118,6 +134,48 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors();
+
+// Add health check endpoints
+app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+        var response = new
+        {
+            status = report.Status.ToString(),
+            checks = report.Entries.Select(e => new
+            {
+                name = e.Key,
+                status = e.Value.Status.ToString(),
+                description = e.Value.Description,
+                duration = e.Value.Duration.ToString()
+            })
+        };
+        await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(response));
+    }
+});
+
+app.MapHealthChecks("/health/modules", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("module"),
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+        var response = new
+        {
+            status = report.Status.ToString(),
+            modules = report.Entries.Where(e => e.Value.Tags.Contains("module")).Select(e => new
+            {
+                name = e.Key,
+                status = e.Value.Status.ToString(),
+                description = e.Value.Description,
+                duration = e.Value.Duration.ToString()
+            })
+        };
+        await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(response));
+    }
+});
 
 app.UseAuthentication();
 app.UseAuthorization();

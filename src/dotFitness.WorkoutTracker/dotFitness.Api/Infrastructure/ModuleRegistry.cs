@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
-using Serilog;
+using Microsoft.Extensions.Logging;
+using dotFitness.Api.Infrastructure.Metrics;
 
 namespace dotFitness.Api.Infrastructure;
 
@@ -9,6 +10,32 @@ namespace dotFitness.Api.Infrastructure;
 /// </summary>
 public static class ModuleRegistry
 {
+    private static ILogger? _logger;
+
+    /// <summary>
+    /// Sets the logger instance for the module registry
+    /// </summary>
+    /// <param name="logger">Logger instance</param>
+    public static void SetLogger(ILogger logger)
+    {
+        _logger = logger;
+    }
+
+    private static void LogInformation(string message, params object[] args)
+    {
+        _logger?.LogInformation(message, args);
+    }
+
+    private static void LogWarning(string message, params object[] args)
+    {
+        _logger?.LogWarning(message, args);
+    }
+
+    private static void LogError(Exception ex, string message, params object[] args)
+    {
+        _logger?.LogError(ex, message, args);
+    }
+
     /// <summary>
     /// Gets all module names that should be registered
     /// This can be extended as new modules are added
@@ -30,13 +57,18 @@ public static class ModuleRegistry
     {
         foreach (var moduleName in ModuleNames)
         {
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             try
             {
                 RegisterModule(services, configuration, moduleName);
+                stopwatch.Stop();
+                ModuleMetrics.RecordModuleRegistration(moduleName, true, stopwatch.Elapsed, _logger!);
             }
             catch (Exception ex)
             {
-                Log.Warning("Could not register module {ModuleName}: {Error}", moduleName, ex.Message);
+                stopwatch.Stop();
+                ModuleMetrics.RecordModuleRegistration(moduleName, false, stopwatch.Elapsed, _logger!);
+                LogWarning("Could not register module {ModuleName}: {Error}", moduleName, ex.Message);
             }
         }
     }
@@ -62,11 +94,11 @@ public static class ModuleRegistry
                 try
                 {
                     System.Reflection.Assembly.LoadFrom(infrastructureAssemblyPath);
-                    Log.Information("Loaded Infrastructure assembly for module: {ModuleName}", moduleName);
+                    LogInformation("Loaded Infrastructure assembly for module: {ModuleName}", moduleName);
                 }
                 catch (Exception ex)
                 {
-                    Log.Warning("Could not load Infrastructure assembly for module {ModuleName}: {Error}", moduleName, ex.Message);
+                    LogWarning("Could not load Infrastructure assembly for module {ModuleName}: {Error}", moduleName, ex.Message);
                 }
             }
             
@@ -83,16 +115,16 @@ public static class ModuleRegistry
                 if (addModuleMethod != null)
                 {
                     addModuleMethod.Invoke(null, new object[] { services, configuration });
-                    Log.Information("Successfully registered module: {ModuleName}", moduleName);
+                    LogInformation("Successfully registered module: {ModuleName}", moduleName);
                     return;
                 }
             }
             
-            Log.Warning("Could not find registration method for module: {ModuleName}", moduleName);
+            LogWarning("Could not find registration method for module: {ModuleName}", moduleName);
         }
         catch (Exception ex)
         {
-            Log.Warning("Failed to register module {ModuleName}: {Error}", moduleName, ex.Message);
+            LogWarning("Failed to register module {ModuleName}: {Error}", moduleName, ex.Message);
         }
     }
 
@@ -112,41 +144,56 @@ public static class ModuleRegistry
                 try
                 {
                     var applicationAssemblyName = $"dotFitness.Modules.{moduleName}.Application";
+                    var stopwatch = System.Diagnostics.Stopwatch.StartNew();
                     var applicationAssembly = System.Reflection.Assembly.Load(applicationAssemblyName);
+                    stopwatch.Stop();
+                    ModuleMetrics.RecordAssemblyLoading(applicationAssemblyName, true, stopwatch.Elapsed, _logger!);
                     moduleAssemblies.Add(applicationAssembly);
-                    Log.Information("Loaded {ModuleName} Application assembly for MediatR", moduleName);
+                    LogInformation("Loaded {ModuleName} Application assembly for MediatR", moduleName);
                 }
                 catch (Exception ex)
                 {
-                    Log.Warning("Could not load {ModuleName} Application assembly: {Error}", moduleName, ex.Message);
+                    var applicationAssemblyName = $"dotFitness.Modules.{moduleName}.Application";
+                    ModuleMetrics.RecordAssemblyLoading(applicationAssemblyName, false, TimeSpan.Zero, _logger!);
+                    LogWarning("Could not load {ModuleName} Application assembly: {Error}", moduleName, ex.Message);
                 }
 
                 // Try to load Infrastructure assembly  
                 try
                 {
                     var infrastructureAssemblyName = $"dotFitness.Modules.{moduleName}.Infrastructure";
+                    var stopwatch = System.Diagnostics.Stopwatch.StartNew();
                     var infrastructureAssembly = System.Reflection.Assembly.Load(infrastructureAssemblyName);
+                    stopwatch.Stop();
+                    ModuleMetrics.RecordAssemblyLoading(infrastructureAssemblyName, true, stopwatch.Elapsed, _logger!);
                     moduleAssemblies.Add(infrastructureAssembly);
-                    Log.Information("Loaded {ModuleName} Infrastructure assembly for MediatR", moduleName);
+                    LogInformation("Loaded {ModuleName} Infrastructure assembly for MediatR", moduleName);
                 }
                 catch (Exception ex)
                 {
-                    Log.Warning("Could not load {ModuleName} Infrastructure assembly: {Error}", moduleName, ex.Message);
+                    var infrastructureAssemblyName = $"dotFitness.Modules.{moduleName}.Infrastructure";
+                    ModuleMetrics.RecordAssemblyLoading(infrastructureAssemblyName, false, TimeSpan.Zero, _logger!);
+                    LogWarning("Could not load {ModuleName} Infrastructure assembly: {Error}", moduleName, ex.Message);
                 }
             }
 
             // Register all discovered assemblies with MediatR
             foreach (var assembly in moduleAssemblies)
             {
+                var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+                var handlerCount = assembly.GetTypes()
+                    .Count(t => t.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(MediatR.IRequestHandler<,>)));
                 cfg.RegisterServicesFromAssembly(assembly);
-                Log.Information("Registered MediatR services from assembly: {AssemblyName}", assembly.GetName().Name);
+                stopwatch.Stop();
+                ModuleMetrics.RecordMediatRRegistration(assembly.GetName().Name!, handlerCount, stopwatch.Elapsed, _logger!);
+                LogInformation("Registered MediatR services from assembly: {AssemblyName}", assembly.GetName().Name);
             }
             
-            Log.Information("MediatR registration completed for {Count} module assemblies", moduleAssemblies.Count);
+            LogInformation("MediatR registration completed for {Count} module assemblies", moduleAssemblies.Count);
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Error during MediatR module assembly registration");
+            LogError(ex, "Error during MediatR module assembly registration");
             throw;
         }
     }
@@ -165,7 +212,7 @@ public static class ModuleRegistry
             }
             catch (Exception ex)
             {
-                Log.Warning("Could not configure indexes for module {ModuleName}: {Error}", moduleName, ex.Message);
+                LogWarning("Could not configure indexes for module {ModuleName}: {Error}", moduleName, ex.Message);
             }
         }
     }
@@ -199,11 +246,21 @@ public static class ModuleRegistry
                         
                         if (configureIndexesMethod != null)
                         {
+                            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
                             var task = (Task?)configureIndexesMethod.Invoke(null, new object[] { services });
                             if (task != null)
                             {
                                 await task;
-                                Log.Information("Successfully configured indexes for module: {ModuleName}", moduleName);
+                                stopwatch.Stop();
+                                // Estimate index count based on module name (this could be made more sophisticated)
+                                var estimatedIndexCount = moduleName.ToLowerInvariant() switch
+                                {
+                                    "users" => 8, // User + UserMetric indexes
+                                    "exercises" => 9, // Exercise + MuscleGroup + Equipment indexes
+                                    _ => 5 // Default estimate
+                                };
+                                ModuleMetrics.RecordIndexConfiguration(moduleName, estimatedIndexCount, stopwatch.Elapsed, _logger!);
+                                LogInformation("Successfully configured indexes for module: {ModuleName}", moduleName);
                                 return;
                             }
                         }
@@ -211,17 +268,17 @@ public static class ModuleRegistry
                 }
                 catch (Exception ex)
                 {
-                    Log.Warning("Could not configure {ModuleName} module indexes: {Error}", moduleName, ex.Message);
+                    LogWarning("Could not configure {ModuleName} module indexes: {Error}", moduleName, ex.Message);
                 }
             }
             else
             {
-                Log.Warning("Infrastructure assembly not found for module: {ModuleName}", moduleName);
+                LogWarning("Infrastructure assembly not found for module: {ModuleName}", moduleName);
             }
         }
         catch (Exception ex)
         {
-            Log.Warning("Failed to configure indexes for module {ModuleName}: {Error}", moduleName, ex.Message);
+            LogWarning("Failed to configure indexes for module {ModuleName}: {Error}", moduleName, ex.Message);
         }
     }
 }
