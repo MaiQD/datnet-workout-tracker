@@ -15,6 +15,7 @@
 - **User Authentication:**
     - Secure user login via **Google OAuth 2.0** for a seamless onboarding experience.
     - Initial admin account assignment via a configured whitelist of Google emails.
+    - First-time onboarding flagged and surfaced on the dashboard.
 - **User Profile Management:**
     - Ability to track and update user information: weight, height, and unit preference (metric/imperial).
     - **Progress Visualization:** Historical graphs of weight and BMI changes over time.
@@ -46,6 +47,8 @@
 - **Admin Role for Master Data:**
     - An administrative role will be implemented to manage and populate the global lists of **Muscle Groups** and **Equipment**.
     - Users can select from global lists, and a mechanism will be in place for users to add *their own* private muscle groups or equipment if not in the global list.
+ - **Billing & Premium (Future):**
+     - Premium plans with Stripe (Checkout, Customer Portal), plan gating via policies, and subscription webhooks.
 
 ## 3. Architectural Design
 
@@ -95,6 +98,11 @@ The Visual Studio solution (`dotFitness.sln`) will contain the following project
 ├── dotFitness.Modules.WorkoutLogs.Domain/
 ├── dotFitness.Modules.WorkoutLogs.Infrastructure/
 ├── dotFitness.Modules.WorkoutLogs.Tests/
+│
+├── dotFitness.Modules.Billing.Application/     <-- Billing module: commands/queries/DTOs
+├── dotFitness.Modules.Billing.Domain/          <-- Billing module: entities (Subscription, Plan)
+├── dotFitness.Modules.Billing.Infrastructure/  <-- Billing module: Stripe integration, handlers
+├── dotFitness.Modules.Billing.Tests/           <-- Billing module: unit tests
 │
 └── dotFitness.WebUI/                         <-- Vue.js Frontend Application`
 
@@ -183,78 +191,144 @@ The Visual Studio solution (`dotFitness.sln`) will contain the following project
 
 All collections will implicitly include `_id` (ObjectId string), `createdAt` (UTC DateTime), and `updatedAt` (UTC DateTime) fields as standard.
 
-- **`users`**
-    - `googleId` (String): Unique ID from Google.
-    - `email` (String): User's email from Google.
-    - `displayName` (String): User's name from Google.
-    - `profilePicture` (String): URL to Google profile picture.
-    - `loginMethod` (String): "google".
-    - `roles` (Array of Strings): e.g., ["User", "Admin"].
+ - **`users`**
+    - `googleId` (String): Unique ID from Google. [Index]
+    - `email` (String): Email address. [PII] [Unique Index]
+    - `displayName` (String): Public display name.
+    - `profilePicture` (String): URL to profile image. [Optional]
+    - `loginMethod` (String): e.g., "google".
+    - `roles` (Array of Strings): e.g., ["User", "Admin"]. [Index]
     - `gender` (String, optional).
-    - `dateOfBirth` (Date, optional).
+    - `dateOfBirth` (Date, optional). [PII]
     - `unitPreference` (String): "metric" or "imperial".
-- **`userMetrics`**
-    - `userId` (ObjectId): Reference to `users` collection.
-    - `date` (Date): Date/time measurement was taken.
+    - `isOnboarded` (Boolean): First-time onboarding flag.
+    - `onboardingCompletedAt` (Date, nullable): Completion timestamp.
+    - `availableEquipmentIds` (Array<ObjectId>): Equipment the user owns.
+    - `focusMuscleGroupIds` (Array<ObjectId>): Muscle groups the user focuses on.
+
+   Design notes:
+   - Unique index on `email`; indexes on `googleId`, `roles` for fast lookups.
+   - Keep PII minimal; never store OAuth tokens.
+ - **`userMetrics`**
+    - `userId` (ObjectId): FK → `users`.
+    - `date` (Date): Measurement date (UTC). [Index]
     - `weight` (Number).
     - `height` (Number, optional).
     - `bmi` (Number, calculated, optional).
     - `notes` (String, optional).
-- **`exercises`**
-    - `userId` (ObjectId, nullable): Reference to `users` collection (creator). Null for global exercises.
-    - `name` (String).
+
+   Design notes:
+   - Compound index `{ userId: 1, date: -1 }` supports latest metric and history queries.
+ - **`exercises`**
+    - `userId` (ObjectId, nullable): FK → `users` (creator). Null for global. [Scope]
+    - `name` (String): Exercise name. [Scoped Unique: (userId,isGlobal,name)]
     - `description` (String, optional).
     - `muscleGroups` (Array of Strings): Associated muscle group names.
     - `equipment` (Array of Strings): Required equipment names.
     - `instructions` (Array of Strings): Step-by-step exercise instructions.
-    - `difficulty` (String): "Beginner", "Intermediate", "Advanced", "Expert".
-    - `videoUrl` (String, optional): URL to demonstration video.
-    - `imageUrl` (String, optional): URL to exercise image.
-    - `isGlobal` (Boolean): `true` for admin-defined, `false` for user-defined.
-    - `tags` (Array of Strings): Custom tags for categorization.
-    - `createdAt` (Date): UTC timestamp of creation.
-    - `updatedAt` (Date): UTC timestamp of last modification.
-- **`muscleGroups`**
-    - `name` (String, unique).
-    - `isGlobal` (Boolean): `true` for admin-defined, `false` for user-defined.
-    - `userId` (ObjectId, nullable): If `isGlobal` is `false`.
-- **`equipment`**
-    - `name` (String, unique).
-    - `isGlobal` (Boolean): `true` for admin-defined, `false` for user-defined.
-    - `userId` (ObjectId, nullable): If `isGlobal` is `false`.
-- **`routines`**
-    - `userId` (ObjectId): Reference to `users` collection.
-    - `name` (String).
+    - `difficulty` (String): Beginner|Intermediate|Advanced|Expert.
+    - `videoUrl` (String, optional): Demo URL.
+    - `imageUrl` (String, optional): Image URL.
+    - `isGlobal` (Boolean): Admin-defined vs user-defined.
+    - `tags` (Array of Strings): Custom tags.
+    - `createdAt` (Date): Created (UTC).
+    - `updatedAt` (Date): Modified (UTC).
+
+   Design notes:
+   - Index `{ userId: 1, isGlobal: 1, name: 1 }`; multikey on `{ tags: 1 }`.
+   - Enforce name uniqueness per scope to ease CSV import and UX.
+ - **`muscleGroups`**
+    - `name` (String): Display name. [Unique per scope]
+    - `bodyRegion` (String): Upper|Lower|Core|FullBody. [Index]
+    - `parentId` (ObjectId, nullable): Parent group for hierarchy. [Index]
+    - `aliases` (Array<String>, optional): Alternative names for import/search.
+    - `isGlobal` (Boolean): Global (admin) vs user-defined.
+    - `userId` (ObjectId, nullable): Present when `isGlobal=false`.
+
+   Design notes:
+   - Unique within scope: `(name, isGlobal, userId)`; index `bodyRegion` for filtering.
+   - Seeder upserts standard catalog; avoid duplicates via uniqueness.
+### 5.1. Seed Data
+
+- **Muscle Groups Seeding:**
+  - Implement an idempotent seeder that upserts standard muscle groups at app startup.
+  - Use unique index on `(name, isGlobal==true)`; set `parentId` links where applicable.
+  - Store a deterministic key (e.g., slug) to allow safe updates.
+
+Indexes:
+- `muscleGroups`: `name` (unique within scope), `bodyRegion`, `parentId`.
+- `users`: `email` (unique), `googleId`, `roles`.
+- `userMetrics`: `{ userId: 1, date: -1 }`.
+- `exercises`: `{ userId: 1, isGlobal: 1, name: 1 }`, `{ tags: 1 }`.
+
+### 5.2. Billing (Future)
+
+- **`subscriptions`**
+  - `userId` (ObjectId): FK → `users`. [Unique per provider]
+  - `provider` (String): e.g., "stripe".
+  - `customerId` (String): Provider customer id.
+  - `subscriptionId` (String): Provider subscription id.
+  - `productId` (String): Provider product id.
+  - `priceId` (String): Provider price id.
+  - `status` (String): active|trialing|canceled|past_due|incomplete|...
+  - `currentPeriodEnd` (Date, nullable): Period end.
+  - `cancelAtPeriodEnd` (Boolean): Cancellation flag.
+  - `startedAt` (Date): Start date.
+  - `updatedAt` (Date): Last sync date.
+
+  Indexes:
+  - Unique `{ provider: 1, userId: 1 }`.
+  - `{ userId: 1, updatedAt: -1 }`.
+
+ - **`equipment`**
+    - `name` (String): Equipment name. [Unique per scope]
+    - `isGlobal` (Boolean): Global vs user-defined.
+    - `userId` (ObjectId, nullable): Present when `isGlobal=false`.
+
+   Design notes:
+   - Unique within scope: `(name, isGlobal, userId)`.
+ - **`routines`**
+    - `userId` (ObjectId): FK → `users`. [Index]
+    - `name` (String): Routine name.
     - `description` (String, optional).
     - `exercises` (Array of Objects):
-        - `exerciseId` (ObjectId): Reference to `exercises`.
-        - `sets` (Number).
-        - `reps` (String).
-        - `restTimeSeconds` (Number).
+        - `exerciseId` (ObjectId): FK → `exercises`.
+        - `sets` (Number): Target sets.
+        - `reps` (String): Target reps (e.g., "5x5", "AMRAP").
+        - `restTimeSeconds` (Number): Recommended rest.
         - `notes` (String, optional).
-- **`workoutLogs`**
-    - `userId` (ObjectId): Reference to `users` collection.
-    - `routineId` (ObjectId, nullable): Reference to `routines` collection (if followed a routine).
-    - `date` (Date): Date/time workout performed.
+
+   Design notes:
+   - Index `{ userId: 1, name: 1 }` helps lookups; consider unique per user optionally.
+ - **`workoutLogs`**
+    - `userId` (ObjectId): FK → `users`. [Index]
+    - `routineId` (ObjectId, nullable): FK → `routines`.
+    - `date` (Date): When performed (UTC). [Index]
     - `notes` (String, optional).
     - `exercisesPerformed` (Array of Objects):
-        - `exerciseId` (ObjectId): Reference to `exercises`.
+        - `exerciseId` (ObjectId): FK → `exercises`.
         - `setsPerformed` (Array of Objects):
-            - `setNumber` (Number).
-            - `reps` (Number).
-            - `weight` (Number).
-            - `unit` (String): "kg" or "lbs".
+            - `setNumber` (Number): 1..N
+            - `reps` (Number): Actual reps.
+            - `weight` (Number): Actual weight.
+            - `unit` (String): "kg" | "lbs".
             - `notes` (String, optional).
         - `exerciseNotes` (String, optional).
-- **`outboxMessages`**
-    - `occurredOn` (Date).
-    - `type` (String): Full event type name.
-    - `data` (String): Serialized event payload (JSON).
-    - `processedDate` (Date, nullable).
-    - `error` (String, nullable).
-    - `retries` (Number).
+
+   Design notes:
+   - Compound index `{ userId: 1, date: -1 }` for history queries and dashboards.
+ - **`outboxMessages`**
+    - `occurredOn` (Date): Event time (UTC). [Index]
+    - `type` (String): Event type discriminator.
+    - `data` (String): Serialized payload (JSON).
+    - `processedDate` (Date, nullable): When processed.
+    - `error` (String, nullable): Last processing error.
+    - `retries` (Number): Retry count.
     - `correlationId` (String, optional).
     - `traceId` (String, optional).
+
+   Design notes:
+   - Index `{ processedDate: 1, occurredOn: 1 }` to efficiently poll unprocessed events.
 
 ## 6. Authentication and Authorization
 
@@ -263,6 +337,60 @@ All collections will implicitly include `_id` (ObjectId string), `createdAt` (UT
     - **Role-Based Access Control (RBAC):** Users will have roles (e.g., "User", "Admin").
     - **Policy-Based Authorization:** ASP.NET Core policies will enforce access rules (e.g., `[Authorize(Roles = "Admin")]` for admin functionalities; custom policies for data ownership like "users can only manage their own exercises").
 - **Admin Initiation:** The first admin account will be designated via a **Configuration/Environment Variable Whitelist**. Upon first login, if a user's Google email matches a whitelisted email, they will automatically be assigned the "Admin" role.
+
+## 10. Onboarding Flow (Technical)
+
+- **Triggering Condition:** `User.isOnboarded == false` on client; backend exposes this via `GetUserProfile`.
+- **Data Capture:**
+  - Update profile: display name, unit preference (existing `UpdateUserProfileCommand`).
+  - Create baseline metric: weight (required), height (optional) via `AddUserMetricCommand` with current date.
+  - Save preferences: equipment and focus muscles via a new `UpdateUserPreferencesCommand` (or extend profile update) that persists `availableEquipmentIds` and `focusMuscleGroupIds`.
+- **Completion Flag:** Add `CompleteOnboardingCommand` (or reuse profile update + metrics creation) that sets `User.isOnboarded = true` and `onboardingCompletedAt = DateTime.UtcNow`.
+- **Validation:** Use FluentValidation for onboarding DTOs (weight required if completing).
+- **Mapping:** Use Mapperly to map onboarding DTOs to `UpdateUserProfileCommand` and `AddUserMetricCommand` inputs.
+- **Security:** Endpoints protected by `SelfOrAdmin` policy.
+
+## 11. Exercise Import API (CSV)
+
+- **Endpoint (user library):** `POST /api/v1/exercises/import`
+  - Auth: `User` or `Admin`.
+  - Body: `multipart/form-data` with `file`, options: `{ overwriteOnNameMatch: bool, defaultDifficulty: string }`.
+  - Behavior: Creates user-owned exercises; if `overwriteOnNameMatch` is true, updates matching by (name, userId).
+
+- **Endpoint (global, Admin):** `POST /api/v1/exercises/import/global`
+  - Auth: `AdminOnly`.
+  - Behavior: Creates global exercises; if overwrite, match by name and `isGlobal=true`.
+
+- **CSV Columns (expected):**
+  - `name` (required)
+  - `description`
+  - `muscleGroups` (comma-separated; match by seeded names/aliases, create user-private if not found)
+  - `equipment` (comma-separated; create user-private if not found)
+  - `instructions` (pipe-separated steps)
+  - `difficulty` (Beginner|Intermediate|Advanced|Expert)
+  - `videoUrl`
+  - `imageUrl`
+  - `tags` (comma-separated)
+
+- **Response:**
+```json
+{
+  "total": 120,
+  "created": 100,
+  "updated": 10,
+  "failed": 10,
+  "errors": [
+    { "row": 12, "reason": "name missing" },
+    { "row": 45, "reason": "invalid difficulty" }
+  ]
+}
+```
+
+- **Implementation Notes:**
+  - Stream parse CSV to avoid large memory; validate per row with FluentValidation.
+  - Use Mapperly to map parsed rows to `CreateExerciseCommand`/`UpdateExerciseCommand`.
+  - Normalize/trim case for name matching; support `aliases` mapping for muscle groups.
+  - Wrap in a MediatR command `ImportExercisesFromCsvCommand` with a handler in Exercises.Infrastructure.
 
 ## 7. Development Environment Setup (Mac)
 

@@ -41,6 +41,8 @@ var app = builder.Build();
 
 // Configure MongoDB indexes
 await MongoDbIndexConfigurator.ConfigureIndexesAsync(app.Services);
+// Seed MongoDB data
+await MongoDbSeeder.ConfigureSeedsAsync(app.Services);
 
 // Configure the application pipeline
 app.ConfigureSwaggerUi()

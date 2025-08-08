@@ -17,6 +17,17 @@ public class MuscleGroup : IEntity
     [BsonElement("description")]
     public string? Description { get; set; }
 
+    [BsonElement("bodyRegion")]
+    [BsonRepresentation(BsonType.String)]
+    public BodyRegion? BodyRegion { get; set; }
+
+    [BsonElement("parentId")]
+    [BsonRepresentation(BsonType.ObjectId)]
+    public string? ParentId { get; set; }
+
+    [BsonElement("aliases")]
+    public List<string>? Aliases { get; set; }
+
     [BsonElement("isGlobal")]
     public bool IsGlobal { get; set; } = false;
 
@@ -32,7 +43,12 @@ public class MuscleGroup : IEntity
     /// <summary>
     /// Updates muscle group properties and sets UpdatedAt timestamp
     /// </summary>
-    public void UpdateMuscleGroup(string? name = null, string? description = null)
+    public void UpdateMuscleGroup(
+        string? name = null,
+        string? description = null,
+        BodyRegion? bodyRegion = null,
+        string? parentId = null,
+        List<string>? aliases = null)
     {
         var isUpdated = false;
 
@@ -48,9 +64,35 @@ public class MuscleGroup : IEntity
             isUpdated = true;
         }
 
+        if (bodyRegion.HasValue)
+        {
+            BodyRegion = bodyRegion.Value;
+            isUpdated = true;
+        }
+
+        if (parentId != null)
+        {
+            ParentId = parentId;
+            isUpdated = true;
+        }
+
+        if (aliases != null)
+        {
+            Aliases = aliases;
+            isUpdated = true;
+        }
+
         if (isUpdated)
         {
             UpdatedAt = DateTime.UtcNow;
         }
     }
+}
+
+public enum BodyRegion
+{
+    Upper,
+    Lower,
+    Core,
+    FullBody
 }
