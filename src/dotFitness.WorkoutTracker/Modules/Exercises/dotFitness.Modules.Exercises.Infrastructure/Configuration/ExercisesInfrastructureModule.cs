@@ -14,6 +14,7 @@ using dotFitness.Modules.Exercises.Application.Validators;
 using dotFitness.Modules.Exercises.Application.DTOs;
 using dotFitness.SharedKernel.Results;
 using dotFitness.SharedKernel.Inbox;
+using dotFitness.Modules.Exercises.Domain.Entities;
 
 namespace dotFitness.Modules.Exercises.Infrastructure.Configuration;
 
@@ -53,12 +54,20 @@ public static class ExercisesInfrastructureModule
         services.AddScoped<IExerciseRepository, ExerciseRepository>();
         services.AddScoped<IMuscleGroupRepository, MuscleGroupRepository>();
         services.AddScoped<IEquipmentRepository, EquipmentRepository>();
+        services.AddScoped<IUserPreferencesProjectionRepository, UserPreferencesProjectionRepository>();
 
         // Register Inbox collection (shared inboxMessages)
         services.AddSingleton(sp =>
         {
             var database = sp.GetRequiredService<IMongoDatabase>();
             return database.GetCollection<InboxMessage>("inboxMessages");
+        });
+
+        // Register user preferences projection collection
+        services.AddSingleton(sp =>
+        {
+            var database = sp.GetRequiredService<IMongoDatabase>();
+            return database.GetCollection<UserPreferencesProjection>("userPreferencesProjections");
         });
 
         // Register MediatR command handlers
@@ -151,6 +160,15 @@ public static class ExercisesInfrastructureModule
                 inboxIndexBuilder.Ascending(x => x.Consumer).Ascending(x => x.EventId),
                 new CreateIndexOptions { Unique = true }),
             new CreateIndexModel<InboxMessage>(inboxIndexBuilder.Ascending(x => x.Consumer).Ascending(x => x.Status).Ascending(x => x.OccurredOn))
+        });
+
+        // Create indexes for preferences projection
+        var prefs = database.GetCollection<UserPreferencesProjection>("userPreferencesProjections");
+        var prefsIndex = Builders<UserPreferencesProjection>.IndexKeys;
+        await prefs.Indexes.CreateManyAsync(new []
+        {
+            new CreateIndexModel<UserPreferencesProjection>(prefsIndex.Ascending(x => x.UserId), new CreateIndexOptions { Unique = true }),
+            new CreateIndexModel<UserPreferencesProjection>(prefsIndex.Ascending(x => x.UpdatedAt))
         });
     }
 

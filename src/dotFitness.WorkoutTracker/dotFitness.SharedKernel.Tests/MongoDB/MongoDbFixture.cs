@@ -1,18 +1,14 @@
 using MongoDB.Driver;
 using Testcontainers.MongoDb;
 
-namespace dotFitness.Modules.Users.Tests.Infrastructure.MongoDB;
+namespace dotFitness.SharedKernel.Tests.MongoDB;
 
-/// <summary>
-/// Shared MongoDB test fixture that provides a single container instance
-/// for all repository tests to improve performance and reduce resource usage.
-/// </summary>
 public class MongoDbFixture : IAsyncLifetime
 {
     private readonly MongoDbContainer _mongoContainer;
     
     public IMongoDatabase Database { get; private set; } = null!;
-    public string ConnectionString { get; private set; } = null!;
+    public string ConnectionString { get; private set; } = string.Empty;
 
     public MongoDbFixture()
     {
@@ -26,7 +22,6 @@ public class MongoDbFixture : IAsyncLifetime
     public async Task InitializeAsync()
     {
         await _mongoContainer.StartAsync();
-        
         ConnectionString = _mongoContainer.GetConnectionString();
         var client = new MongoClient(ConnectionString);
         Database = client.GetDatabase($"testDb_{Guid.NewGuid():N}");
@@ -38,18 +33,12 @@ public class MongoDbFixture : IAsyncLifetime
         await _mongoContainer.DisposeAsync();
     }
 
-    /// <summary>
-    /// Creates a fresh database for each test class to ensure test isolation
-    /// </summary>
     public IMongoDatabase CreateFreshDatabase()
     {
         var client = new MongoClient(ConnectionString);
         return client.GetDatabase($"testDb_{Guid.NewGuid():N}");
     }
 
-    /// <summary>
-    /// Cleans up all data in the current database
-    /// </summary>
     public async Task CleanupDatabaseAsync()
     {
         var collections = await Database.ListCollectionNamesAsync();
@@ -60,10 +49,5 @@ public class MongoDbFixture : IAsyncLifetime
     }
 }
 
-/// <summary>
-/// Collection definition for xUnit to share the fixture across test classes
-/// </summary>
-[CollectionDefinition("MongoDB")]
-public class MongoDbCollectionFixture : ICollectionFixture<MongoDbFixture>
-{
-}
+[CollectionDefinition("MongoDB.Shared")]
+public class MongoDbSharedCollectionFixture : ICollectionFixture<MongoDbFixture> { }

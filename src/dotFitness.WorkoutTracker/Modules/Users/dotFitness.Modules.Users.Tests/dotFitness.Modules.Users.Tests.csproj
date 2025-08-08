@@ -32,6 +32,7 @@
     <ProjectReference Include="..\dotFitness.Modules.Users.Domain\dotFitness.Modules.Users.Domain.csproj" />
     <ProjectReference Include="..\dotFitness.Modules.Users.Infrastructure\dotFitness.Modules.Users.Infrastructure.csproj" />
     <ProjectReference Include="..\..\..\dotFitness.SharedKernel\dotFitness.SharedKernel.csproj" />
+    <ProjectReference Include="..\..\..\dotFitness.SharedKernel.Tests\dotFitness.SharedKernel.Tests.csproj" />
   </ItemGroup>
 
 </Project>

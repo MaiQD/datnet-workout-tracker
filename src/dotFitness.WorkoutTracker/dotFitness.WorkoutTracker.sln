@@ -27,7 +27,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotFitness.Modules.Exercise
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotFitness.Modules.Exercises.Infrastructure", "Modules\Exercises\dotFitness.Modules.Exercises.Infrastructure\dotFitness.Modules.Exercises.Infrastructure.csproj", "{16571D40-6414-4EC1-B2DD-052B806035C3}"
 EndProject
-
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotFitness.Modules.Exercises.Tests", "Modules\Exercises\dotFitness.Modules.Exercises.Tests\dotFitness.Modules.Exercises.Tests.csproj", "{EB0218FD-88CE-43AA-B172-85EFD4D25917}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotFitness.SharedKernel.Tests", "dotFitness.SharedKernel.Tests\dotFitness.SharedKernel.Tests.csproj", "{2837B3EE-381F-4FC5-8C69-FD5513BD40F4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -73,6 +76,14 @@ Global
 		{16571D40-6414-4EC1-B2DD-052B806035C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{16571D40-6414-4EC1-B2DD-052B806035C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{16571D40-6414-4EC1-B2DD-052B806035C3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EB0218FD-88CE-43AA-B172-85EFD4D25917}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EB0218FD-88CE-43AA-B172-85EFD4D25917}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EB0218FD-88CE-43AA-B172-85EFD4D25917}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EB0218FD-88CE-43AA-B172-85EFD4D25917}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2837B3EE-381F-4FC5-8C69-FD5513BD40F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2837B3EE-381F-4FC5-8C69-FD5513BD40F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2837B3EE-381F-4FC5-8C69-FD5513BD40F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2837B3EE-381F-4FC5-8C69-FD5513BD40F4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{337D17C4-C299-4A01-A6A1-4C83CAB158FE} = {F78FF002-6272-47DD-AACE-5081AAF688D6}
@@ -84,5 +95,6 @@ Global
 		{8FCF3692-1CC1-4BBB-BC1F-F6EE2166D7C8} = {D9186E60-88DD-48E4-8508-FCE2FEFF32AF}
 		{798E0F95-F4A0-48B8-9155-F454856A79FB} = {D9186E60-88DD-48E4-8508-FCE2FEFF32AF}
 		{16571D40-6414-4EC1-B2DD-052B806035C3} = {D9186E60-88DD-48E4-8508-FCE2FEFF32AF}
+		{EB0218FD-88CE-43AA-B172-85EFD4D25917} = {D9186E60-88DD-48E4-8508-FCE2FEFF32AF}
 	EndGlobalSection
 EndGlobal

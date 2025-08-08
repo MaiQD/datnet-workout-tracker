@@ -232,7 +232,7 @@ public class UpdateUserProfileCommandHandlerTests
         // Arrange
         var command = new UpdateUserProfileCommand(
             userId: "user123",
-            displayName: invalidDisplayName,
+            displayName: invalidDisplayName!,
             gender: null,
             dateOfBirth: null
         );
