@@ -98,9 +98,10 @@ dotFitness.Modules.{ModuleName}/
    ```
 
 7. **Access the API**
-   - API: http://localhost:5000
-   - Swagger Documentation: http://localhost:5000/swagger
-   - Health Checks: http://localhost:5000/health
+   - API: https://localhost:7001
+   - Swagger Documentation: https://localhost:7001 (served at root)
+   - Health Checks: https://localhost:7001/health
+   - **Google OAuth**: Use the Authorize button in Swagger UI to authenticate
 
 ### Configuration
 
@@ -119,8 +120,16 @@ Update `dotFitness.Api/appsettings.Development.json`:
     "Issuer": "dotFitness",
     "Audience": "dotFitness",
     "ExpirationHours": 24
+  },
+  "GoogleOAuth": {
+    "ClientId": "your-google-client-id",
+    "ClientSecret": "your-google-client-secret",
+    "RedirectUri": "https://localhost:7001/swagger/oauth2-redirect.html"
   }
 }
+```
+
+**Note**: For Google OAuth integration, follow the [Google OAuth Setup Guide](doc/GOOGLE_OAUTH_SWAGGER_SETUP.md) to configure your Google Cloud Console credentials.
 ```
 
 ## 📚 Documentation
@@ -131,6 +140,7 @@ Update `dotFitness.Api/appsettings.Development.json`:
 - **[UI Design](doc/UI_DESIGN.md)**: Frontend architecture and design system
 - **[Technical Specifications](doc/TECHNICAL.md)**: Technical requirements and patterns
 - **[Project Status](doc/PROJECT_STATUS.md)**: Current implementation status
+- **[Google OAuth with Swagger](doc/GOOGLE_OAUTH_SWAGGER_SETUP.md)**: Google OAuth integration with Swagger UI
 
 ## 🧩 Modules
 
