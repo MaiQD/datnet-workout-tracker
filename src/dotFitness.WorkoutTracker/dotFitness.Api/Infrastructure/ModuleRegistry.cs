@@ -251,6 +251,55 @@ public static class ModuleRegistry
     }
 
     /// <summary>
+    /// Seeds data for all modules
+    /// </summary>
+    public static async Task SeedAllModuleData(IServiceProvider services)
+    {
+        foreach (var moduleName in ModuleNames)
+        {
+            try
+            {
+                await SeedModuleData(services, moduleName);
+            }
+            catch (Exception ex)
+            {
+                LogWarning("Could not seed data for module {ModuleName}: {Error}", moduleName, ex.Message);
+            }
+        }
+    }
+
+    private static async Task SeedModuleData(IServiceProvider services, string moduleName)
+    {
+        try
+        {
+            var infrastructureAssemblyPath = Path.Combine(AppContext.BaseDirectory, $"dotFitness.Modules.{moduleName}.Infrastructure.dll");
+            if (File.Exists(infrastructureAssemblyPath))
+            {
+                var infrastructureAssembly = System.Reflection.Assembly.LoadFrom(infrastructureAssemblyPath);
+                var seederTypeName = $"dotFitness.Modules.{moduleName}.Infrastructure.Configuration.{moduleName}InfrastructureModule";
+                var seederType = infrastructureAssembly.GetType(seederTypeName);
+
+                if (seederType != null)
+                {
+                    var seedMethod = seederType.GetMethod($"Seed{moduleName}ModuleData", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                    if (seedMethod != null)
+                    {
+                        var task = (Task?)seedMethod.Invoke(null, new object[] { services });
+                        if (task != null) await task;
+                        LogInformation("Successfully seeded data for module: {ModuleName}", moduleName);
+                        return;
+                    }
+                }
+            }
+
+            LogWarning("Could not find seeder for module: {ModuleName}", moduleName);
+        }
+        catch (Exception ex)
+        {
+            LogWarning("Failed to seed module {ModuleName}: {Error}", moduleName, ex.Message);
+        }
+    }
+    /// <summary>
     /// Configures MongoDB indexes for a specific module
     /// </summary>
     /// <param name="services">Service provider</param>

@@ -1,0 +1,66 @@
+# Cursor Rules for dotFitness
+
+## Architecture & Boundaries
+- Follow Modular Monolith + Clean Architecture.
+- No cross-module domain dependencies.
+- Domain/Application MUST NOT depend on Infrastructure; use interfaces and DI.
+- One responsibility per unit: one handler/command/query/validator per file (SRP).
+
+## Validation & Mapping
+- Use FluentValidation for all command/query inputs.
+- Use Mapperly for DTO ↔ domain mapping.
+
+## Auth & Authorization
+- JWT-based auth; roles: Admin, PT, User.
+- Use policies over raw roles: AdminOnly, PTOnly, UserOnly, SelfOrAdmin, OwnerUserOrAdmin (PTAssignedToUserOrAdmin when available).
+
+## Eventing (Current Design)
+- Use Outbox on producers; Inbox per module on consumers for idempotency.
+- Events are DTO payloads; include eventId, eventType, occurredOn, correlationId, traceId.
+- Do NOT add an external broker unless explicitly requested. Migration plan exists; use abstractions later.
+
+## MongoDB Usage
+- Obtain `IMongoCollection<T>` via DI as singletons (driver is thread-safe).
+- Create/maintain indexes in each module’s index configurator:
+  - Users: unique Email; GoogleId; Roles; metrics `{ UserId, Date }`.
+  - Exercises: scoped unique `{ UserId, IsGlobal, Name }`; indexes for MuscleGroups, Equipment, Tags.
+  - MuscleGroups: Name (unique per scope), BodyRegion, ParentId.
+  - Equipment: scoped unique `{ Name, IsGlobal, UserId }`.
+  - Inbox: unique `{ Consumer, EventId }`, `{ Consumer, Status, OccurredOn }`.
+  - Outbox: IsProcessed, CreatedAt, EventType.
+- Seeders must be idempotent upserts. Seed global Muscle Groups (BodyRegion) and Equipment (incl. Bodyweight).
+
+## File Placement
+- Domain: `Modules/<X>/*.Domain/Entities|Events|Repositories/*`
+- Application: `Modules/<X>/*.Application/Commands|Queries|DTOs|Mappers|Validators/*`
+- Infrastructure: `Modules/<X>/*.Infrastructure/Handlers|Repositories|Configuration/*`
+- API: `dotFitness.Api/Controllers/*` and shared infra in `dotFitness.Api/Infrastructure/*`
+
+## Handlers & SRP
+- Do NOT co-locate multiple handlers in a file.
+- Keep handlers small; extract complex logic to application services or domain methods.
+- Use DTOs at boundaries. Never expose domain entities across modules.
+
+## Testing (Keep in sync with Copilot)
+- Use xUnit + FluentAssertions; Moq for mocking.
+- Test names: `Should_[ExpectedBehavior]_[UnderCondition]`; use Arrange-Act-Assert.
+- NEVER mock Mapperly mappers; use real generated mappers in tests.
+- Avoid `DateTime.UtcNow` in tests; use fixed UTC timestamps.
+- Always include all mock parameters (e.g., `CancellationToken`).
+- Prefer Result<T> assertions over exception-based flows for business errors.
+
+## Documentation Discipline
+- When adding features, update: `URS.md`, `UI_DESIGN.md`, `TECHNICAL.md`, `ARCHITECTURE.md`.
+
+## Branching & Commits
+- Use `feature/*` branches.
+- Small, focused edits with high-signal commit messages (what/why).
+
+## Don’ts
+- Don’t introduce ASP.NET Core Identity or an external event broker unless requested.
+- Don’t access other modules’ collections directly.
+- Don’t store secrets in code; use configuration.
+
+## Naming & Style
+- Descriptive names; avoid ambiguous abbreviations.
+- Prefer explaining “why” in comments where non-obvious.

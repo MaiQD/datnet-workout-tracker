@@ -44,6 +44,9 @@ This document defines the requirements for the initial release of the **dotFitne
 - **User-selectable light and dark themes.**
 - Focus on a web-based interface.
 
+Optional/Future (Premium):
+- Paid plans (Free/Pro) with gated features (e.g., CSV import, advanced analytics)
+
 **Out-of-Scope for Initial Release:**
 
 - Native mobile applications (iOS/Android).
@@ -64,6 +67,9 @@ This document defines the requirements for the initial release of the **dotFitne
 - **UM-004: Body Metric Tracking:** The system SHALL allow authenticated users to record and update their weight and height.
 - **UM-005: Unit Preference:** The system SHALL allow users to select their preferred units for weight and height (e.g., kilograms/pounds, centimeters/inches).
 - **UM-006: Admin Access:** The system SHALL allow specific designated users to be recognized as administrators upon their first login, granting them access to administrative functions.
+- **UM-007: Role Assignment:** The system SHALL support user roles `Admin`, `PT` (Personal Trainer), and `User`. Roles SHALL be embedded in authentication tokens and enforced via server-side authorization policies.
+- **UM-008: Admin Determination:** Users whose email addresses are listed in a secure, server-side configuration (email whitelist) SHALL automatically be granted the `Admin` role upon their first successful Google login. This whitelist is managed via `AdminSettings.AdminEmails` and is not exposed in client applications.
+- **UM-009: PT–Client Assignment (Future):** The system SHOULD support assigning users to a `PT` for coaching. Assigned `PT`s SHALL have read/write access to their clients’ workout-related data only. (See Section 2.7.)
 
 ### 2.2. Exercise Management (EM)
 
@@ -82,6 +88,10 @@ This document defines the requirements for the initial release of the **dotFitne
 - **EM-004: Exercise Editing/Deletion:** The system SHALL allow users to edit or delete their custom exercises. Users SHALL NOT be able to edit or delete global exercises.
 - **EM-005: Custom Muscle Groups/Equipment:** The system SHALL allow users to add new muscle group and equipment tags that are not already present in the global list, for their personal use.
 - **EM-006: Global Exercise Access:** The system SHALL provide users access to a library of global exercises created by administrators, which can be used in routines but cannot be modified by regular users.
+- **EM-007: Muscle Group Body Region:** Each Muscle Group SHALL include a "Body Region" attribute to support grouping and filtering (e.g., `Upper`, `Lower`, `Core`, `FullBody`).
+- **EM-008: Seeded Muscle Groups:** The system SHALL ship with a comprehensive, standardized list of Muscle Groups as seed data. Seed data SHALL be idempotently applied at startup to ensure presence and allow updates without duplication.
+- **EM-009: Exercise Import (CSV):** The system SHALL allow importing exercises from a CSV file. Users can import into their own library; Admins can import as global exercises. The importer SHALL validate rows, provide a preview, and return a summary report (created/updated/failed with reasons).
+- **EM-010: Smart Exercise Suggestions:** The system SHOULD suggest exercises tailored to each user based on their selected focus muscle groups, available equipment, and experience level. Suggestions SHALL include global and personal exercises and be surfaced on the Dashboard and Exercises screens.
 
 ### 2.3. Routine Management (RM)
 
@@ -120,6 +130,58 @@ This document defines the requirements for the initial release of the **dotFitne
 - **SA-001: Global Muscle Group Management:** The system SHALL allow authenticated administrators to add, edit, or delete global muscle group definitions.
 - **SA-002: Global Equipment Management:** The system SHALL allow authenticated administrators to add, edit, or delete global equipment definitions.
 - **SA-003: Global Exercise Management:** The system SHALL allow authenticated administrators to add, edit, or delete global exercise definitions that will be available to all users.
+- **SA-004: Role Management:** The system SHALL allow administrators to promote/demote users between `User`, `PT`, and `Admin` roles. Changes SHALL be reflected in subsequent authentication tokens.
+- **SA-005: PT–Client Management (Future):** The system SHOULD allow administrators to assign and transfer clients between `PT`s.
+- **SA-006: Admin Email Whitelist:** The system SHALL load the admin email whitelist from secure configuration and apply it on first login to grant `Admin` role automatically.
+
+### 2.7. Billing & Premium (BP) — Future
+
+- **BP-001: Plans:** The system SHOULD support plans: `Free` and `Pro` (premium).
+- **BP-002: Gated Features:** Premium-only features MAY include CSV import, advanced analytics, template libraries, and future PT tooling.
+- **BP-003: Subscription Management:** Users SHOULD be able to purchase/manage subscriptions via a hosted billing portal (e.g., Stripe Customer Portal).
+- **BP-004: Webhooks:** The system SHALL update subscription state from trusted billing webhooks.
+- **BP-005: Cancellation & Trials:** Support trials and cancel-at-period-end with access until period end.
+- **BP-006: Entitlements:** APIs SHALL enforce premium access via server-side checks/policies (e.g., `PremiumOnly`).
+
+### 2.7. Authorization & Roles (AR)
+
+- **AR-001: Roles:** The system defines three roles:
+  - `Admin`: System-level manager with unrestricted access. Manages global data (muscle groups, equipment, global exercises), roles, and PT–client assignments.
+  - `PT`: Coach with scoped access to their assigned clients. Can create PT-owned resources (e.g., routines) and assign them to their clients. Cannot access other PTs’ clients.
+  - `User`: End-user. Can manage their own workouts, routines, and exercises.
+- **AR-002: Policy Enforcement:** The API SHALL enforce access using policy-based authorization with, at minimum, the following policies:
+  - `AdminOnly`: `Admin` role required.
+  - `PTOnly`: `PT` role required.
+  - `UserOnly`: `User` role required.
+  - `SelfOrAdmin`: Access permitted if the acting user is the resource owner (by `UserId`) or has `Admin` role.
+  - `PTAssignedToUserOrAdmin` (Future): Access permitted if acting user is the assigned `PT` for the target `UserId` or has `Admin` role.
+  - `OwnerPTOrAdmin` (Future): PT-owned resource accessible to its owning `PT` or `Admin`.
+  - `OwnerUserOrAdmin`: User-owned resource accessible to its owning `User` or `Admin`.
+- **AR-003: Data Scoping:** Query handlers SHALL filter returned data by role:
+  - `Admin`: No data restrictions.
+  - `PT` (Future): Restricted to resources owned by the `PT` or their assigned clients.
+  - `User`: Restricted to resources owned by the acting user.
+- **AR-004: Token Claims:** Authentication tokens (JWT) SHALL include the user identifier and role claims. Authorization decisions SHALL be made server-side based on these claims and repository checks (e.g., PT–client assignment).
+
+### 2.8. Onboarding (OB)
+
+- **OB-001: First-Time Onboarding Prompt:** After a user's first successful login, the dashboard SHALL display a quick onboarding experience to capture essential preferences and baseline data.
+- **OB-002: Required Inputs:** The onboarding flow SHALL allow users to confirm or set:
+  - Display Name (prefilled from Google if available)
+  - Unit Preference (Metric/Imperial)
+  - Baseline Body Metrics: weight (required), height (optional)
+- **OB-003: Optional Inputs:** Users MAY set:
+  - Theme Preference (Light/Dark)
+  - Experience Level (Beginner/Intermediate/Advanced)
+  - Primary Goal (e.g., Fat Loss, Strength, Endurance)
+- **OB-004a: Available Equipment Selection:** The onboarding flow SHALL allow users to select the equipment they have available at home from the global/user equipment list. This selection SHALL be stored with the user profile and used to tailor routine suggestions and exercise filters.
+- **OB-004b: Focus Muscle Selection:** The onboarding flow SHALL allow users to select muscle groups they want to focus on, presented grouped by "Body Region". This selection SHALL be stored with the user profile and used to tailor suggestions and analytics.
+- **OB-004: Skippable & Remind Later:** Users MAY skip the onboarding. The system SHALL gently remind them later via a dismissible dashboard banner until completed.
+- **OB-005: Idempotency & Editability:** Onboarding SHALL be idempotent. Users can complete it in multiple sessions. All captured data SHALL be editable later in Profile/Settings.
+- **OB-006: Persistence:** The system SHALL track onboarding completion using a boolean flag and completion timestamp per user.
+- **OB-007: Security:** Onboarding updates SHALL be limited to the acting user account (`SelfOrAdmin` policy).
+- **OB-008: Smart Suggestions (Optional):** Upon completion, the system MAY suggest a starter routine template based on selected goals/experience.
+- **OB-009: Data Sources:** Equipment and Muscle Group options presented during onboarding SHALL be fetched from existing endpoints. Only global entries and the current user's private entries SHALL be included.
 
 ## 3. Non-Functional Requirements (NFR)
 
@@ -184,3 +246,47 @@ This document defines the requirements for the initial release of the **dotFitne
 - **C-004:** All development and deployment will follow CI/CD principles using GitHub Actions.
 
 ---
+
+## Appendix A: Standard Muscle Groups (Seed Data)
+
+The following muscle groups SHALL be seeded as global entries. Each entry includes a display name and `bodyRegion`. Some groups include sub-groups (children) for finer tagging while keeping the main group selectable.
+
+- Upper (bodyRegion: `Upper`)
+  - Chest (Pectorals)
+  - Back
+    - Lats (Latissimus Dorsi)
+    - Traps (Trapezius: upper/mid/lower)
+    - Rhomboids
+    - Erector Spinae (Thoracic)
+  - Shoulders (Deltoids)
+    - Anterior Deltoid
+    - Lateral Deltoid
+    - Posterior Deltoid
+  - Arms
+    - Biceps (Biceps Brachii/Brachialis)
+    - Triceps (Triceps Brachii)
+    - Forearms (Flexors/Extensors)
+  - Neck (Sternocleidomastoid/Upper Traps)
+
+- Core (bodyRegion: `Core`)
+  - Abs (Rectus Abdominis)
+  - Obliques (External/Internal)
+  - Transverse Abdominis
+  - Lower Back (Lumbar Erector Spinae/Quadratus Lumborum)
+  - Hip Flexors (Iliopsoas)
+
+- Lower (bodyRegion: `Lower`)
+  - Glutes (Maximus/Medius/Minimus)
+  - Quadriceps (Rectus Femoris, Vastus Lateralis/Medialis/Intermedius)
+  - Hamstrings (Biceps Femoris, Semitendinosus, Semimembranosus)
+  - Calves (Gastrocnemius/Soleus)
+  - Hip Abductors (Glute Medius/Minimus, TFL)
+  - Hip Adductors (Adductor group)
+  - Tibialis Anterior
+
+- Full Body (bodyRegion: `FullBody`)
+  - Full Body (compound/general)
+
+Notes:
+- The UI MAY present sub-groups nested under main groups; tagging can accept either the main group or sub-group.
+- Admins MAY add additional groups; users MAY add private groups per EM-005.

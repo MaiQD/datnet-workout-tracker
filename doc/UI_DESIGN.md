@@ -22,7 +22,7 @@ The core UI design goals for **dotFitness** are:
 - **Clear & Uncluttered:** Provide a clean interface with minimal distractions, especially during active workout sessions.
 - **Intuitive & Easy to Use:** Ensure a smooth learning curve for users to navigate, create, log, and track their workouts efficiently.
 - **Visually Guided:** Leverage visual aids like exercise videos and clear data visualizations to enhance understanding and engagement.
-- **Responsive:** Adapt seamlessly to various screen sizes (desktop, tablet, mobile) for flexibility in home workout environments.
+- **Responsive (Mobile-First):** Adapt seamlessly to various screen sizes (desktop, tablet, mobile), with a strong emphasis on mobile ergonomics (thumb zones, large touch targets, minimal typing) for in-workout usage.
 - **Action-Oriented:** Guide users towards key functionalities with prominent and well-labeled calls to action.
 - **Themable:** Allow users to switch between a light and dark visual theme based on preference.
 - **Secure Access:** Enforce authenticated access for all core application features.
@@ -80,11 +80,11 @@ Clean, modern, and highly readable sans-serif fonts will be used, ensuring good 
 
 ## 3. Layout and Navigation
 
-### 3.1. Responsive Layout
+### 3.1. Responsive Layout (Mobile Priority)
 
 The design will be built mobile-first using Tailwind CSS's utility classes.
 
-- **Small Screens (Mobile):** Primary navigation via a bottom navigation bar or a hamburger menu toggling a full-screen overlay. Content will be stacked vertically. Critical workout session elements will fill the screen.
+- **Small Screens (Mobile):** Primary navigation via a bottom navigation bar or a hamburger menu toggling a full-screen overlay. Content will be stacked vertically. Critical workout session elements fill the screen. Large tap targets (44px+), sticky primary actions, and reduced text input are prioritized.
 - **Medium Screens (Tablet):** Content may flow into two columns. Navigation potentially via a collapsible sidebar.
 - **Large Screens (Desktop):** Consistent sidebar navigation (always visible). Multi-column layouts for dashboards and lists.
 
@@ -132,9 +132,36 @@ The design will be built mobile-first using Tailwind CSS's utility classes.
 - **Progress Snapshots:** Small, digestible charts or summary statistics for recent weight changes, or a snapshot of volume.
 - **Quick Action Buttons:** A row or grid of buttons/cards for "Start Quick Workout," "Browse Routines," "Create Exercise." Clear labels and relevant icons.
 
+#### 4.1.b. Smart Exercise Suggestions (New)
+- A horizontal carousel of suggested exercises tailored to the user (chips show Muscle Groups and Equipment).
+- CTA per card: "Add to Routine" or "Start Now" (ad-hoc).
+
+#### 4.1.a. First-Time Onboarding (New)
+
+- **Trigger:** Displayed only when `isOnboarded == false` for the signed-in user.
+- **Presentation:** A prominent, dismissible banner or modal at the top of the Dashboard.
+- **Content:**
+  - Headline: "Let's get you set up!"
+  - Copy: "Confirm your preferences and add a baseline weight for better tracking."
+  - Primary CTA: "Complete Onboarding"
+  - Secondary CTA: "Remind me later"
+- **Flow:** Multistep modal or side-panel with 3 concise steps:
+  1. Profile: Display Name (prefilled), Theme (Light/Dark)
+  2. Preferences: Unit Preference (Metric/Imperial)
+  3. Equipment: Multi-select list of equipment (show common first, search + tags)
+  4. Focus Muscles: Multi-select of muscle groups grouped by Body Region (collapsible groups)
+  5. Baseline: Weight (required), Height (optional), Date (defaults to today)
+- **Validation:** Inline validation; weight required if proceeding.
+- **Completion:** Show a brief success toast and optionally a suggestion card (e.g., "Try a 20-min full body routine").
+
+UI details:
+- Equipment picker supports chips with remove, and a quick "I have none" toggle.
+- Focus Muscles grouped sections: `Upper`, `Lower`, `Core`, `FullBody`; search filters across all.
+
 ### 4.2. Exercise Management (Browse & Create)
 
 - **"My Exercises" List View:**
+  - Suggested section at top (if present) before the full list.
     - A clean, scrollable list of exercise cards.
     - Each card: Exercise Name, primary Muscle Group, Equipment icon.
     - Search bar at the top, with filters for Muscle Groups, Equipment, "Bodyweight Only."
@@ -148,6 +175,19 @@ The design will be built mobile-first using Tailwind CSS's utility classes.
         - **Video Link:** Text input for URL. A small, embedded video preview will appear below the input once a valid URL is entered.
     - Validation feedback for each field (e.g., red border, error text).
     - "Save" and "Cancel" buttons.
+
+#### 4.2.a. Exercise Import (CSV) (New)
+
+- **Entry Points:** "Import CSV" button in "My Exercises" toolbar and Admin Exercises page for global imports.
+- **Flow:**
+  1. Upload CSV file (drag & drop or file picker).
+  2. Parse & Preview table: show first N rows with validation markers.
+  3. Mapping (optional): confirm columns → fields.
+  4. Import Options: as Global (Admins only), Overwrite if name matches (optional), Default difficulty.
+  5. Confirm & Import: show progress bar; on completion, show summary (created/updated/failed with reasons).
+- **Validation:** Inline per row; invalid rows can be skipped with reasons collected.
+- **Template:** Link to download sample CSV.
+- **UX:** Keep import non-blocking; background job optional if large.
 
 ### 4.3. Routine Management (Build & Manage)
 
@@ -167,7 +207,7 @@ The design will be built mobile-first using Tailwind CSS's utility classes.
 
 This screen requires a focused, full-screen, and highly interactive design.
 
-- **Minimalist Layout:** Eliminate all non-essential navigation and elements.
+- **Minimalist Layout:** Eliminate all non-essential navigation and elements. Mobile: full-screen, sticky controls, and large buttons suited for one-handed use.
 - **Current Exercise Display:**
     - Large, bold **Exercise Name** at the top.
     - Clear indicator: "Exercise X of Y."
@@ -220,6 +260,34 @@ The UI will be built using Vue.js's component-based architecture.
 
 - **Vue Components:** Each distinct UI element (e.g., `Button`, `InputField`, `Card`), and each major section (e.g., `WorkoutSession`, `ExerciseForm`, `ProgressChart`), will be encapsulated as a reusable Vue component.
 - **Tailwind CSS:** All styling will be applied directly using Tailwind's utility classes within Vue component templates. This ensures consistency, responsiveness, and minimal custom CSS. The `dark:` prefix will be extensively used for theme-specific styles.
+
+### 6.1. Onboarding Components (New)
+
+- `components/users/onboarding/OnboardingBanner.vue`: Dashboard banner entry point with CTAs.
+- `components/users/onboarding/OnboardingModal.vue`: Multistep modal wrapper.
+- `components/users/onboarding/steps/ProfileStep.vue`: Display name + theme.
+- `components/users/onboarding/steps/PreferencesStep.vue`: Unit preference.
+- `components/users/onboarding/steps/EquipmentStep.vue`: Equipment multi-select.
+- `components/users/onboarding/steps/FocusMusclesStep.vue`: Muscle groups by Body Region.
+- `components/users/onboarding/steps/BaselineStep.vue`: Weight, height, date.
+
+Store additions:
+
+```javascript
+// stores/auth/onboarding state (Pinia)
+export const useAuthStore = defineStore('auth', {
+  state: () => ({
+    user: null,
+    isOnboarded: false,
+    onboardingCompletedAt: null
+  }),
+  actions: {
+    async completeOnboarding(payload) {
+      // Calls API to update profile + create baseline metric, then flags onboarding complete
+    }
+  }
+});
+```
 - **Chart.js Integration:** Chart.js will be used within dedicated Vue components (e.g., `WeightTrendChart.vue`) by passing data as props to the Chart.js instances, ensuring reactive updates. Chart colors will be adjusted based on the active theme.
 
 ---
@@ -234,6 +302,13 @@ The UI will be built using Vue.js's component-based architecture.
 - **UI Feedback:** A loading spinner may appear briefly during authentication redirects.
 
 ### 7.2. Theming (Dark and Light Theme) (New)
+### 7.3. Mobile-First Ergonomics (New)
+
+- Large touch targets (44–48px)
+- Bottom-sheet modals and drawers on mobile for onboarding and pickers
+- Sticky primary actions (e.g., Start/Log/Finish) during workouts
+- Reduced typing: pickers, toggles, defaults
+- Haptics and subtle sounds for rest timer and logging feedback (where supported)
 
 - **Mechanism:** Users will have the option to switch between a **Light Theme** (default) and a **Dark Theme**.
 - **Theme Toggle:** A prominent toggle (e.g., a sun/moon icon) will be present in the application's top navigation bar or user profile settings.

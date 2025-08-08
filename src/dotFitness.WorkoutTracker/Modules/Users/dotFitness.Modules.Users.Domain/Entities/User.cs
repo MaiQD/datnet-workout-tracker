@@ -38,6 +38,18 @@ public class User : IEntity
 
     [BsonElement("updatedAt")] public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+    [BsonElement("isOnboarded")] public bool IsOnboarded { get; set; } = false;
+
+    [BsonElement("onboardingCompletedAt")] public DateTime? OnboardingCompletedAt { get; set; }
+
+    [BsonElement("availableEquipmentIds")]
+    [BsonRepresentation(BsonType.ObjectId)]
+    public List<string> AvailableEquipmentIds { get; set; } = new();
+
+    [BsonElement("focusMuscleGroupIds")]
+    [BsonRepresentation(BsonType.ObjectId)]
+    public List<string> FocusMuscleGroupIds { get; set; } = new();
+
     public bool IsAdmin => Roles.Contains("Admin");
 
     public void AddRole(string role)
