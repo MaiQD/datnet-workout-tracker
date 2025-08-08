@@ -1,11 +1,12 @@
+using dotFitness.Modules.Users.Domain.Entities;
+using dotFitness.Modules.Users.Infrastructure.Repositories;
+using dotFitness.SharedKernel.Tests.MongoDB;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using Moq;
-using dotFitness.Modules.Users.Domain.Entities;
-using dotFitness.Modules.Users.Infrastructure.Repositories;
 
-namespace dotFitness.Modules.Users.Tests.Infrastructure.MongoDB;
+namespace dotFitness.Modules.Users.Tests.Infrastructure.Repositories;
 
 [Collection("MongoDB")]
 public class UserMetricsRepositoryTests(MongoDbFixture fixture) : IAsyncLifetime
