@@ -26,6 +26,37 @@ dotFitness implements a **Modular Monolith** architecture that combines the simp
 - Testable and maintainable code structure
 - Clear separation of concerns
 
+#### 3.1 Single Responsibility Principle (SRP)
+- Each class has exactly one reason to change.
+- Split responsibilities into focused classes:
+  - Command/Query objects: data-only intent
+  - Handlers: application orchestration per request
+  - Domain entities: business invariants and behavior
+  - Repositories: persistence concerns behind interfaces
+  - Mappers: DTO ↔ domain mapping (Mapperly)
+  - Validators: FluentValidation rules per command/query
+
+#### 3.2 Layered Concerns
+- Domain: Entities, Value Objects, Domain Events, Repository Interfaces
+- Application: Commands/Queries, Handlers, DTOs, Mappers, Validators
+- Infrastructure: Repository implementations, external services, handlers’ wiring
+- API: Controllers, filters/middleware, DI setup
+
+#### 3.3 Class Separation Guidelines
+- Keep handlers small; extract complex policies/services into separate application services when logic grows
+- Avoid God objects: prefer cohesive domain methods over sprawling services
+- No infrastructure dependencies in Domain/Application (use interfaces)
+- Keep constructors minimal; prefer injecting abstractions only
+
+#### 3.4 Module Boundaries
+- No cross-module domain references; communicate via commands/queries or events
+- SharedKernel only for truly cross-cutting abstractions (no domain rules)
+
+#### 3.5 Testing Implications
+- Domain is pure and easily unit-testable
+- Application handlers tested with mocked repositories/services
+- Infrastructure verified via integration tests
+
 ## 📁 Project Structure
 
 ```
@@ -242,10 +273,13 @@ public static class UserMapper
 - Interface-based communication between layers
 - No direct dependencies between different modules
 
-### 2. **Asynchronous Communication**
-- Domain events for cross-module communication
-- Outbox pattern for reliable event delivery
-- Event handlers for side effects
+### 2. **Asynchronous Communication (Event-Driven)**
+- Domain events for cross-module communication.
+- **Outbox pattern** for reliable event publishing by the producing module.
+- **Inbox pattern** for idempotent processing by consuming modules:
+  - Each consumer records processed `eventId`s in its `inboxMessages` to avoid duplicates.
+  - Handlers are idempotent and retriable.
+- Event handlers for side effects and projections (read models).
 
 ### 3. **Shared Kernel**
 - Common interfaces (`IEntity`)

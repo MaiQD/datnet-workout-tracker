@@ -13,6 +13,7 @@ using dotFitness.Modules.Exercises.Application.Queries;
 using dotFitness.Modules.Exercises.Application.Validators;
 using dotFitness.Modules.Exercises.Application.DTOs;
 using dotFitness.SharedKernel.Results;
+using dotFitness.SharedKernel.Inbox;
 
 namespace dotFitness.Modules.Exercises.Infrastructure.Configuration;
 
@@ -53,6 +54,13 @@ public static class ExercisesInfrastructureModule
         services.AddScoped<IMuscleGroupRepository, MuscleGroupRepository>();
         services.AddScoped<IEquipmentRepository, EquipmentRepository>();
 
+        // Register Inbox collection (shared inboxMessages)
+        services.AddSingleton(sp =>
+        {
+            var database = sp.GetRequiredService<IMongoDatabase>();
+            return database.GetCollection<InboxMessage>("inboxMessages");
+        });
+
         // Register MediatR command handlers
         services.AddScoped<IRequestHandler<CreateExerciseCommand, Result<ExerciseDto>>, CreateExerciseCommandHandler>();
         services.AddScoped<IRequestHandler<UpdateExerciseCommand, Result<ExerciseDto>>, UpdateExerciseCommandHandler>();
@@ -63,6 +71,7 @@ public static class ExercisesInfrastructureModule
         services.AddScoped<IRequestHandler<GetAllExercisesQuery, Result<IEnumerable<ExerciseDto>>>, GetAllExercisesQueryHandler>();
         services.AddScoped<IRequestHandler<GetAllMuscleGroupsQuery, Result<IEnumerable<MuscleGroupDto>>>, GetAllMuscleGroupsQueryHandler>();
         services.AddScoped<IRequestHandler<GetAllEquipmentQuery, Result<IEnumerable<EquipmentDto>>>, GetAllEquipmentQueryHandler>();
+        services.AddScoped<IRequestHandler<GetSmartExerciseSuggestionsQuery, Result<IEnumerable<ExerciseDto>>>, GetSmartExerciseSuggestionsQueryHandler>();
 
         // Register validators
         services.AddScoped<IValidator<CreateExerciseCommand>, CreateExerciseCommandValidator>();
@@ -131,6 +140,17 @@ public static class ExercisesInfrastructureModule
             new CreateIndexModel<Equipment>(
                 equipmentIndexBuilder.Ascending(x => x.Name).Ascending(x => x.IsGlobal).Ascending(x => x.UserId),
                 new CreateIndexOptions { Unique = true })
+        });
+
+        // Create indexes for Inbox collection (Exercises consumers)
+        var inboxCollection = database.GetCollection<InboxMessage>("inboxMessages");
+        var inboxIndexBuilder = Builders<InboxMessage>.IndexKeys;
+        await inboxCollection.Indexes.CreateManyAsync(new[]
+        {
+            new CreateIndexModel<InboxMessage>(
+                inboxIndexBuilder.Ascending(x => x.Consumer).Ascending(x => x.EventId),
+                new CreateIndexOptions { Unique = true }),
+            new CreateIndexModel<InboxMessage>(inboxIndexBuilder.Ascending(x => x.Consumer).Ascending(x => x.Status).Ascending(x => x.OccurredOn))
         });
     }
 

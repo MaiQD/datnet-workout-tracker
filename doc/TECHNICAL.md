@@ -45,6 +45,9 @@
     - Achievements or badges for reaching milestones (e.g., "First 7-day streak").
     - Post-workout summaries with key achievements.
 - **Admin Role for Master Data:**
+ - **Smart Exercise Suggestions:**
+     - Query endpoint returns a list of suggested exercises for the current user, ranked by fit to preferences (focus muscles, available equipment). Initial heuristic is simple scoring; future iterations may consider history and progression.
+
     - An administrative role will be implemented to manage and populate the global lists of **Muscle Groups** and **Equipment**.
     - Users can select from global lists, and a mechanism will be in place for users to add *their own* private muscle groups or equipment if not in the global list.
  - **Billing & Premium (Future):**
@@ -280,6 +283,89 @@ Indexes:
   - Unique `{ provider: 1, userId: 1 }`.
   - `{ userId: 1, updatedAt: -1 }`.
 
+### 5.3. Inbox (Event Idempotency) — Event-Driven Architecture
+
+- **`inboxMessages`** (per subscriber/consumer)
+  - `eventId` (String): Unique provider event id. [Unique per consumer]
+  - `eventType` (String): Type discriminator.
+  - `occurredOn` (Date): Event time (UTC).
+  - `payload` (String): Raw JSON body.
+  - `consumer` (String): Logical consumer name (e.g., `Exercises.SuggestionsProjector`).
+  - `status` (String): pending|processed|failed.
+  - `processedAt` (Date, nullable): When processed.
+  - `attempts` (Number): Delivery attempts.
+  - `error` (String, nullable): Last error.
+  - `correlationId` (String, optional), `traceId` (String, optional)
+
+  Indexes:
+  - Unique `{ consumer: 1, eventId: 1 }`
+  - `{ consumer: 1, status: 1, occurredOn: 1 }`
+
+Per-module implementation
+- Each module SHALL implement its own consumers and persist inbox entries with a unique `consumer` name.
+- Consumer naming convention: `{Module}.{Component}`, e.g., `Exercises.SuggestionsProjector`, `Users.ProfileProjector`, `Billing.SubscriptionProjector`.
+- Index creation for inbox MUST be added in each module’s installer (similar to how other module indexes are configured).
+- Allowed storage strategies:
+  - Single shared collection `inboxMessages` (recommended) with `consumer` disambiguation (as modeled above), or
+  - Separate per-module collections (e.g., `inboxMessages.exercises`) using the same schema and indexes.
+- Handlers MUST upsert `{ consumer, eventId }` before executing business logic to ensure idempotency, then update `status` and `processedAt`.
+
+## 13. Event Broker Migration Plan (Later)
+
+Phase 1 — Build with current design (now)
+- Use Outbox on producers (`outboxMessages`) and document consumer-side Inbox schema.
+- Keep events as DTO payloads with `eventId`, `eventType`, `occurredOn`, `correlationId`, `traceId` in the envelope.
+- Implement features without a broker; cross-module side effects can be added later via outbox dispatcher.
+
+Phase 2 — Introduce Event Bus abstraction
+- Define `IEventBusPublisher`, `IEventBusSubscriber`, and `EventEnvelope` in `SharedKernel`.
+- Add an Outbox dispatcher `BackgroundService` that reads unprocessed outbox entries and publishes `EventEnvelope` via `IEventBusPublisher`.
+- Consumers subscribe through `IEventBusSubscriber` in each module installer and persist to Inbox before handling (idempotent).
+
+Phase 3 — In-memory adapter (dev/default)
+- Implement `InMemoryEventBus` for `IEventBus*` interfaces (simple pub/sub in-process). 
+- Wire DI to in-memory bus for all environments initially.
+
+Phase 4 — Cloud broker adapter
+- Implement cloud adapter (e.g., Azure Service Bus/RabbitMQ) for `IEventBus*`.
+- Externalize topics/queues in configuration; avoid broker-specific logic in business code.
+- Swap DI to cloud adapter for staging/prod only; keep in-memory for local/testing.
+
+Phase 5 — Operations & hardening
+- Add DLQ, retries, and metrics dashboards on the broker side.
+- Keep Outbox/Inbox for at-least-once semantics. Ensure handlers are idempotent.
+- Load/perf test event throughput and backpressure.
+
+### 13.1. Inbox Migration for Existing Modules (Now)
+
+- Prereqs
+  - Define an `InboxMessage` schema (fields per 5.3). Use a shared collection `inboxMessages` with `consumer` disambiguation.
+
+- Users module
+  1. Add DI binding for `inboxMessages` in `UsersModuleInstaller`.
+  2. Create indexes: unique `{ consumer, eventId }`, `{ consumer, status, occurredOn }`.
+  3. Introduce a small idempotency wrapper (decorator or base service) that:
+     - Upserts `{ consumer, eventId }` with `status=pending`.
+     - Executes handler.
+     - Sets `status=processed`, `processedAt=UtcNow` (or `status=failed` with `error`).
+  4. Apply wrapper to each consumer handler (e.g., projection updaters) and choose a `consumer` name like `Users.ProfileProjector`.
+
+- Exercises module
+  1. Add DI binding for `inboxMessages` in `ExercisesInfrastructureModule`.
+  2. Create the same indexes.
+  3. Reuse the idempotency wrapper.
+  4. Apply to consumers (e.g., suggestions projector) with `consumer` name `Exercises.SuggestionsProjector`.
+
+- Rollout order
+  1. Add inbox bindings + indexes in all modules.
+  2. Wrap consumers with idempotency.
+  3. Enable outbox dispatcher (when built) to publish events.
+  4. Monitor duplicates; adjust retry/backoff.
+
+- Testing
+  - Unit-test the wrapper (duplicate event processed once).
+  - Integration-test: insert the same outbox event twice → single side effect.
+
  - **`equipment`**
     - `name` (String): Equipment name. [Unique per scope]
     - `isGlobal` (Boolean): Global vs user-defined.
@@ -391,6 +477,12 @@ Indexes:
   - Use Mapperly to map parsed rows to `CreateExerciseCommand`/`UpdateExerciseCommand`.
   - Normalize/trim case for name matching; support `aliases` mapping for muscle groups.
   - Wrap in a MediatR command `ImportExercisesFromCsvCommand` with a handler in Exercises.Infrastructure.
+
+## 12. Clean Architecture & SOLID (Enforcement)
+
+- Each handler, command, and query SHALL reside in its own file. Do not co-locate multiple handlers in one file.
+- Domain/Application code SHALL not depend on Infrastructure types. Use interfaces and inject abstractions.
+- Large handlers SHOULD extract orchestration/services to maintain SRP.
 
 ## 7. Development Environment Setup (Mac)
 

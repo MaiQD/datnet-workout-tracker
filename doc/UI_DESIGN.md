@@ -132,6 +132,10 @@ The design will be built mobile-first using Tailwind CSS's utility classes.
 - **Progress Snapshots:** Small, digestible charts or summary statistics for recent weight changes, or a snapshot of volume.
 - **Quick Action Buttons:** A row or grid of buttons/cards for "Start Quick Workout," "Browse Routines," "Create Exercise." Clear labels and relevant icons.
 
+#### 4.1.b. Smart Exercise Suggestions (New)
+- A horizontal carousel of suggested exercises tailored to the user (chips show Muscle Groups and Equipment).
+- CTA per card: "Add to Routine" or "Start Now" (ad-hoc).
+
 #### 4.1.a. First-Time Onboarding (New)
 
 - **Trigger:** Displayed only when `isOnboarded == false` for the signed-in user.
@@ -157,6 +161,7 @@ UI details:
 ### 4.2. Exercise Management (Browse & Create)
 
 - **"My Exercises" List View:**
+  - Suggested section at top (if present) before the full list.
     - A clean, scrollable list of exercise cards.
     - Each card: Exercise Name, primary Muscle Group, Equipment icon.
     - Search bar at the top, with filters for Muscle Groups, Equipment, "Bodyweight Only."

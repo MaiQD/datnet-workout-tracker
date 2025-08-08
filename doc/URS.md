@@ -91,6 +91,7 @@ Optional/Future (Premium):
 - **EM-007: Muscle Group Body Region:** Each Muscle Group SHALL include a "Body Region" attribute to support grouping and filtering (e.g., `Upper`, `Lower`, `Core`, `FullBody`).
 - **EM-008: Seeded Muscle Groups:** The system SHALL ship with a comprehensive, standardized list of Muscle Groups as seed data. Seed data SHALL be idempotently applied at startup to ensure presence and allow updates without duplication.
 - **EM-009: Exercise Import (CSV):** The system SHALL allow importing exercises from a CSV file. Users can import into their own library; Admins can import as global exercises. The importer SHALL validate rows, provide a preview, and return a summary report (created/updated/failed with reasons).
+- **EM-010: Smart Exercise Suggestions:** The system SHOULD suggest exercises tailored to each user based on their selected focus muscle groups, available equipment, and experience level. Suggestions SHALL include global and personal exercises and be surfaced on the Dashboard and Exercises screens.
 
 ### 2.3. Routine Management (RM)
 
