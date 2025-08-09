@@ -1,6 +1,7 @@
 using MongoDB.Driver;
 using dotFitness.SharedKernel.Outbox;
 using Microsoft.Extensions.Logging;
+using dotFitness.Bootstrap;
 
 namespace dotFitness.Api.Infrastructure;
 
@@ -22,8 +23,8 @@ public static class MongoDbIndexConfigurator
         // Configure shared indexes
         await ConfigureSharedIndexesAsync(database);
         
-        // Configure module-specific indexes
-        await ModuleRegistry.ConfigureAllModuleIndexes(services);
+        // Configure module-specific indexes using interface-based approach
+        scope.ServiceProvider.ConfigureAllModuleIndexes(logger);
         
         logger.LogInformation("MongoDB indexes configured successfully");
     }

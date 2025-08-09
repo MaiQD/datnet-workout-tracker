@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using dotFitness.Bootstrap;
 
 namespace dotFitness.Api.Infrastructure;
 
@@ -16,7 +17,8 @@ public static class MongoDbSeeder
         var loggerFactory = scope.ServiceProvider.GetRequiredService<ILoggerFactory>();
         var logger = loggerFactory.CreateLogger("MongoDbSeeder");
 
-        await ModuleRegistry.SeedAllModuleData(services);
+        // Seed module data using interface-based approach
+        scope.ServiceProvider.SeedAllModuleData(logger);
         logger.LogInformation("MongoDB seed data configured successfully");
     }
 }

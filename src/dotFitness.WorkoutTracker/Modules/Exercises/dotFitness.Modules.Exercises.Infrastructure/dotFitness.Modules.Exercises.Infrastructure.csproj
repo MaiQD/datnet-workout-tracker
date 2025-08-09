@@ -2,6 +2,7 @@
   <ItemGroup>
     <ProjectReference Include="..\dotFitness.Modules.Exercises.Domain\dotFitness.Modules.Exercises.Domain.csproj" />
     <ProjectReference Include="..\dotFitness.Modules.Exercises.Application\dotFitness.Modules.Exercises.Application.csproj" />
+    <ProjectReference Include="..\..\..\dotFitness.ModuleContracts\dotFitness.ModuleContracts.csproj" />
     <ProjectReference Include="..\..\..\dotFitness.SharedKernel\dotFitness.SharedKernel.csproj" />
   </ItemGroup>
 

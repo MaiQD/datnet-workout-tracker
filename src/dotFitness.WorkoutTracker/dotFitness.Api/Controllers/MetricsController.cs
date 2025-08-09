@@ -44,7 +44,7 @@ public class MetricsController : ControllerBase
     /// </summary>
     /// <returns>Detailed metrics for all modules</returns>
     [HttpGet("modules")]
-    [ProducesResponseType(typeof(Dictionary<string, ModuleRegistrationMetrics>), 200)]
+    [ProducesResponseType(typeof(Dictionary<string, dotFitness.Api.Infrastructure.Metrics.ModuleRegistrationMetrics>), 200)]
     public IActionResult GetAllModuleMetrics()
     {
         try
@@ -66,7 +66,7 @@ public class MetricsController : ControllerBase
     /// <param name="moduleName">Name of the module</param>
     /// <returns>Detailed metrics for the specified module</returns>
     [HttpGet("modules/{moduleName}")]
-    [ProducesResponseType(typeof(ModuleRegistrationMetrics), 200)]
+    [ProducesResponseType(typeof(dotFitness.Api.Infrastructure.Metrics.ModuleRegistrationMetrics), 200)]
     [ProducesResponseType(404)]
     public IActionResult GetModuleMetrics(string moduleName)
     {

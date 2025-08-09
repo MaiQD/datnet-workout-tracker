@@ -10,6 +10,8 @@ namespace dotFitness.Api.Infrastructure;
 /// </summary>
 public static class ModuleHealthChecks
 {
+    internal static readonly string[] ModuleNames = { "Users", "Exercises", "Routines", "WorkoutLogs" };
+
     /// <summary>
     /// Adds health checks for all registered modules
     /// </summary>
@@ -142,7 +144,7 @@ public class ModuleRegistryHealthCheck : IHealthCheck
     {
         try
         {
-            var moduleNames = ModuleRegistry.ModuleNames;
+            var moduleNames = ModuleHealthChecks.ModuleNames;
             var loadedModules = new List<string>();
             var missingModules = new List<string>();
 

@@ -9,6 +9,8 @@ namespace dotFitness.Api.Infrastructure;
 /// </summary>
 public static class ModuleConfigurationValidator
 {
+    public static readonly string[] ModuleNames = { "Users", "Exercises", "Routines", "WorkoutLogs" };
+
     /// <summary>
     /// Validates configuration for all modules
     /// </summary>
@@ -18,7 +20,7 @@ public static class ModuleConfigurationValidator
     public static ModuleConfigurationValidationResult ValidateModuleConfiguration(IConfiguration configuration, ILogger logger)
     {
         var result = new ModuleConfigurationValidationResult();
-        var moduleNames = ModuleRegistry.ModuleNames;
+        var moduleNames = ModuleNames;
 
         logger.LogInformation("Starting module configuration validation for {ModuleCount} modules", moduleNames.Length);
 
