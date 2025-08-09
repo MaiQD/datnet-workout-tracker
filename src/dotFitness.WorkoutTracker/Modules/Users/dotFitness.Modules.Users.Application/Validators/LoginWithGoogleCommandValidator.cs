@@ -7,7 +7,7 @@ public class LoginWithGoogleCommandValidator : AbstractValidator<LoginWithGoogle
 {
     public LoginWithGoogleCommandValidator()
     {
-        RuleFor(x => x.GoogleToken)
+        RuleFor(x => x.Request.GoogleToken)
             .NotEmpty()
             .WithMessage("Google token ID is required");
     }

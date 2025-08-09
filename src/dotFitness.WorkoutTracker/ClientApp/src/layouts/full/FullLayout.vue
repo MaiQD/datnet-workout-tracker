@@ -1,12 +1,10 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router';
 import MainView from './Main.vue';
-import Topbar from './Topbar.vue';
 </script>
 
 <template>
     <v-locale-provider>
-        <Topbar />
         <v-app>
             <v-main>
                 <MainView />

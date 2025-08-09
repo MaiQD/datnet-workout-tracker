@@ -116,10 +116,10 @@ Update `dotFitness.Api/appsettings.Development.json`:
     "AdminEmails": ["your.admin.email@gmail.com"]
   },
   "JwtSettings": {
-    "SecretKey": "your-secret-key-here",
-    "Issuer": "dotFitness",
-    "Audience": "dotFitness",
-    "ExpirationHours": 24
+    "SecretKey": "YourSuperSecretKeyThatShouldBeAtLeast256BitsLong!",
+    "Issuer": "dotFitness.Api",
+    "Audience": "dotFitness.Client",
+    "ExpirationInHours": 24
   },
   "GoogleOAuth": {
     "ClientId": "your-google-client-id",

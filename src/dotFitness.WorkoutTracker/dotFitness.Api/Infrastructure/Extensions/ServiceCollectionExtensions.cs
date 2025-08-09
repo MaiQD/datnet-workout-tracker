@@ -6,6 +6,7 @@ using dotFitness.SharedKernel.Outbox;
 using dotFitness.Api.Infrastructure.Settings;
 using dotFitness.Api.Infrastructure.Swagger;
 using dotFitness.Bootstrap;
+using Microsoft.Extensions.Options;
 
 namespace dotFitness.Api.Infrastructure.Extensions;
 
@@ -118,9 +119,16 @@ public static class ServiceCollectionExtensions
         {
             options.AddDefaultPolicy(builder =>
             {
-                builder.AllowAnyOrigin()
-                       .AllowAnyMethod()
-                       .AllowAnyHeader();
+                var corsSettings = services.BuildServiceProvider()
+                    .GetRequiredService<IOptions<CorsSettings>>()
+                    .Value;
+
+                    builder.WithOrigins(corsSettings.AllowedOrigins)
+                           .AllowAnyMethod()
+                           .AllowAnyHeader()
+                           .AllowCredentials()
+                           .WithExposedHeaders("Content-Disposition");
+                
             });
         });
 

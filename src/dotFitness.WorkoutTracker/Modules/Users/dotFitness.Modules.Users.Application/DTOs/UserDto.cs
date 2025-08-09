@@ -14,6 +14,8 @@ public class UserDto
     [Required]
     public string DisplayName { get; set; } = string.Empty;
     
+    public string? ProfilePicture { get; set; }
+    
     public string? GoogleId { get; set; }
     
     public string LoginMethod { get; set; } = string.Empty;

@@ -23,17 +23,18 @@ public class AuthController : ControllerBase
     /// <summary>
     /// Authenticates a user with Google OAuth token
     /// </summary>
-    /// <param name="command">The Google login command containing the OAuth token</param>
+    /// <param name="request">The Google login request containing the OAuth token</param>
     /// <returns>JWT token and user information</returns>
     [HttpPost("google-login")]
     [ProducesResponseType(typeof(LoginResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> LoginWithGoogle([FromBody] LoginWithGoogleCommand command)
+    public async Task<IActionResult> LoginWithGoogle([FromBody] LoginWithGoogleRequest request)
     {
         try
         {
+            var command = new LoginWithGoogleCommand(request);
             var result = await _mediator.Send(command);
             
             if (result.IsFailure)

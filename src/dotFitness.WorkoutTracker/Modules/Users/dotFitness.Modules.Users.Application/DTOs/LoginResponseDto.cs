@@ -16,6 +16,8 @@ public class LoginResponseDto
     [Required]
     public string DisplayName { get; set; } = string.Empty;
     
+    public string? ProfilePicture { get; set; }
+    
     public List<string> Roles { get; set; } = new();
     
     public DateTime ExpiresAt { get; set; }
