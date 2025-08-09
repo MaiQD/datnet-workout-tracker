@@ -5,6 +5,7 @@ using MongoDB.Driver;
 using dotFitness.ModuleContracts;
 using dotFitness.Modules.Users.Infrastructure.Configuration;
 using dotFitness.Modules.Exercises.Infrastructure.Configuration;
+using FluentValidation;
 
 namespace dotFitness.Bootstrap;
 
@@ -39,11 +40,16 @@ public static class ModuleRegistry
             return client.GetDatabase(dbName);
         });
 
+        // MediatR handlers
         services.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssemblyContaining<UsersModuleInstaller>();
             cfg.RegisterServicesFromAssemblyContaining<ExercisesModuleInstaller>();
         });
+
+        // FluentValidation validators
+        services.AddValidatorsFromAssemblyContaining<UsersModuleInstaller>();
+        services.AddValidatorsFromAssemblyContaining<ExercisesModuleInstaller>();
     }
 
     public static void ConfigureAllModuleIndexes(this IServiceProvider provider, ILogger logger)

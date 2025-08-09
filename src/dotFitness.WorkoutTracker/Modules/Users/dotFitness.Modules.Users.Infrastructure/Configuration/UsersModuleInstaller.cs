@@ -79,19 +79,8 @@ public class UsersModuleInstaller : IModuleInstaller
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserMetricsRepository, UserMetricsRepository>();
 
-        // Register MediatR handlers
-        services.AddScoped<IRequestHandler<LoginWithGoogleCommand, Result<LoginResponseDto>>, LoginWithGoogleCommandHandler>();
-        services.AddScoped<IRequestHandler<UpdateUserProfileCommand, Result<UserDto>>, UpdateUserProfileCommandHandler>();
-        services.AddScoped<IRequestHandler<AddUserMetricCommand, Result<UserMetricDto>>, AddUserMetricCommandHandler>();
-        services.AddScoped<IRequestHandler<GetUserByIdQuery, Result<UserDto>>, GetUserByIdQueryHandler>();
-        services.AddScoped<IRequestHandler<GetUserProfileQuery, Result<UserDto>>, GetUserProfileQueryHandler>();
-        services.AddScoped<IRequestHandler<GetLatestUserMetricQuery, Result<UserMetricDto>>, GetLatestUserMetricQueryHandler>();
-        services.AddScoped<IRequestHandler<GetUserMetricsQuery, Result<IEnumerable<UserMetricDto>>>, GetUserMetricsQueryHandler>();
-
-        // Register validators
-        services.AddScoped<IValidator<LoginWithGoogleCommand>, LoginWithGoogleCommandValidator>();
-        services.AddScoped<IValidator<UpdateUserProfileCommand>, UpdateUserProfileCommandValidator>();
-        services.AddScoped<IValidator<AddUserMetricCommand>, AddUserMetricCommandValidator>();
+        // Register MediatR handlers (auto-registered in Bootstrap) - removed
+        // Register validators (auto-registered in Bootstrap) - removed
 
         // Register Mapperly mappers - they will be generated as implementations
         services.AddScoped<UserMapper>();
@@ -100,39 +89,7 @@ public class UsersModuleInstaller : IModuleInstaller
 
     public void ConfigureIndexes(IMongoDatabase database)
     {
-        // Create indexes for User collection
-        var userCollection = database.GetCollection<User>("users");
-        var userIndexBuilder = Builders<User>.IndexKeys;
-        
-        userCollection.Indexes.CreateMany(new[]
-        {
-            new CreateIndexModel<User>(userIndexBuilder.Ascending(x => x.Email), new CreateIndexOptions { Unique = true }),
-            new CreateIndexModel<User>(userIndexBuilder.Ascending(x => x.GoogleId)),
-            new CreateIndexModel<User>(userIndexBuilder.Ascending(x => x.CreatedAt)),
-            new CreateIndexModel<User>(userIndexBuilder.Ascending(x => x.Roles))
-        });
-
-        // Create indexes for UserMetric collection
-        var userMetricCollection = database.GetCollection<UserMetric>("userMetrics");
-        var userMetricIndexBuilder = Builders<UserMetric>.IndexKeys;
-        
-        userMetricCollection.Indexes.CreateMany(new[]
-        {
-            new CreateIndexModel<UserMetric>(userMetricIndexBuilder.Ascending(x => x.UserId)),
-            new CreateIndexModel<UserMetric>(userMetricIndexBuilder.Ascending(x => x.Date)),
-            new CreateIndexModel<UserMetric>(userMetricIndexBuilder.Ascending(x => x.UserId).Descending(x => x.Date)),
-            new CreateIndexModel<UserMetric>(userMetricIndexBuilder.Ascending(x => x.UserId).Ascending(x => x.Date), new CreateIndexOptions { Unique = true })
-        });
-
-        // Create indexes for Inbox collection
-        var inboxCollection = database.GetCollection<InboxMessage>("inboxMessages");
-        var inboxIndexBuilder = Builders<InboxMessage>.IndexKeys;
-        
-        inboxCollection.Indexes.CreateMany(new[]
-        {
-            new CreateIndexModel<InboxMessage>(inboxIndexBuilder.Ascending(x => x.Consumer).Ascending(x => x.EventId), new CreateIndexOptions { Unique = true }),
-            new CreateIndexModel<InboxMessage>(inboxIndexBuilder.Ascending(x => x.Consumer).Ascending(x => x.Status).Ascending(x => x.OccurredOn))
-        });
+        UsersMongoIndexConfigurator.Configure(database);
     }
 
     public void SeedData(IMongoDatabase database)

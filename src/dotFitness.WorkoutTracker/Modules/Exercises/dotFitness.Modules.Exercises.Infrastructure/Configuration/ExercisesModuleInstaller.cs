@@ -66,93 +66,14 @@ public class ExercisesModuleInstaller : IModuleInstaller
         services.AddScoped<IEquipmentRepository, EquipmentRepository>();
         services.AddScoped<IUserPreferencesProjectionRepository, UserPreferencesProjectionRepository>();
 
-        // Register MediatR command handlers
-        services.AddScoped<IRequestHandler<CreateExerciseCommand, Result<ExerciseDto>>, CreateExerciseCommandHandler>();
-        services.AddScoped<IRequestHandler<UpdateExerciseCommand, Result<ExerciseDto>>, UpdateExerciseCommandHandler>();
-        services.AddScoped<IRequestHandler<DeleteExerciseCommand, Result>, DeleteExerciseCommandHandler>();
+        // Register MediatR handlers (auto-registered in Bootstrap) - removed
 
-        // Register MediatR query handlers
-        services.AddScoped<IRequestHandler<GetExerciseByIdQuery, Result<ExerciseDto?>>, GetExerciseByIdQueryHandler>();
-        services.AddScoped<IRequestHandler<GetAllExercisesQuery, Result<IEnumerable<ExerciseDto>>>, GetAllExercisesQueryHandler>();
-        services.AddScoped<IRequestHandler<GetAllMuscleGroupsQuery, Result<IEnumerable<MuscleGroupDto>>>, GetAllMuscleGroupsQueryHandler>();
-        services.AddScoped<IRequestHandler<GetAllEquipmentQuery, Result<IEnumerable<EquipmentDto>>>, GetAllEquipmentQueryHandler>();
-        services.AddScoped<IRequestHandler<GetSmartExerciseSuggestionsQuery, Result<IEnumerable<ExerciseDto>>>, GetSmartExerciseSuggestionsQueryHandler>();
-
-        // Register validators
-        services.AddScoped<IValidator<CreateExerciseCommand>, CreateExerciseCommandValidator>();
-        services.AddScoped<IValidator<UpdateExerciseCommand>, UpdateExerciseCommandValidator>();
-        services.AddScoped<IValidator<DeleteExerciseCommand>, DeleteExerciseCommandValidator>();
+        // Register validators (auto-registered in Bootstrap) - removed
     }
 
     public void ConfigureIndexes(IMongoDatabase database)
     {
-        // Create indexes for Exercise collection
-        var exerciseCollection = database.GetCollection<Exercise>("exercises");
-        var exerciseIndexBuilder = Builders<Exercise>.IndexKeys;
-        
-        exerciseCollection.Indexes.CreateMany(new[]
-        {
-            new CreateIndexModel<Exercise>(exerciseIndexBuilder.Ascending(x => x.Name)),
-            new CreateIndexModel<Exercise>(exerciseIndexBuilder.Ascending(x => x.UserId)),
-            new CreateIndexModel<Exercise>(exerciseIndexBuilder.Ascending(x => x.IsGlobal)),
-            new CreateIndexModel<Exercise>(exerciseIndexBuilder.Ascending(x => x.MuscleGroups)),
-            new CreateIndexModel<Exercise>(exerciseIndexBuilder.Ascending(x => x.Equipment)),
-            new CreateIndexModel<Exercise>(exerciseIndexBuilder.Ascending(x => x.Difficulty)),
-            new CreateIndexModel<Exercise>(exerciseIndexBuilder.Ascending(x => x.Tags)),
-            new CreateIndexModel<Exercise>(exerciseIndexBuilder.Ascending(x => x.CreatedAt)),
-            new CreateIndexModel<Exercise>(exerciseIndexBuilder.Text(x => x.Name).Text(x => x.Description)),
-            // Scoped unique: (userId, isGlobal, name)
-            new CreateIndexModel<Exercise>(
-                exerciseIndexBuilder.Ascending(x => x.UserId).Ascending(x => x.IsGlobal).Ascending(x => x.Name),
-                new CreateIndexOptions { Unique = true })
-        });
-
-        // Create indexes for MuscleGroup collection
-        var muscleGroupCollection = database.GetCollection<MuscleGroup>("muscleGroups");
-        var muscleGroupIndexBuilder = Builders<MuscleGroup>.IndexKeys;
-        
-        muscleGroupCollection.Indexes.CreateMany(new[]
-        {
-            new CreateIndexModel<MuscleGroup>(muscleGroupIndexBuilder.Ascending(x => x.Name)),
-            new CreateIndexModel<MuscleGroup>(muscleGroupIndexBuilder.Ascending(x => x.UserId)),
-            new CreateIndexModel<MuscleGroup>(muscleGroupIndexBuilder.Ascending(x => x.IsGlobal)),
-            new CreateIndexModel<MuscleGroup>(muscleGroupIndexBuilder.Ascending(x => x.BodyRegion)),
-            new CreateIndexModel<MuscleGroup>(muscleGroupIndexBuilder.Ascending(x => x.ParentId)),
-            new CreateIndexModel<MuscleGroup>(muscleGroupIndexBuilder.Ascending(x => x.CreatedAt))
-        });
-
-        // Create indexes for Equipment collection
-        var equipmentCollection = database.GetCollection<Equipment>("equipment");
-        var equipmentIndexBuilder = Builders<Equipment>.IndexKeys;
-        
-        equipmentCollection.Indexes.CreateMany(new[]
-        {
-            new CreateIndexModel<Equipment>(equipmentIndexBuilder.Ascending(x => x.Name)),
-            new CreateIndexModel<Equipment>(equipmentIndexBuilder.Ascending(x => x.UserId)),
-            new CreateIndexModel<Equipment>(equipmentIndexBuilder.Ascending(x => x.IsGlobal)),
-            new CreateIndexModel<Equipment>(equipmentIndexBuilder.Ascending(x => x.Category)),
-            new CreateIndexModel<Equipment>(equipmentIndexBuilder.Ascending(x => x.CreatedAt))
-        });
-
-        // Create indexes for UserPreferencesProjection collection
-        var userPreferencesCollection = database.GetCollection<UserPreferencesProjection>("userPreferencesProjections");
-        var userPreferencesIndexBuilder = Builders<UserPreferencesProjection>.IndexKeys;
-        
-        userPreferencesCollection.Indexes.CreateMany(new[]
-        {
-            new CreateIndexModel<UserPreferencesProjection>(userPreferencesIndexBuilder.Ascending(x => x.UserId), new CreateIndexOptions { Unique = true }),
-            new CreateIndexModel<UserPreferencesProjection>(userPreferencesIndexBuilder.Ascending(x => x.UpdatedAt))
-        });
-
-        // Create indexes for Inbox collection
-        var inboxCollection = database.GetCollection<InboxMessage>("inboxMessages");
-        var inboxIndexBuilder = Builders<InboxMessage>.IndexKeys;
-        
-        inboxCollection.Indexes.CreateMany(new[]
-        {
-            new CreateIndexModel<InboxMessage>(inboxIndexBuilder.Ascending(x => x.Consumer).Ascending(x => x.EventId), new CreateIndexOptions { Unique = true }),
-            new CreateIndexModel<InboxMessage>(inboxIndexBuilder.Ascending(x => x.Consumer).Ascending(x => x.Status).Ascending(x => x.OccurredOn))
-        });
+        ExercisesMongoIndexConfigurator.Configure(database);
     }
 
     public void SeedData(IMongoDatabase database)
