@@ -9,6 +9,7 @@
   <ItemGroup>
     <ProjectReference Include="..\dotFitness.SharedKernel\dotFitness.SharedKernel.csproj" />
     <ProjectReference Include="..\dotFitness.Bootstrap\dotFitness.Bootstrap.csproj" />
+    <ProjectReference Include="..\dotFitness.ModuleContracts\dotFitness.ModuleContracts.csproj" />
     <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.1" />
     <PackageReference Include="Google.Apis.Auth" Version="1.70.0" />
     <PackageReference Include="MediatR" Version="12.5.0" />
