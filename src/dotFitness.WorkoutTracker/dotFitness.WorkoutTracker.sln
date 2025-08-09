@@ -31,6 +31,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotFitness.Modules.Exercise
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotFitness.SharedKernel.Tests", "dotFitness.SharedKernel.Tests\dotFitness.SharedKernel.Tests.csproj", "{2837B3EE-381F-4FC5-8C69-FD5513BD40F4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotFitness.Bootstrap", "dotFitness.Bootstrap\dotFitness.Bootstrap.csproj", "{4D4EE0CA-137C-4ACA-91DF-54D611A1F6D8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotFitness.ModuleContracts", "dotFitness.ModuleContracts\dotFitness.ModuleContracts.csproj", "{D546E85B-1DD9-45FA-AD31-74497A46D3CC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -84,6 +88,14 @@ Global
 		{2837B3EE-381F-4FC5-8C69-FD5513BD40F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2837B3EE-381F-4FC5-8C69-FD5513BD40F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2837B3EE-381F-4FC5-8C69-FD5513BD40F4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4D4EE0CA-137C-4ACA-91DF-54D611A1F6D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4D4EE0CA-137C-4ACA-91DF-54D611A1F6D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4D4EE0CA-137C-4ACA-91DF-54D611A1F6D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4D4EE0CA-137C-4ACA-91DF-54D611A1F6D8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D546E85B-1DD9-45FA-AD31-74497A46D3CC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D546E85B-1DD9-45FA-AD31-74497A46D3CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D546E85B-1DD9-45FA-AD31-74497A46D3CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D546E85B-1DD9-45FA-AD31-74497A46D3CC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{337D17C4-C299-4A01-A6A1-4C83CAB158FE} = {F78FF002-6272-47DD-AACE-5081AAF688D6}
