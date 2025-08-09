@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
+import LogoutButton from '@/components/auth/LogoutButton.vue'
 
 const router = useRouter()
 
@@ -72,6 +73,19 @@ const handleAction = (route: string) => {
           </v-card>
         </v-col>
       </v-row>
+      
+      <!-- Logout Section -->
+      <v-divider class="my-4"></v-divider>
+      <div class="text-center">
+        <LogoutButton 
+          variant="outlined" 
+          color="primary" 
+          button-text="Sign Out" 
+          :show-icon="true"
+          size="small"
+          button-class="rounded-pill"
+        />
+      </div>
     </v-card-text>
   </v-card>
 </template>

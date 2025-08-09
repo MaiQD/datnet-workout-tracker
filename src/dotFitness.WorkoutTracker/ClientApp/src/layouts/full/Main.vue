@@ -6,7 +6,6 @@ import NavItem from './vertical-sidebar/NavItem/index.vue';
 import Logo from './logo/Logo.vue';
 // Icon Imports
 import { Menu2Icon, BellRingingIcon } from 'vue-tabler-icons';
-import NotificationDD from './vertical-header/NotificationDD.vue';
 import ProfileDD from './vertical-header/ProfileDD.vue';
 import NavCollapse from './vertical-sidebar/NavCollapse/NavCollapse.vue';
 const sidebarMenu = shallowRef(sidebarItems);
@@ -41,7 +40,6 @@ const sDrawer = ref(true);
                 <v-sheet rounded="md" color="lightprimary" class="position-relative extrabox hide-menu mx-1 px-4 py-3">
                     <div class="d-flex align-center">
                         <div>
-                            <h6 class="text-h6 text-10 mb-3">Check Pro Version</h6>
                             <v-btn
                                 target="_blank"
                                 href="https://www.wrappixel.com/templates/spike-vuejs-admin-dashboard/?ref=376#demos"
@@ -62,28 +60,46 @@ const sDrawer = ref(true);
     </v-navigation-drawer>
     <div class="container verticalLayout">
         <div class="maxWidth">
-            <v-app-bar elevation="0" height="70" class="top-header">
-                <div class="d-flex align-center justify-space-between w-100">
-                    <div>
-                        <v-btn class="hidden-lg-and-up text-muted" @click="sDrawer = !sDrawer" icon variant="flat" size="small">
+            <v-sheet 
+                rounded="lg" 
+                color="surface" 
+                class="ma-4 pa-4"
+                elevation="2"
+            >
+                <div class="d-flex align-center justify-space-between">
+                    <div class="d-flex align-center">
+                        <!-- Mobile menu toggle button -->
+                        <v-btn 
+                            class="hidden-lg-and-up text-muted mr-4" 
+                            @click="sDrawer = !sDrawer" 
+                            icon 
+                            variant="flat" 
+                            size="small"
+                        >
                             <Menu2Icon size="20" stroke-width="1.5" />
                         </v-btn>
-                        <!-- Notification -->
-                        <NotificationDD />
-                    </div>
-                    <div>
-                        <!-- Upgrade button -->
-                        <v-btn
-                            class="mr-2 bg-primary rounded-pill"
-                            href="https://www.wrappixel.com/templates/spike-vuejs-admin-dashboard/?ref=376#demos"
-                            target="_blank"
-                            >Check Pro Version</v-btn
+                        
+                        <!-- Notification Bell -->
+                        <v-btn 
+                            icon 
+                            variant="text" 
+                            size="small"
+                            class="position-relative"
                         >
-                        <!-- User Profile -->
-                        <ProfileDD />
+                            <BellRingingIcon size="20" stroke-width="1.5" />
+                            <v-badge 
+                                color="primary" 
+                                content="3" 
+                                class="notification-badge"
+                            />
+                        </v-btn>
                     </div>
+                    
+                    
+                    <!-- User Profile -->
+                    <ProfileDD />
                 </div>
-            </v-app-bar>
+            </v-sheet>
         </div>
     </div>
 </template>

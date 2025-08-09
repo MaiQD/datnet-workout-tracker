@@ -15,6 +15,7 @@ export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
   const token = ref<string | null>(null)
   const isLoading = ref(false)
+  const isLoggingOut = ref(false)
 
   const isAuthenticated = computed(() => !!token.value)
   const isAdmin = computed(() => user.value?.roles.includes('Admin') ?? false)
@@ -31,7 +32,8 @@ export const useAuthStore = defineStore('auth', () => {
         id: response.userId,
         email: response.email,
         name: response.displayName,
-        roles: response.roles
+        roles: response.roles,
+        profilePicture: response.profilePicture
       }
       
       token.value = response.token
@@ -47,14 +49,35 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   const logout = async () => {
+    if (isLoggingOut.value) return // Prevent multiple logout calls
+    
+    isLoggingOut.value = true
     try {
+      // Revoke Google OAuth token
       await googleAuthService.signOut()
+      
+      // Clear local state
+      user.value = null
+      token.value = null
+      
+      // Clear all auth-related data from localStorage
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('google_token')
+      
+      // Clear any other auth-related data
+      sessionStorage.clear()
+      
+      console.log('User logged out successfully')
     } catch (error) {
       console.error('Logout error:', error)
-    } finally {
+      // Even if Google logout fails, clear local state
       user.value = null
       token.value = null
       localStorage.removeItem('auth_token')
+      localStorage.removeItem('google_token')
+      sessionStorage.clear()
+    } finally {
+      isLoggingOut.value = false
     }
   }
 
@@ -80,10 +103,33 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  // Check if token is expired
+  const isTokenExpired = (): boolean => {
+    if (!token.value) return true
+    
+    try {
+      // Decode JWT token to check expiration
+      const payload = JSON.parse(atob(token.value.split('.')[1]))
+      const expirationTime = payload.exp * 1000 // Convert to milliseconds
+      return Date.now() >= expirationTime
+    } catch {
+      return true // If token can't be decoded, consider it expired
+    }
+  }
+
+  // Auto-logout if token is expired
+  const checkTokenExpiration = () => {
+    if (isTokenExpired()) {
+      console.log('Token expired, logging out user')
+      logout()
+    }
+  }
+
   return {
     user,
     token,
     isLoading,
+    isLoggingOut,
     isAuthenticated,
     isAdmin,
     isPT,
@@ -91,6 +137,8 @@ export const useAuthStore = defineStore('auth', () => {
     loginWithGoogle,
     logout,
     updateProfile,
-    initializeAuth
+    initializeAuth,
+    isTokenExpired,
+    checkTokenExpiration
   }
 })

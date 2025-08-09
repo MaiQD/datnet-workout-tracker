@@ -8,6 +8,7 @@ export interface GoogleAuthResponse {
   displayName: string
   roles: string[]
   expiresAt: string
+  profilePicture?: string
 }
 
 class GoogleAuthService {
@@ -80,10 +81,30 @@ class GoogleAuthService {
   }
 
   async signOut(): Promise<void> {
-    if (window.google?.accounts) {
-      window.google.accounts.oauth2.revoke(localStorage.getItem('auth_token') || '', () => {
-        localStorage.removeItem('auth_token')
-      })
+    try {
+      // Get the current token
+      const currentToken = localStorage.getItem('auth_token')
+      
+      if (window.google && window.google.accounts?.oauth2 && currentToken) {
+        // Revoke the Google OAuth token
+        return new Promise<void>((resolve) => {
+          window.google.accounts.oauth2.revoke(currentToken, (response?: any) => {
+            if (response?.error) {
+              console.warn('Google token revocation failed:', response.error)
+              // Don't reject, just log the warning
+            }
+            
+            resolve()
+          })
+        })
+      }
+    } catch (error) {
+      console.warn('Google signOut error:', error)
+      // Don't throw, ensure cleanup continues
+    } finally {
+      // Always clear local storage regardless of Google API response
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('google_token')
     }
   }
 }
