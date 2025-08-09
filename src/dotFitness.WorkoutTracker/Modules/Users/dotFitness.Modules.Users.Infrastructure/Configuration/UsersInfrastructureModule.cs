@@ -17,6 +17,7 @@ using dotFitness.Modules.Users.Application.Queries;
 using dotFitness.Modules.Users.Application.Validators;
 using dotFitness.Modules.Users.Application.DTOs;
 using dotFitness.SharedKernel.Results;
+using dotFitness.SharedKernel.Inbox;
 
 namespace dotFitness.Modules.Users.Infrastructure.Configuration;
 
@@ -76,6 +77,13 @@ public static class UsersInfrastructureModule
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserMetricsRepository, UserMetricsRepository>();
 
+            // Register Inbox collection (shared inboxMessages)
+            services.AddSingleton(sp =>
+            {
+                var database = sp.GetRequiredService<IMongoDatabase>();
+                return database.GetCollection<InboxMessage>("inboxMessages");
+            });
+
         // Register MediatR handlers
         services.AddScoped<IRequestHandler<LoginWithGoogleCommand, Result<LoginResponseDto>>, LoginWithGoogleCommandHandler>();
         services.AddScoped<IRequestHandler<UpdateUserProfileCommand, Result<UserDto>>, UpdateUserProfileCommandHandler>();
@@ -129,6 +137,17 @@ public static class UsersInfrastructureModule
             new CreateIndexModel<UserMetric>(userMetricIndexBuilder.Ascending(x => x.Date)),
             new CreateIndexModel<UserMetric>(userMetricIndexBuilder.Ascending(x => x.UserId).Descending(x => x.Date)),
             new CreateIndexModel<UserMetric>(userMetricIndexBuilder.Ascending(x => x.UserId).Ascending(x => x.Date), new CreateIndexOptions { Unique = true })
+        });
+
+        // Create indexes for Inbox collection (Users consumers)
+        var inboxCollection = database.GetCollection<InboxMessage>("inboxMessages");
+        var inboxIndexBuilder = Builders<InboxMessage>.IndexKeys;
+        await inboxCollection.Indexes.CreateManyAsync(new[]
+        {
+            new CreateIndexModel<InboxMessage>(
+                inboxIndexBuilder.Ascending(x => x.Consumer).Ascending(x => x.EventId),
+                new CreateIndexOptions { Unique = true }),
+            new CreateIndexModel<InboxMessage>(inboxIndexBuilder.Ascending(x => x.Consumer).Ascending(x => x.Status).Ascending(x => x.OccurredOn))
         });
     }
 }
