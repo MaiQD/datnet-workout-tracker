@@ -38,6 +38,8 @@ const userEmail = computed(() => user.value?.email || '');
                         <img 
                             v-if="profilePicture" 
                             :src="profilePicture" 
+                            style = "border-radius: 50%;"
+                            height="35" 
                             alt="user" 
                         />
                         <v-icon v-else size="24">mdi-account</v-icon>

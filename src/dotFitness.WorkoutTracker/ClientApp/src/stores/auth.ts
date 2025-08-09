@@ -28,7 +28,7 @@ export const useAuthStore = defineStore('auth', () => {
       const response: GoogleAuthResponse = await googleAuthService.signIn()
       
       // Create user object from response
-      user.value = {
+      const userData = {
         id: response.userId,
         email: response.email,
         name: response.displayName,
@@ -36,8 +36,12 @@ export const useAuthStore = defineStore('auth', () => {
         profilePicture: response.profilePicture
       }
       
+      user.value = userData
       token.value = response.token
+      
+      // Store auth data in localStorage for persistence
       localStorage.setItem('auth_token', response.token)
+      localStorage.setItem('auth_user', JSON.stringify(userData))
       
       return response
     } catch (error) {
@@ -62,6 +66,7 @@ export const useAuthStore = defineStore('auth', () => {
       
       // Clear all auth-related data from localStorage
       localStorage.removeItem('auth_token')
+      localStorage.removeItem('auth_user')
       localStorage.removeItem('google_token')
       
       // Clear any other auth-related data
@@ -97,9 +102,18 @@ export const useAuthStore = defineStore('auth', () => {
   // Initialize auth state from localStorage
   const initializeAuth = () => {
     const storedToken = localStorage.getItem('auth_token')
-    if (storedToken) {
-      token.value = storedToken
-      // TODO: Validate token and fetch user info
+    const storedUser = localStorage.getItem('auth_user')
+    
+    if (storedToken && storedUser) {
+      try {
+        token.value = storedToken
+        user.value = JSON.parse(storedUser)
+      } catch (error) {
+        console.error('Failed to restore auth state:', error)
+        // Clear corrupted data
+        localStorage.removeItem('auth_token')
+        localStorage.removeItem('auth_user')
+      }
     }
   }
 

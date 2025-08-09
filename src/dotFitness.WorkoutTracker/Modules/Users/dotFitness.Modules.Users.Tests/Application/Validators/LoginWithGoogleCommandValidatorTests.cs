@@ -1,6 +1,7 @@
 using FluentAssertions;
 using FluentValidation.TestHelper;
 using dotFitness.Modules.Users.Application.Commands;
+using dotFitness.Modules.Users.Application.DTOs;
 using dotFitness.Modules.Users.Application.Validators;
 using dotFitness.Modules.Users.Domain.Entities;
 
@@ -19,7 +20,11 @@ public class LoginWithGoogleCommandValidatorTests
     public void Should_Pass_Validation_For_Valid_Command()
     {
         // Arrange
-        var command = new LoginWithGoogleCommand("valid_google_token_123");
+        var request = new LoginWithGoogleRequest
+        {
+            GoogleToken = "valid_google_token_123"
+        };
+        var command = new LoginWithGoogleCommand(request);
 
         // Act
         var result = _validator.TestValidate(command);
@@ -35,13 +40,17 @@ public class LoginWithGoogleCommandValidatorTests
     public void Should_Fail_Validation_For_Missing_Google_Token(string? invalidToken)
     {
         // Arrange
-        var command = new LoginWithGoogleCommand(invalidToken!);
+        var request = new LoginWithGoogleRequest
+        {
+            GoogleToken = invalidToken!
+        };
+        var command = new LoginWithGoogleCommand(request);
 
         // Act
         var result = _validator.TestValidate(command);
 
         // Assert
-        result.ShouldHaveValidationErrorFor(x => x.GoogleToken)
+        result.ShouldHaveValidationErrorFor(x => x.Request.GoogleToken)
             .WithErrorMessage("Google token ID is required");
     }
 
@@ -49,13 +58,17 @@ public class LoginWithGoogleCommandValidatorTests
     public void Should_Have_Validation_Error_For_Missing_Required_Field()
     {
         // Arrange
-        var command = new LoginWithGoogleCommand("");
+        var request = new LoginWithGoogleRequest
+        {
+            GoogleToken = ""
+        };
+        var command = new LoginWithGoogleCommand(request);
 
         // Act
         var result = _validator.TestValidate(command);
 
         // Assert
-        result.ShouldHaveValidationErrorFor(x => x.GoogleToken);
+        result.ShouldHaveValidationErrorFor(x => x.Request.GoogleToken);
         result.Errors.Should().Contain(e => e.ErrorMessage == "Google token ID is required");
     }
 }

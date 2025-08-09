@@ -24,6 +24,7 @@ public class UserMapperTests
             Email = "test@example.com",
             DisplayName = "Test User",
             GoogleId = "google123",
+            ProfilePicture = "https://lh3.googleusercontent.com/a/test-photo",
             LoginMethod = LoginMethod.Google,
             Gender = Gender.Male,
             DateOfBirth = new DateTime(1990, 1, 1),
@@ -41,6 +42,7 @@ public class UserMapperTests
         dto.Id.Should().Be("user123");
         dto.Email.Should().Be("test@example.com");
         dto.DisplayName.Should().Be("Test User");
+        dto.ProfilePicture.Should().Be("https://lh3.googleusercontent.com/a/test-photo");
         dto.Gender.Should().Be(nameof(Gender.Male));
         dto.DateOfBirth.Should().Be(new DateTime(1990, 1, 1));
         dto.UnitPreference.Should().Be(nameof(UnitPreference.Metric));
@@ -59,6 +61,7 @@ public class UserMapperTests
             Email = "test@example.com",
             DisplayName = "Test User",
             GoogleId = null, // Null optional field
+            ProfilePicture = null, // Null optional field
             Gender = null, // Null optional field
             DateOfBirth = null, // Null optional field
             UnitPreference = UnitPreference.Metric,
@@ -75,6 +78,7 @@ public class UserMapperTests
         dto.Id.Should().Be("user123");
         dto.Email.Should().Be("test@example.com");
         dto.DisplayName.Should().Be("Test User");
+        dto.ProfilePicture.Should().BeNull();
         dto.Gender.Should().BeNull();
         dto.DateOfBirth.Should().BeNull();
         dto.UnitPreference.Should().Be(nameof(UnitPreference.Metric));

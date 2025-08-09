@@ -38,6 +38,19 @@ public class GoogleAuthService : IGoogleAuthService
                 accessToken[..Math.Min(10, accessToken.Length)]);
             
             var userInfo = JsonSerializer.Deserialize<GoogleUserInfo>(json, _jsonOptions);
+            
+            // Google API returns "picture" field for profile image URL
+            if (userInfo != null && json.Contains("\"picture\""))
+            {
+                // Parse the picture URL manually since our record doesn't have it yet
+                var jsonDoc = JsonDocument.Parse(json);
+                if (jsonDoc.RootElement.TryGetProperty("picture", out var pictureElement))
+                {
+                    var pictureUrl = pictureElement.GetString();
+                    // Create new instance with profile picture
+                    userInfo = new GoogleUserInfo(userInfo.Id, userInfo.Email, userInfo.Name, pictureUrl);
+                }
+            }
             if (userInfo != null)
             {
                 _logger.LogInformation("Successfully retrieved Google user info: {Email}", userInfo.Email);

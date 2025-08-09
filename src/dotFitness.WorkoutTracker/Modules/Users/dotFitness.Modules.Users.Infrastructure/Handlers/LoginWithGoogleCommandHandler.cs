@@ -57,6 +57,7 @@ public class LoginWithGoogleCommandHandler : IRequestHandler<LoginWithGoogleComm
                 UserId = user.Id,
                 Email = user.Email,
                 DisplayName = user.DisplayName,
+                ProfilePicture = user.ProfilePicture,
                 Roles = user.Roles.ToList(),
                 ExpiresAt = expiresAt
             };

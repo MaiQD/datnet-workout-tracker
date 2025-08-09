@@ -8,6 +8,7 @@ using dotFitness.Modules.Users.Application.DTOs;
 using dotFitness.Modules.Users.Domain.Entities;
 using dotFitness.Modules.Users.Domain.Repositories;
 using dotFitness.Modules.Users.Infrastructure.Handlers;
+using dotFitness.Modules.Users.Infrastructure.Services;
 using dotFitness.Modules.Users.Infrastructure.Settings;
 using dotFitness.SharedKernel.Results;
 
@@ -19,6 +20,9 @@ public class LoginWithGoogleCommandHandlerTests
     private readonly Mock<ILogger<LoginWithGoogleCommandHandler>> _loggerMock;
     private readonly Mock<IOptions<JwtSettings>> _jwtSettingsMock;
     private readonly Mock<IOptions<AdminSettings>> _adminSettingsMock;
+    private readonly Mock<IGoogleAuthService> _googleAuthServiceMock;
+    private readonly Mock<IUserService> _userServiceMock;
+    private readonly Mock<IJwtService> _jwtServiceMock;
     private readonly LoginWithGoogleCommandHandler _handler;
     private readonly JwtSettings _jwtSettings;
     private readonly AdminSettings _adminSettings;
@@ -26,6 +30,9 @@ public class LoginWithGoogleCommandHandlerTests
     public LoginWithGoogleCommandHandlerTests()
     {
         _userRepositoryMock = new Mock<IUserRepository>();
+        _googleAuthServiceMock = new Mock<IGoogleAuthService>();
+        _userServiceMock = new Mock<IUserService>();
+        _jwtServiceMock = new Mock<IJwtService>();
         _loggerMock = new Mock<ILogger<LoginWithGoogleCommandHandler>>();
         _jwtSettingsMock = new Mock<IOptions<JwtSettings>>();
         _adminSettingsMock = new Mock<IOptions<AdminSettings>>();
@@ -47,10 +54,10 @@ public class LoginWithGoogleCommandHandlerTests
         _adminSettingsMock.Setup(x => x.Value).Returns(_adminSettings);
 
         _handler = new LoginWithGoogleCommandHandler(
-            _userRepositoryMock.Object,
-            _loggerMock.Object,
-            _jwtSettingsMock.Object,
-            _adminSettingsMock.Object
+            _googleAuthServiceMock.Object,
+            _userServiceMock.Object,
+            _jwtServiceMock.Object,
+            _loggerMock.Object
         );
     }
 
@@ -58,7 +65,11 @@ public class LoginWithGoogleCommandHandlerTests
     public async Task Should_Handle_Valid_Command_Successfully_For_Existing_User()
     {
         // Arrange
-        var command = new LoginWithGoogleCommand("valid_google_token");
+        var request = new LoginWithGoogleRequest
+        {
+            GoogleToken = "valid_google_token_123"
+        };
+        var command = new LoginWithGoogleCommand(request);
         var existingUser = new User
         {
             Id = "user123",
@@ -87,7 +98,11 @@ public class LoginWithGoogleCommandHandlerTests
     public async Task Should_Return_ValidationError_For_Invalid_Command()
     {
         // Arrange
-        var command = new LoginWithGoogleCommand(""); // Invalid empty token
+        var request = new LoginWithGoogleRequest
+        {
+            GoogleToken = ""
+        };
+        var command = new LoginWithGoogleCommand(request); // Invalid empty token
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
@@ -101,7 +116,11 @@ public class LoginWithGoogleCommandHandlerTests
     public async Task Should_Handle_Repository_Errors_Gracefully()
     {
         // Arrange
-        var command = new LoginWithGoogleCommand("valid_google_token");
+        var request = new LoginWithGoogleRequest
+        {
+            GoogleToken = "valid_google_token_123"
+        };
+        var command = new LoginWithGoogleCommand(request);
 
         _userRepositoryMock
             .Setup(x => x.GetByGoogleIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -119,7 +138,11 @@ public class LoginWithGoogleCommandHandlerTests
     public async Task Should_Create_New_User_For_First_Time_Google_Login()
     {
         // Arrange
-        var command = new LoginWithGoogleCommand("valid_google_token");
+        var request = new LoginWithGoogleRequest
+        {
+            GoogleToken = "valid_google_token_123"
+        };
+        var command = new LoginWithGoogleCommand(request);
 
         _userRepositoryMock
             .Setup(x => x.GetByGoogleIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -152,7 +175,11 @@ public class LoginWithGoogleCommandHandlerTests
     public async Task Should_Add_Admin_Role_For_Admin_Email()
     {
         // Arrange
-        var command = new LoginWithGoogleCommand("valid_google_token");
+        var request = new LoginWithGoogleRequest
+        {
+            GoogleToken = "valid_google_token_123"
+        };
+        var command = new LoginWithGoogleCommand(request);
         var adminUser = new User
         {
             Id = "admin123",

@@ -18,6 +18,9 @@ public class User : IEntity
     [BsonRequired]
     public string DisplayName { get; set; } = string.Empty;
 
+    [BsonElement("profilePicture")]
+    public string? ProfilePicture { get; set; }
+
     [BsonElement("loginMethod")]
     [BsonRepresentation(BsonType.String)]
     public LoginMethod LoginMethod { get; set; } = LoginMethod.Google;

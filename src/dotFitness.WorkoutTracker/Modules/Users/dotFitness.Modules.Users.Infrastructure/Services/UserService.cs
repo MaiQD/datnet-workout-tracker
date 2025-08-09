@@ -33,6 +33,20 @@ public class UserService : IUserService
             if (existingUserResult.IsSuccess)
             {
                 var user = existingUserResult.Value!;
+                
+                // Update profile picture only if it has actually changed
+                if (!string.Equals(user.ProfilePicture, googleUserInfo.ProfilePicture, StringComparison.Ordinal))
+                {
+                    user.ProfilePicture = googleUserInfo.ProfilePicture;
+                    user.UpdatedAt = DateTime.UtcNow;
+                    
+                    var updateResult = await _userRepository.UpdateAsync(user, cancellationToken);
+                    if (updateResult.IsFailure)
+                    {
+                        _logger.LogWarning("Failed to update user profile picture: {Error}", updateResult.Error);
+                    }
+                }
+                
                 _logger.LogInformation("Existing user logged in: {Email}", user.Email);
                 return Result.Success(user);
             }
@@ -66,6 +80,7 @@ public class UserService : IUserService
             GoogleId = googleUserInfo.Id,
             Email = googleUserInfo.Email,
             DisplayName = googleUserInfo.Name,
+            ProfilePicture = googleUserInfo.ProfilePicture,
             LoginMethod = LoginMethod.Google,
             Roles = new List<string> { "User" },
             CreatedAt = DateTime.UtcNow,
