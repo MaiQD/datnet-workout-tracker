@@ -4,8 +4,12 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-  </PropertyGroup>  <ItemGroup>
+  </PropertyGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\dotFitness.SharedKernel\dotFitness.SharedKernel.csproj" />
+    <ProjectReference Include="..\dotFitness.Bootstrap\dotFitness.Bootstrap.csproj" />
+    <ProjectReference Include="..\dotFitness.ModuleContracts\dotFitness.ModuleContracts.csproj" />
     <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.1" />
     <PackageReference Include="Google.Apis.Auth" Version="1.70.0" />
     <PackageReference Include="MediatR" Version="12.5.0" />
@@ -20,14 +24,5 @@
     <ProjectReference Include="..\Modules\Users\dotFitness.Modules.Users.Application\dotFitness.Modules.Users.Application.csproj" />
     <ProjectReference Include="..\Modules\Exercises\dotFitness.Modules.Exercises.Application\dotFitness.Modules.Exercises.Application.csproj" />
   </ItemGroup>
-
-  <!-- Runtime assemblies for reflection-based module loading -->
-  <Target Name="CopyModuleInfrastructureAssemblies" AfterTargets="Build">
-    <ItemGroup>
-      <InfrastructureAssemblies Include="..\Modules\Users\dotFitness.Modules.Users.Infrastructure\bin\$(Configuration)\net8.0\dotFitness.Modules.Users.Infrastructure.dll" />
-      <InfrastructureAssemblies Include="..\Modules\Exercises\dotFitness.Modules.Exercises.Infrastructure\bin\$(Configuration)\net8.0\dotFitness.Modules.Exercises.Infrastructure.dll" />
-    </ItemGroup>
-    <Copy SourceFiles="@(InfrastructureAssemblies)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />
-  </Target>
 
 </Project>

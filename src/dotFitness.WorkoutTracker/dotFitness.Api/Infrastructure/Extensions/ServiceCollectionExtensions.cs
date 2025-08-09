@@ -5,6 +5,7 @@ using MongoDB.Driver;
 using dotFitness.SharedKernel.Outbox;
 using dotFitness.Api.Infrastructure.Settings;
 using dotFitness.Api.Infrastructure.Swagger;
+using dotFitness.Bootstrap;
 
 namespace dotFitness.Api.Infrastructure.Extensions;
 
@@ -157,9 +158,6 @@ public static class ServiceCollectionExtensions
         // Add health checks for modules
         services.AddModuleHealthChecks();
 
-        // Set up module registry logger
-        ModuleRegistry.SetLogger(logger);
-
         // Validate module configuration
         var configurationValidation = ModuleConfigurationValidator.ValidateModuleConfiguration(configuration, logger);
         if (!configurationValidation.IsValid)
@@ -167,18 +165,8 @@ public static class ServiceCollectionExtensions
             logger.LogWarning("Module configuration validation found issues: {ValidationResult}", configurationValidation.ToJson());
         }
 
-        // Register all modules automatically
-        ModuleRegistry.RegisterAllModules(services, configuration);
-
-        // Add MediatR with automatic module assembly discovery
-        services.AddMediatR(cfg => 
-        {
-            // Register API assembly
-            cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
-            
-            // Auto-discover and register all module assemblies
-            ModuleRegistry.RegisterModuleAssemblies(cfg);
-        });
+        // Register all modules using interface-based approach via Bootstrap
+        services.RegisterAllModules(configuration, logger);
 
         return services;
     }

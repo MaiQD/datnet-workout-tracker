@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using dotFitness.ModuleContracts;
 using System.Text.Json;
 
 namespace dotFitness.Api.Infrastructure;
@@ -9,6 +10,8 @@ namespace dotFitness.Api.Infrastructure;
 /// </summary>
 public static class ModuleConfigurationValidator
 {
+    public static readonly string[] ModuleNames = { "Users", "Exercises", "Routines", "WorkoutLogs" };
+
     /// <summary>
     /// Validates configuration for all modules
     /// </summary>
@@ -18,7 +21,7 @@ public static class ModuleConfigurationValidator
     public static ModuleConfigurationValidationResult ValidateModuleConfiguration(IConfiguration configuration, ILogger logger)
     {
         var result = new ModuleConfigurationValidationResult();
-        var moduleNames = ModuleRegistry.ModuleNames;
+        var moduleNames = ModuleNames;
 
         logger.LogInformation("Starting module configuration validation for {ModuleCount} modules", moduleNames.Length);
 
@@ -63,8 +66,7 @@ public static class ModuleConfigurationValidator
         // Check if module section exists
         if (!moduleSection.Exists())
         {
-            result.AddError($"Module configuration section 'Modules:{moduleName}' not found");
-            logger.LogWarning("Module configuration section not found: Modules:{ModuleName}", moduleName);
+            result.AddWarning($"Module configuration section 'Modules:{moduleName}' not found (module may be optional)");
         }
         else
         {
@@ -77,20 +79,11 @@ public static class ModuleConfigurationValidator
                 case "exercises":
                     ValidateExercisesModuleConfiguration(moduleSection, result, logger);
                     break;
-                case "routines":
-                    ValidateRoutinesModuleConfiguration(moduleSection, result, logger);
-                    break;
-                case "workoutlogs":
-                    ValidateWorkoutLogsModuleConfiguration(moduleSection, result, logger);
-                    break;
                 default:
                     ValidateGenericModuleConfiguration(moduleSection, result, logger);
                     break;
             }
         }
-
-        // Check if module assemblies can be loaded
-        ValidateModuleAssemblies(moduleName, result, logger);
 
         result.IsValid = !result.Errors.Any();
         return result;
@@ -103,12 +96,7 @@ public static class ModuleConfigurationValidator
     {
         // Validate JWT settings
         var jwtSection = moduleSection.GetSection("JwtSettings");
-        if (!jwtSection.Exists())
-        {
-            result.AddError("JWT settings not found for Users module");
-            logger.LogWarning("JWT settings not found for Users module");
-        }
-        else
+        if (jwtSection.Exists())
         {
             var requiredJwtSettings = new[] { "SecretKey", "Issuer", "Audience" };
             foreach (var setting in requiredJwtSettings)
@@ -116,7 +104,6 @@ public static class ModuleConfigurationValidator
                 if (string.IsNullOrEmpty(jwtSection[setting]))
                 {
                     result.AddError($"JWT setting '{setting}' is missing or empty");
-                    logger.LogWarning("JWT setting missing: {Setting}", setting);
                 }
             }
         }
@@ -140,7 +127,6 @@ public static class ModuleConfigurationValidator
         if (maxExercisesPerUser.HasValue && maxExercisesPerUser.Value <= 0)
         {
             result.AddError("MaxExercisesPerUser must be greater than 0");
-            logger.LogWarning("Invalid MaxExercisesPerUser value: {Value}", maxExercisesPerUser.Value);
         }
 
         var enableGlobalExercises = moduleSection.GetValue<bool?>("EnableGlobalExercises");
@@ -180,48 +166,6 @@ public static class ModuleConfigurationValidator
         if (enabled.HasValue && !enabled.Value)
         {
             result.AddWarning("Module is disabled in configuration");
-            logger.LogDebug("Module is disabled in configuration");
-        }
-    }
-
-    /// <summary>
-    /// Validates that module assemblies can be loaded
-    /// </summary>
-    private static void ValidateModuleAssemblies(string moduleName, ModuleValidationResult result, ILogger logger)
-    {
-        try
-        {
-            var applicationAssemblyName = $"dotFitness.Modules.{moduleName}.Application";
-            var infrastructureAssemblyName = $"dotFitness.Modules.{moduleName}.Infrastructure";
-
-            // Check if assemblies are already loaded
-            var applicationAssembly = AppDomain.CurrentDomain.GetAssemblies()
-                .FirstOrDefault(a => a.GetName().Name == applicationAssemblyName);
-            
-            var infrastructureAssembly = AppDomain.CurrentDomain.GetAssemblies()
-                .FirstOrDefault(a => a.GetName().Name == infrastructureAssemblyName);
-
-            if (applicationAssembly == null)
-            {
-                result.AddError($"Application assembly '{applicationAssemblyName}' not loaded");
-                logger.LogWarning("Application assembly not loaded: {AssemblyName}", applicationAssemblyName);
-            }
-
-            if (infrastructureAssembly == null)
-            {
-                result.AddError($"Infrastructure assembly '{infrastructureAssemblyName}' not loaded");
-                logger.LogWarning("Infrastructure assembly not loaded: {AssemblyName}", infrastructureAssemblyName);
-            }
-
-            if (applicationAssembly != null && infrastructureAssembly != null)
-            {
-                logger.LogDebug("Module assemblies loaded successfully: {ModuleName}", moduleName);
-            }
-        }
-        catch (Exception ex)
-        {
-            result.AddError($"Error validating module assemblies: {ex.Message}");
-            logger.LogError(ex, "Error validating module assemblies for {ModuleName}", moduleName);
         }
     }
 
@@ -234,17 +178,10 @@ public static class ModuleConfigurationValidator
         
         if (globalModuleSection.Exists())
         {
-            var autoDiscoverModules = globalModuleSection.GetValue<bool?>("AutoDiscoverModules");
-            if (autoDiscoverModules.HasValue)
-            {
-                logger.LogDebug("Auto-discover modules setting: {Value}", autoDiscoverModules.Value);
-            }
-
             var moduleTimeout = globalModuleSection.GetValue<int?>("ModuleLoadTimeout");
             if (moduleTimeout.HasValue && moduleTimeout.Value <= 0)
             {
                 result.AddGlobalError("ModuleLoadTimeout must be greater than 0");
-                logger.LogWarning("Invalid ModuleLoadTimeout value: {Value}", moduleTimeout.Value);
             }
         }
     }
@@ -268,20 +205,10 @@ public class ModuleConfigurationValidationResult
 
     public bool IsValid => !GlobalErrors.Any() && ModuleValidations.Values.All(v => v.IsValid);
 
-    public void AddGlobalError(string error)
-    {
-        GlobalErrors.Add(error);
-    }
+    public void AddGlobalError(string error) => GlobalErrors.Add(error);
+    public void AddGlobalWarning(string warning) => GlobalWarnings.Add(warning);
 
-    public void AddGlobalWarning(string warning)
-    {
-        GlobalWarnings.Add(warning);
-    }
-
-    public string ToJson()
-    {
-        return JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
-    }
+    public string ToJson() => JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
 }
 
 /// <summary>
@@ -300,13 +227,6 @@ public class ModuleValidationResult
     public List<string> Warnings { get; set; }
     public bool IsValid { get; set; }
 
-    public void AddError(string error)
-    {
-        Errors.Add(error);
-    }
-
-    public void AddWarning(string warning)
-    {
-        Warnings.Add(warning);
-    }
+    public void AddError(string error) => Errors.Add(error);
+    public void AddWarning(string warning) => Warnings.Add(warning);
 } 

@@ -198,6 +198,68 @@ public class UserRepository : IUserRepository
 }
 ```
 
+## 🔧 Module Registration & Composition (Decision Update)
+
+We moved from reflection-based assembly scanning to explicit, type-safe installers with a dedicated composition root.
+
+- Interface: moved to `dotFitness.ModuleContracts` as `IModuleInstaller`
+- Composition Root: `dotFitness.Bootstrap` registers modules and shared infra
+- API: references only Bootstrap (and Application projects) to stay “pure”
+- Modules: keep installers in each `*.Infrastructure`
+
+### Why this design?
+- Type safety and compile-time validation (no reflection)
+- API remains clean; wiring centralized and reusable across hosts (API, Worker)
+- Future microservices: Bootstrap and installer contracts mirror per-service wiring
+
+### Trade-offs
+- One more project (Bootstrap) and a small contracts package
+- Bootstrap must reference module Infrastructure (outer layer dependency)
+
+### Diagram
+```mermaid
+flowchart TB
+  subgraph Host[Hosts]
+    API[dotFitness.Api]
+    Worker[Future: dotFitness.Worker]
+  end
+
+  subgraph Bootstrap[dotFitness.Bootstrap]
+    MR[ModuleRegistry]
+  end
+
+  subgraph Contracts[dotFitness.ModuleContracts]
+    IF[IModuleInstaller]
+  end
+
+  subgraph Users[Users Module]
+    UApp[Users.Application]
+    UInfra[Users.Infrastructure]
+    UDomain[Users.Domain]
+  end
+
+  subgraph Exercises[Exercises Module]
+    EApp[Exercises.Application]
+    EInfra[Exercises.Infrastructure]
+    EDomain[Exercises.Domain]
+  end
+
+  API --> MR
+  Worker --> MR
+  MR --> IF
+  MR --> UInfra
+  MR --> EInfra
+  UInfra --> UApp --> UDomain
+  EInfra --> EApp --> EDomain
+  API --> UApp
+  API --> EApp
+```
+
+### Key Boundary: No inward dependencies
+- Domain/Application don’t depend on Infrastructure
+- Modules don’t reference each other’s Domains
+- Cross-module via Application DTOs or Inbox/Outbox events
+
 ## 🔄 Module Registration System
 
 ### Automatic Discovery

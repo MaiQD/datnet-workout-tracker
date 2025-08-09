@@ -68,62 +68,51 @@
 
 ### 3.2. Project Structure
 
-The Visual Studio solution (`dotFitness.sln`) will contain the following projects:
+The Visual Studio solution (`dotFitness.WorkoutTracker.sln`) contains the following projects:
 
-`dotFitness.sln
-├── dotFitness.Api/                           <-- Main ASP.NET Core Web API entry point
-│   ├── Program.cs
-│   └── appsettings.json
-│   └── ... global middleware, auth setup, etc.
-│
-├── dotFitness.SharedKernel/                  <-- Core shared components
-│   ├── Results/ (Result pattern implementation)
-│   ├── Outbox/ (OutboxMessage model)
-│   ├── Interfaces/ (e.g., IEntity)
-│   └── ... common utilities
-│
-├── dotFitness.Modules.Users.Application/     <-- User module: Public API (Commands, Queries, DTOs, Mappers)
-├── dotFitness.Modules.Users.Domain/          <-- User module: Core business logic, entities (User, UserMetric)
-├── dotFitness.Modules.Users.Infrastructure/  <-- User module: Implementation details (MongoDB repos, Handlers)
-├── dotFitness.Modules.Users.Tests/           <-- User module: Unit tests
-│
-├── dotFitness.Modules.Exercises.Application/ <-- Similar structure for Exercises module
-├── dotFitness.Modules.Exercises.Domain/
-├── dotFitness.Modules.Exercises.Infrastructure/
-├── dotFitness.Modules.Exercises.Tests/
-│
-├── dotFitness.Modules.Routines.Application/  <-- Similar structure for Routines module
-├── dotFitness.Modules.Routines.Domain/
-├── dotFitness.Modules.Routines.Infrastructure/
-├── dotFitness.Modules.Routines.Tests/
-│
-├── dotFitness.Modules.WorkoutLogs.Application/ <-- Similar structure for WorkoutLogs module
-├── dotFitness.Modules.WorkoutLogs.Domain/
-├── dotFitness.Modules.WorkoutLogs.Infrastructure/
-├── dotFitness.Modules.WorkoutLogs.Tests/
-│
-├── dotFitness.Modules.Billing.Application/     <-- Billing module: commands/queries/DTOs
-├── dotFitness.Modules.Billing.Domain/          <-- Billing module: entities (Subscription, Plan)
-├── dotFitness.Modules.Billing.Infrastructure/  <-- Billing module: Stripe integration, handlers
-├── dotFitness.Modules.Billing.Tests/           <-- Billing module: unit tests
-│
-└── dotFitness.WebUI/                         <-- Vue.js Frontend Application`
+```
+dotFitness.WorkoutTracker/
+├── dotFitness.Api/                           <-- Web API entry point (controllers, middleware)
+├── dotFitness.Bootstrap/                     <-- Composition root (register installers, MediatR, validators)
+├── dotFitness.ModuleContracts/               <-- Contracts for installers (IModuleInstaller)
+├── dotFitness.SharedKernel/                  <-- Shared components (Results, Outbox, Interfaces, Utilities)
+├── Modules/
+│   ├── Users/
+│   │   ├── dotFitness.Modules.Users.Domain/
+│   │   ├── dotFitness.Modules.Users.Application/
+│   │   └── dotFitness.Modules.Users.Infrastructure/
+│   └── Exercises/ (same pattern)
+└── ... Tests per module
+```
 
 **Project Dependencies:**
-
-- `dotFitness.Api` references all `.Application` projects.
-- `.Infrastructure` projects reference their corresponding `.Domain` and `.Application` projects, and `dotFitness.SharedKernel`.
-- `.Domain` projects reference `dotFitness.SharedKernel`.
-- `.Application` projects reference `dotFitness.SharedKernel`.
-- `.Tests` projects reference the `Application`, `Domain`, `Infrastructure` projects they are testing, and `dotFitness.SharedKernel`.
+- `dotFitness.Api` → references `dotFitness.Bootstrap` and module `.Application` projects
+- `dotFitness.Bootstrap` → references module `.Infrastructure` projects and `dotFitness.ModuleContracts`
+- Module `.Infrastructure` → references its `.Application`, `.Domain`, `dotFitness.SharedKernel`, and `dotFitness.ModuleContracts`
+- Module `.Application` → references `.Domain` and `dotFitness.SharedKernel`
+- Module `.Domain` → references `dotFitness.SharedKernel`
 
 ### 3.3. Core Technical Stack
 
-- **Backend Framework:** ASP.NET Core Web API (latest LTS version, e.g., .NET 8).
-- **Frontend Framework:** Vue.js (latest stable version, e.g., Vue 3) with Vite for build tooling.
-- **Database:** MongoDB.
-- **Styling:** Tailwind CSS (utility-first CSS framework).
-- **Charting:** Chart.js (JavaScript charting library with Vue.js wrappers).
+- **Backend Framework:** ASP.NET Core Web API (.NET 8)
+- **Frontend Framework:** Vue 3 (Vite)
+- **Database:** MongoDB
+- **Validation:** FluentValidation
+- **Mapping:** Mapperly (source generator)
+- **Messaging:** MediatR (in-process CQRS)
+
+### 3.4. Module Composition (Bootstrap + Contracts)
+
+- Each module exposes an installer implementing `dotFitness.ModuleContracts.IModuleInstaller` with:
+  - `InstallServices(IServiceCollection, IConfiguration)`
+  - `ConfigureIndexes(IMongoDatabase)`
+  - `SeedData(IMongoDatabase)`
+- `dotFitness.Bootstrap.ModuleRegistry`:
+  - Registers all installers (explicit list; no reflection)
+  - Registers shared Mongo (`IMongoClient`, `IMongoDatabase`)
+  - Auto-registers MediatR handlers: `RegisterServicesFromAssemblyContaining<ModuleInstaller>`
+  - Auto-registers FluentValidation validators: `AddValidatorsFromAssemblyContaining<ModuleInstaller>`
+- API remains “pure”: controllers/middleware only; it calls Bootstrap to compose the app.
 
 ## 4. Core Technical Patterns & Libraries
 
@@ -483,6 +472,8 @@ Phase 5 — Operations & hardening
 - Each handler, command, and query SHALL reside in its own file. Do not co-locate multiple handlers in one file.
 - Domain/Application code SHALL not depend on Infrastructure types. Use interfaces and inject abstractions.
 - Large handlers SHOULD extract orchestration/services to maintain SRP.
+- Domain/Application do not depend on Infrastructure; API/Bootstrap are outer layers.
+- Installers live in Infrastructure; database index configuration is separated into per-module configurators.
 
 ## 7. Development Environment Setup (Mac)
 
@@ -542,11 +533,4 @@ A robust CI/CD pipeline using **GitHub Actions** will automate the entire softwa
             - `azure/webapps-deploy@v2` (deploys to Azure App Service).
         - **Secrets:** Azure Service Principal credentials.
     3. **`frontend-ci-cd.yml` (Frontend Application Pipeline):**
-        - **Trigger:** Push to `main` branch (or Pull Request) affecting files within the `YourAppName.WebUI/` directory.
-        - **Stages:**
-            - `npm install` (frontend dependencies).
-            - `npm run build` (builds Vue.js application into static files).
-            - `azure/static-web-apps-deploy@v1` (deploys static files to Azure Static Web Apps).
-        - **Secrets:** `AZURE_STATIC_WEB_APPS_API_TOKEN` (generated by Azure Static Web Apps), `VITE_APP_API_BASE_URL` (environment variable to point to the deployed API URL).
-
-This comprehensive technical document outlines the entire journey for building **dotFitness**, from its conceptual features to its robust deployment and CI/CD strategy.
+        - **Trigger:** Push to `main`
