@@ -11,6 +11,7 @@ using dotFitness.SharedKernel.Results;
 using dotFitness.Modules.Users.Domain.Entities;
 using dotFitness.Modules.Users.Domain.Repositories;
 using dotFitness.Modules.Users.Infrastructure.Repositories;
+using dotFitness.Modules.Users.Infrastructure.Services;
 using dotFitness.Modules.Users.Application.Commands;
 using dotFitness.Modules.Users.Application.Queries;
 using dotFitness.Modules.Users.Application.DTOs;
@@ -78,6 +79,14 @@ public class UsersModuleInstaller : IModuleInstaller
         // Register repositories
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserMetricsRepository, UserMetricsRepository>();
+
+        // Register services
+        services.AddScoped<IGoogleAuthService, GoogleAuthService>();
+        services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IJwtService, JwtService>();
+        
+        // Register HttpClient for GoogleAuthService
+        services.AddHttpClient<IGoogleAuthService, GoogleAuthService>();
 
         // Register MediatR handlers (auto-registered in Bootstrap) - removed
         // Register validators (auto-registered in Bootstrap) - removed
