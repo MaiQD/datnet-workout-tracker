@@ -3,45 +3,44 @@ const MainRoutes = {
     meta: {
         requiresAuth: true
     },
-    redirect: '/main',
+    redirect: '/dashboard',
     component: () => import('@/layouts/full/FullLayout.vue'),
     children: [
         {
             name: 'Dashboard',
-            path: '/',
+            path: '/dashboard',
             component: () => import('@/views/dashboard/index.vue')
         },
         {
-            name: 'Alert',
-            path: '/ui/alerts',
-            component: () => import('@/views/ui-components/Alerts.vue')
+            name: 'Workouts',
+            path: '/workouts',
+            component: () => import('@/views/workouts/WorkoutsList.vue')
         },
         {
-            name: 'Buttons',
-            path: '/ui/buttons',
-            component: () => import('@/views/ui-components/Buttons.vue')
+            name: 'NewWorkout',
+            path: '/workouts/new',
+            component: () => import('@/views/workouts/NewWorkout.vue')
         },
         {
-            name: 'Cards',
-            path: '/ui/cards',
-            component: () => import('@/views/ui-components/Cards.vue')
+            name: 'Exercises',
+            path: '/exercises',
+            component: () => import('@/views/exercises/ExercisesList.vue')
         },
         {
-            name: 'Tables',
-            path: '/ui/tables',
-            component: () => import('@/views/ui-components/Tables.vue')
+            name: 'Progress',
+            path: '/progress',
+            component: () => import('@/views/progress/Progress.vue')
         },
         {
-            name: 'Icons',
-            path: '/icons',
-            component: () => import('@/views/pages/Icons.vue')
+            name: 'Goals',
+            path: '/goals',
+            component: () => import('@/views/goals/Goals.vue')
         },
         {
-            name: 'Starter',
-            path: '/sample-page',
-            component: () => import('@/views/pages/SamplePage.vue')
-        },
-       
+            name: 'Profile',
+            path: '/profile',
+            component: () => import('@/views/profile/Profile.vue')
+        }
     ]
 };
 

@@ -1,11 +1,13 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
+import axios from 'axios'
+import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
+import { environment } from '@/config/environment'
 
 class ApiService {
   private api: AxiosInstance
 
   constructor() {
     this.api = axios.create({
-      baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
+      baseURL: environment.apiBaseUrl,
       timeout: 10000,
       headers: {
         'Content-Type': 'application/json',

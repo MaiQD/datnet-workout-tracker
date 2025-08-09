@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import Logo from '@/layouts/full/logo/Logo.vue';
-/* Register form */
-import RegisterForm from '@/components/auth/RegisterForm.vue';
+import GoogleLoginForm from '@/components/auth/GoogleLoginForm.vue';
 </script>
 <template>
     <div class="authentication">
@@ -14,14 +13,11 @@ import RegisterForm from '@/components/auth/RegisterForm.vue';
                                 <div class="d-flex justify-center mb-5">
                                     <Logo />
                                 </div>
-                                <div class="d-flex align-center text-center mb-6">
-                                    <div class="text-h6 w-100 px-5 font-weight-regular auth-divider position-relative">
-                                        <span
-                                            class="bg-surface px-5 py-3 position-relative text-subtitle-1 text-grey100">Your
-                                            Social Campaigns</span>
-                                    </div>
+                                <div class="text-center mb-6">
+                                    <h2 class="text-h5 font-weight-medium mb-2">Join dotFitness</h2>
+                                    <p class="text-body-2 text-medium-emphasis">Create your account to start tracking your fitness journey</p>
                                 </div>
-                                <RegisterForm />
+                                <GoogleLoginForm />
                                 <h6 class="text-subtitle-1  text-grey100 d-flex justify-center align-center mt-3">
                                     Already have an Account?
                                     <v-btn variant="plain" to="/auth/login"
@@ -33,4 +29,5 @@ import RegisterForm from '@/components/auth/RegisterForm.vue';
                 </v-col>
             </v-row>
         </v-container>
-    </div></template>
+    </div>
+</template>

@@ -23,5 +23,5 @@ public class JwtSettings
     /// <summary>
     /// Token expiration time in hours (default: 24 hours)
     /// </summary>
-    public int ExpirationHours { get; set; } = 24;
+    public int ExpirationInHours { get; set; } = 24;
 }

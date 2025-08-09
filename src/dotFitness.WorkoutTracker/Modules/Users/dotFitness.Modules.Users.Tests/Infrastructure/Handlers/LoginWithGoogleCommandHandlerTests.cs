@@ -32,10 +32,10 @@ public class LoginWithGoogleCommandHandlerTests
 
         _jwtSettings = new JwtSettings
         {
-            SecretKey = "this-is-a-very-long-secret-key-for-testing-purposes-only-32-characters",
-            Issuer = "dotFitness",
-            Audience = "dotFitness-users",
-            ExpirationHours = 1
+            SecretKey = "TestSecretKeyThatIsLongEnoughForTestingPurposes123456789012345678901234567890",
+            Issuer = "TestIssuer",
+            Audience = "TestAudience",
+            ExpirationInHours = 1
         };
 
         _adminSettings = new AdminSettings

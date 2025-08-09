@@ -1,74 +1,154 @@
-# dotFitness ClientApp
+# dotFitness Client App
 
-Vue.js frontend application for the dotFitness workout tracking system.
+A Vue.js-based frontend for the dotFitness workout tracking application.
 
-## Tech Stack
+## Features
 
-- **Vue 3** - Progressive JavaScript framework
-- **TypeScript** - Type-safe JavaScript
-- **Vuetify 3** - Material Design component library
-- **Vite** - Fast build tool and dev server
-- **Pinia** - State management for Vue
-- **Vue Router** - Client-side routing
-- **Vue ApexCharts** - Interactive charts and graphs
-- **SASS** - CSS preprocessor
+- **Google OAuth Authentication** - Secure login with Google accounts
+- **Workout Dashboard** - Track your fitness progress and recent workouts
+- **Exercise Management** - Browse and manage your exercise library
+- **Progress Tracking** - Monitor your fitness goals and achievements
+- **Responsive Design** - Works on desktop and mobile devices
 
-## Getting Started
+## Setup
 
 ### Prerequisites
+
 - Node.js 18+ 
 - npm or yarn
+- Google OAuth Client ID
 
 ### Installation
+
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+2. Create environment configuration:
+   Create a `.env` file in the ClientApp directory with:
+   ```env
+   VITE_GOOGLE_CLIENT_ID=your_google_client_id_here
+   VITE_API_BASE_URL=http://localhost:5000/api
+   ```
+
+3. Get Google OAuth Client ID:
+   - Go to [Google Cloud Console](https://console.cloud.google.com/)
+   - Create a new project or select existing one
+   - Enable Google+ API
+   - Create OAuth 2.0 credentials
+   - Add authorized origins: `http://localhost:3000`, `http://localhost:5050`
+   - Add authorized redirect URIs: `http://localhost:3000`, `http://localhost:5050`
+
+## Google OAuth Setup
+
+To enable Google login functionality, you need to:
+
+1. **Create a Google OAuth 2.0 Client ID:**
+   - Go to [Google Cloud Console](https://console.cloud.google.com/)
+   - Create a new project or select an existing one
+   - Enable the Google+ API
+   - Go to "Credentials" → "Create Credentials" → "OAuth 2.0 Client IDs"
+   - Set Application Type to "Web application"
+   - Add authorized JavaScript origins:
+     - `http://localhost:5173` (for development - Vite default)
+     - `http://localhost:7000` (for backend)
+   - Add authorized redirect URIs:
+     - `http://localhost:5173` (for SPA OAuth flow)
+   - Copy the Client ID
+
+2. **Create Environment Configuration:**
+   Create a `.env` file in the ClientApp directory:
+   ```bash
+   # Google OAuth Configuration
+   VITE_GOOGLE_CLIENT_ID=your_google_client_id_here
+   
+   # API Configuration
+   VITE_API_BASE_URL=http://localhost:7000/api/v1.0
+   
+   # Frontend URL (for reference)
+   # Dev server runs on: http://localhost:5173
+   
+   # Environment
+   NODE_ENV=development
+   ```
+
+3. **Replace `your_google_client_id_here`** with the actual Client ID from step 1.
+
+## Development
+
 ```bash
+# Install dependencies
 npm install
-```
 
-### Development
-```bash
+# Start development server (runs on http://localhost:5173)
 npm run dev
-```
 
-### Build
-```bash
+# Build for production
 npm run build
-```
 
-### Preview Build
-```bash
+# Preview production build (runs on http://localhost:5050)
 npm run preview
 ```
+
+**Note**: The development server runs on port 5173 (Vite default), not port 3000. The preview server runs on port 5050.
 
 ## Project Structure
 
 ```
 src/
-├── components/     # Reusable Vue components
-├── views/         # Page components
-├── layouts/       # Layout components
-├── router/        # Vue Router configuration
-├── plugins/       # Vue plugins (Vuetify, etc.)
-├── stores/        # Pinia stores for state management
-├── types/         # TypeScript type definitions
-├── scss/          # Global styles and variables
-└── assets/        # Static assets
+├── components/
+│   ├── auth/           # Authentication components
+│   ├── dashboards/     # Dashboard widgets
+│   └── shared/         # Shared UI components
+├── config/             # Configuration files
+├── layouts/            # Layout components
+├── router/             # Vue Router configuration
+├── services/           # API and external services
+├── stores/             # Pinia state management
+├── types/              # TypeScript type definitions
+├── views/              # Page components
+└── main.ts             # Application entry point
 ```
 
-## Features
+## Authentication Flow
 
-- Responsive Material Design UI
-- Dark/Light theme support
-- Mobile-first design
-- TypeScript support
-- Component-based architecture
-- State management with Pinia
-- Chart integration for progress visualization
+1. User clicks "Sign in with Google"
+2. Google OAuth popup opens
+3. User authenticates with Google
+4. Google returns access token
+5. Frontend sends token to backend
+6. Backend validates and returns user data + JWT
+7. User is logged in and redirected to dashboard
 
-## Integration with Backend
+## API Integration
 
-This frontend integrates with the dotFitness ASP.NET Core backend API through REST endpoints for:
+The app integrates with the dotFitness backend API for:
 - User authentication and management
-- Exercise management
-- Routine building
-- Workout tracking
-- Progress analytics
+- Exercise and workout data
+- Progress tracking
+- Goal management
+
+## Styling
+
+- **Vuetify 3** - Material Design component library
+- **SCSS** - Custom styling and theming
+- **Responsive** - Mobile-first design approach
+
+## Browser Support
+
+- Chrome 90+
+- Firefox 88+
+- Safari 14+
+- Edge 90+
+
+## Contributing
+
+1. Follow the established code style
+2. Use TypeScript for type safety
+3. Write meaningful commit messages
+4. Test your changes thoroughly
+
+## License
+
+This project is part of the dotFitness workout tracking system.
