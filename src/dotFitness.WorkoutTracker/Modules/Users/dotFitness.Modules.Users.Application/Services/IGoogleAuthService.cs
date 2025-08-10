@@ -1,4 +1,4 @@
-namespace dotFitness.Modules.Users.Infrastructure.Services;
+namespace dotFitness.Modules.Users.Application.Services;
 
 public interface IGoogleAuthService
 {

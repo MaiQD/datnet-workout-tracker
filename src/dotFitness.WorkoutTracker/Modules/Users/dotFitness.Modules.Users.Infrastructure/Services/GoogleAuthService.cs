@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
+using dotFitness.Modules.Users.Application.Services;
 
 namespace dotFitness.Modules.Users.Infrastructure.Services;
 

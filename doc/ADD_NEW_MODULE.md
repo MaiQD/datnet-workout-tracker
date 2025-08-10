@@ -26,10 +26,12 @@ dotFitness.Modules.{ModuleName}/
 │   ├── DTOs/
 │   ├── Mappers/
 │   ├── Validators/
+│   ├── Services/              # 🆕 Service interfaces (application contracts)
 │   └── Configuration/
 ├── dotFitness.Modules.{ModuleName}.Infrastructure/
 │   ├── Handlers/
 │   ├── Repositories/
+│   ├── Services/              # 🆕 Service implementations
 │   ├── Configuration/
 │   └── Settings/
 └── dotFitness.Modules.{ModuleName}.Tests/
@@ -661,6 +663,67 @@ public static class {ModuleName}IndexConfiguration
         await collection.Indexes.CreateOneAsync(indexModel);
     }
 }
+```
+
+## 🆕 Service Interface Placement
+
+### Correct Service Architecture
+
+**Service interfaces belong in the Application layer** as application contracts that define the behavior expected by the application. This follows Clean Architecture principles:
+
+```csharp
+// ✅ CORRECT: Application layer defines service contracts
+// dotFitness.Modules.{ModuleName}.Application/Services/I{EntityName}Service.cs
+namespace dotFitness.Modules.{ModuleName}.Application.Services;
+
+public interface I{EntityName}Service
+{
+    Task<Result<{EntityName}>> GetOrCreate{EntityName}Async(string name, string description, CancellationToken cancellationToken = default);
+    Task<Result<{EntityName}>> Update{EntityName}Async(string id, string name, string description, CancellationToken cancellationToken = default);
+    Task<Result<bool>> Validate{EntityName}Async(string name, CancellationToken cancellationToken = default);
+}
+```
+
+**Service implementations belong in the Infrastructure layer** as concrete implementations:
+
+```csharp
+// ✅ CORRECT: Infrastructure layer implements Application contracts
+// dotFitness.Modules.{ModuleName}.Infrastructure/Services/{EntityName}Service.cs
+namespace dotFitness.Modules.{ModuleName}.Infrastructure.Services;
+
+public class {EntityName}Service : I{EntityName}Service  // Implements Application interface
+{
+    private readonly I{EntityName}Repository _{entityName}Repository;
+    
+    public async Task<Result<{EntityName}>> GetOrCreate{EntityName}Async(string name, string description, CancellationToken cancellationToken = default)
+    {
+        // Implementation of application service contract
+        // ...
+    }
+}
+```
+
+### Why This Placement Matters
+
+- **Dependency Inversion**: Application layer defines contracts, Infrastructure implements them
+- **No Circular Dependencies**: Clear one-way dependency flow
+- **Clean Testing**: Application layer can be tested with mocked services
+- **Proper Separation**: Business logic doesn't depend on technical implementation details
+
+### Folder Structure for Services
+
+```
+dotFitness.Modules.{ModuleName}.Application/
+├── Services/                    # 🆕 Service interfaces (contracts)
+│   ├── I{EntityName}Service.cs
+│   └── IExternalService.cs
+└── ...
+
+dotFitness.Modules.{ModuleName}.Infrastructure/
+├── Services/                    # 🆕 Service implementations
+│   ├── {EntityName}Service.cs
+│   └── ExternalService.cs
+└── ...
 ```
 
 ## 🎯 Best Practices

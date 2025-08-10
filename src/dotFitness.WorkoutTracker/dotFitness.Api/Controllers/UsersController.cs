@@ -5,7 +5,6 @@ using System.Security.Claims;
 using dotFitness.Modules.Users.Application.Commands;
 using dotFitness.Modules.Users.Application.Queries;
 using dotFitness.Modules.Users.Application.DTOs;
-using dotFitness.SharedKernel.Results;
 
 namespace dotFitness.Api.Controllers;
 

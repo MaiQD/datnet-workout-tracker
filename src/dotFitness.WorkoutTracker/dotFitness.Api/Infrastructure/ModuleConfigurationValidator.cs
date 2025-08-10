@@ -1,6 +1,3 @@
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using dotFitness.ModuleContracts;
 using System.Text.Json;
 
 namespace dotFitness.Api.Infrastructure;

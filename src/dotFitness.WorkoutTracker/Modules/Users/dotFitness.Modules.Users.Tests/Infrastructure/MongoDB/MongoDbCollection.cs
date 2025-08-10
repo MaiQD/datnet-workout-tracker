@@ -1,4 +1,3 @@
-using Xunit;
 using dotFitness.SharedKernel.Tests.MongoDB;
 
 namespace dotFitness.Modules.Users.Tests.Infrastructure.MongoDB;

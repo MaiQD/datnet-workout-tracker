@@ -1,3 +1,4 @@
+using dotFitness.Modules.Users.Application.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MongoDB.Bson;

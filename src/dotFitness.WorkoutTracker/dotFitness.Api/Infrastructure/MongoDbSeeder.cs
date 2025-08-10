@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Logging;
 using dotFitness.Bootstrap;
 
 namespace dotFitness.Api.Infrastructure;
@@ -11,7 +10,7 @@ public static class MongoDbSeeder
     /// <summary>
     /// Runs seeders for all modules
     /// </summary>
-    public static async Task ConfigureSeedsAsync(IServiceProvider services)
+    public static Task ConfigureSeedsAsync(IServiceProvider services)
     {
         using var scope = services.CreateScope();
         var loggerFactory = scope.ServiceProvider.GetRequiredService<ILoggerFactory>();
@@ -20,6 +19,7 @@ public static class MongoDbSeeder
         // Seed module data using interface-based approach
         scope.ServiceProvider.SeedAllModuleData(logger);
         logger.LogInformation("MongoDB seed data configured successfully");
+        return Task.CompletedTask;
     }
 }
 

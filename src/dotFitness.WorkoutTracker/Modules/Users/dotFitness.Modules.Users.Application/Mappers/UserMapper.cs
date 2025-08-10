@@ -8,6 +8,10 @@ namespace dotFitness.Modules.Users.Application.Mappers;
 public partial class UserMapper
 {
     [MapperIgnoreSource(nameof(User.IsAdmin))]
+    [MapperIgnoreSource(nameof(User.IsOnboarded))]
+    [MapperIgnoreSource(nameof(User.OnboardingCompletedAt))]
+    [MapperIgnoreSource(nameof(User.AvailableEquipmentIds))]
+    [MapperIgnoreSource(nameof(User.FocusMuscleGroupIds))]
     public partial UserDto ToDto(User user);
     
     // Custom mapping for enum conversions

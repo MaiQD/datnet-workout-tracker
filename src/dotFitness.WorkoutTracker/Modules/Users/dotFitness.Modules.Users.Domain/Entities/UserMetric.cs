@@ -2,7 +2,6 @@ using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using dotFitness.SharedKernel.Interfaces;
 using UnitsNet;
-using UnitsNet.Units;
 
 namespace dotFitness.Modules.Users.Domain.Entities;
 

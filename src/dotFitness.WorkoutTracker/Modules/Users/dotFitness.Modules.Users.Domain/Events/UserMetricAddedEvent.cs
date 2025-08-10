@@ -1,3 +1,5 @@
+namespace dotFitness.Modules.Users.Domain.Events;
+
 public class UserMetricAddedEvent
 {
     public string UserMetricId { get; set; } = string.Empty;

@@ -14,6 +14,9 @@ public static partial class ExerciseMapper
 [Mapper]
 public static partial class MuscleGroupMapper
 {
+    [MapperIgnoreSource(nameof(MuscleGroup.BodyRegion))]
+    [MapperIgnoreSource(nameof(MuscleGroup.ParentId))]
+    [MapperIgnoreSource(nameof(MuscleGroup.Aliases))]
     public static partial MuscleGroupDto ToDto(MuscleGroup muscleGroup);
     public static partial IEnumerable<MuscleGroupDto> ToDto(IEnumerable<MuscleGroup> muscleGroups);
 }
