@@ -4,7 +4,6 @@ using dotFitness.Modules.Exercises.Application.Mappers;
 using dotFitness.Modules.Exercises.Application.Queries;
 using dotFitness.Modules.Exercises.Domain.Repositories;
 using dotFitness.SharedKernel.Results;
-using dotFitness.Modules.Exercises.Domain.Repositories;
 
 namespace dotFitness.Modules.Exercises.Infrastructure.Handlers;
 
@@ -30,7 +29,7 @@ public class GetSmartExerciseSuggestionsQueryHandler : IRequestHandler<GetSmartE
         var preferredMuscles = prefResult.Value?.FocusMuscleGroupIds ?? new List<string>();
         var availableEquipment = prefResult.Value?.AvailableEquipmentIds ?? new List<string>();
 
-        var scored = all.Value
+        var scored = all.Value!
             .Select(e => new
             {
                 Exercise = e,

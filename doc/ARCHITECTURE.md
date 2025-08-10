@@ -52,6 +52,12 @@ dotFitness implements a **Modular Monolith** architecture that combines the simp
 - No cross-module domain references; communicate via commands/queries or events
 - SharedKernel only for truly cross-cutting abstractions (no domain rules)
 
+#### 3.5 Service Interface Placement
+- **Service interfaces belong in the Application layer** as application contracts
+- **Service implementations belong in the Infrastructure layer** as concrete implementations
+- This ensures proper dependency flow: Application → Infrastructure (not the reverse)
+- Handlers depend on Application layer interfaces, not Infrastructure layer contracts
+
 #### 3.5 Testing Implications
 - Domain is pure and easily unit-testable
 - Application handlers tested with mocked repositories/services
@@ -80,13 +86,33 @@ dotFitness.WorkoutTracker/
     ├── Users/                        # 👤 User Management Module
     │   ├── dotFitness.Modules.Users.Domain/
     │   ├── dotFitness.Modules.Users.Application/
+    │   │   ├── Commands/             # Write operations
+    │   │   ├── Queries/              # Read operations
+    │   │   ├── DTOs/                 # Data transfer objects
+    │   │   ├── Mappers/              # Domain ↔ DTO mapping
+    │   │   ├── Validators/           # Input validation
+    │   │   └── Services/             # 🆕 Service interfaces (contracts)
     │   ├── dotFitness.Modules.Users.Infrastructure/
+    │   │   ├── Handlers/             # Command/Query processors
+    │   │   ├── Repositories/         # Data access implementations
+    │   │   ├── Services/             # Service implementations
+    │   │   └── Configuration/        # Module setup
     │   └── dotFitness.Modules.Users.Tests/
     │
     ├── Exercises/                    # 💪 Exercise Management Module
     │   ├── dotFitness.Modules.Exercises.Domain/
     │   ├── dotFitness.Modules.Exercises.Application/
+    │   │   ├── Commands/
+    │   │   ├── Queries/
+    │   │   ├── DTOs/
+    │   │   ├── Mappers/
+    │   │   ├── Validators/
+    │   │   └── Services/             # 🆕 Service interfaces
     │   ├── dotFitness.Modules.Exercises.Infrastructure/
+    │   │   ├── Handlers/
+    │   │   ├── Repositories/
+    │   │   ├── Services/             # Service implementations
+    │   │   └── Configuration/
     │   └── dotFitness.Modules.Exercises.Tests/
     │
     ├── Routines/                     # 📋 Workout Routine Module (Planned)
@@ -162,7 +188,71 @@ public static class UserMapper
         DisplayName = user.DisplayName
     };
 }
+
+// Service interfaces (application contracts)
+public interface IUserService
+{
+    Task<Result<User>> GetOrCreateUserAsync(GoogleUserInfo googleUserInfo, CancellationToken cancellationToken = default);
+}
+
+public interface IGoogleAuthService
+{
+    Task<GoogleUserInfo?> GetUserInfoAsync(string accessToken, CancellationToken cancellationToken = default);
+}
+
+public interface IJwtService
+{
+    string GenerateToken(User user);
+    DateTime GetExpirationTime();
+}
 ```
+
+### Service Architecture & Interface Placement
+**Service interfaces belong in the Application layer** as application contracts that define the behavior expected by the application. This follows Clean Architecture principles:
+
+```csharp
+// ✅ CORRECT: Application layer defines service contracts
+namespace dotFitness.Modules.Users.Application.Services;
+
+public interface IUserService
+{
+    Task<Result<User>> GetOrCreateUserAsync(GoogleUserInfo googleUserInfo, CancellationToken cancellationToken = default);
+}
+
+public interface IGoogleAuthService
+{
+    Task<GoogleUserInfo?> GetUserInfoAsync(string accessToken, CancellationToken cancellationToken = default);
+}
+
+public interface IJwtService
+{
+    string GenerateToken(User user);
+    DateTime GetExpirationTime();
+}
+```
+
+**Service implementations belong in the Infrastructure layer** as concrete implementations:
+
+```csharp
+// ✅ CORRECT: Infrastructure layer implements Application contracts
+namespace dotFitness.Modules.Users.Infrastructure.Services;
+
+public class UserService : IUserService  // Implements Application interface
+{
+    // Implementation details...
+}
+
+public class GoogleAuthService : IGoogleAuthService  // Implements Application interface
+{
+    // Implementation details...
+}
+```
+
+**Why this placement matters:**
+- **Dependency Inversion**: Application layer defines contracts, Infrastructure implements them
+- **No Circular Dependencies**: Clear one-way dependency flow
+- **Clean Testing**: Application layer can be tested with mocked services
+- **Proper Separation**: Business logic doesn't depend on technical implementation details
 
 ### Infrastructure Layer (`*.Infrastructure`)
 ```csharp
@@ -195,6 +285,27 @@ public class UserRepository : IUserRepository
         return await _collection.Find(u => u.Id == id).FirstOrDefaultAsync();
     }
     // Other repository methods...
+}
+
+// Service implementations (implements Application layer interfaces)
+public class UserService : IUserService
+{
+    private readonly IUserRepository _userRepository;
+    
+    public async Task<Result<User>> GetOrCreateUserAsync(GoogleUserInfo googleUserInfo, CancellationToken cancellationToken = default)
+    {
+        // Implementation of application service contract
+        // ...
+    }
+}
+
+public class GoogleAuthService : IGoogleAuthService
+{
+    public async Task<GoogleUserInfo?> GetUserInfoAsync(string accessToken, CancellationToken cancellationToken = default)
+    {
+        // Implementation of application service contract
+        // ...
+    }
 }
 ```
 
@@ -259,6 +370,26 @@ flowchart TB
 - Domain/Application don’t depend on Infrastructure
 - Modules don’t reference each other’s Domains
 - Cross-module via Application DTOs or Inbox/Outbox events
+
+### Dependency Flow & Service Architecture
+```
+Application Layer (Service Interfaces)
+    ↑ (depends on)
+Infrastructure Layer (Service Implementations)
+    ↑ (implements)
+Application Layer (Handlers use interfaces)
+```
+
+**Correct Service Placement:**
+- **Service Interfaces**: `*.Application/Services/` - Define application contracts
+- **Service Implementations**: `*.Infrastructure/Services/` - Implement those contracts
+- **Handlers**: Depend on Application layer interfaces, not Infrastructure contracts
+
+**Benefits of Correct Placement:**
+- ✅ Clean dependency flow (Application → Infrastructure)
+- ✅ No circular dependencies
+- ✅ Easy testing with mocked services
+- ✅ Follows Clean Architecture principles
 
 ## 🔄 Module Registration System
 

@@ -1,10 +1,10 @@
 using FluentAssertions;
-using MediatR;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 using dotFitness.Modules.Users.Application.Commands;
 using dotFitness.Modules.Users.Application.DTOs;
+using dotFitness.Modules.Users.Application.Services;
 using dotFitness.Modules.Users.Domain.Entities;
 using dotFitness.Modules.Users.Domain.Repositories;
 using dotFitness.Modules.Users.Infrastructure.Handlers;

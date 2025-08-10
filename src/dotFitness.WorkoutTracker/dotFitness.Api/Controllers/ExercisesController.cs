@@ -6,7 +6,6 @@ using dotFitness.Modules.Exercises.Application.Commands;
 using dotFitness.Modules.Exercises.Application.Queries;
 using dotFitness.Modules.Exercises.Application.DTOs;
 using dotFitness.Modules.Exercises.Domain.Entities;
-using dotFitness.SharedKernel.Results;
 
 namespace dotFitness.Api.Controllers;
 

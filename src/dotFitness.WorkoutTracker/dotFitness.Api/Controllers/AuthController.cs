@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using MediatR;
 using dotFitness.Modules.Users.Application.Commands;
 using dotFitness.Modules.Users.Application.DTOs;
-using dotFitness.SharedKernel.Results;
 
 namespace dotFitness.Api.Controllers;
 

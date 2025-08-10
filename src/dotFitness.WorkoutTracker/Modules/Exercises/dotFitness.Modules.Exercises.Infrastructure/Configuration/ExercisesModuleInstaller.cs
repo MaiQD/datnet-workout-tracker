@@ -1,21 +1,10 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
-using FluentValidation;
-using MediatR;
-using MongoDB.Bson;
-using System;
-using System.Collections.Generic;
 using dotFitness.ModuleContracts;
-using dotFitness.SharedKernel.Results;
 using dotFitness.Modules.Exercises.Domain.Entities;
 using dotFitness.Modules.Exercises.Domain.Repositories;
 using dotFitness.Modules.Exercises.Infrastructure.Repositories;
-using dotFitness.Modules.Exercises.Application.Commands;
-using dotFitness.Modules.Exercises.Application.Queries;
-using dotFitness.Modules.Exercises.Application.DTOs;
-using dotFitness.Modules.Exercises.Infrastructure.Handlers;
-using dotFitness.Modules.Exercises.Application.Validators;
 using dotFitness.SharedKernel.Inbox;
 
 namespace dotFitness.Modules.Exercises.Infrastructure.Configuration;

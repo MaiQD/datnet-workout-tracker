@@ -1,9 +1,7 @@
 using dotFitness.Modules.Users.Domain.Entities;
-using dotFitness.Modules.Users.Domain.Repositories;
-using dotFitness.Modules.Users.Infrastructure.Services;
 using dotFitness.SharedKernel.Results;
 
-namespace dotFitness.Modules.Users.Infrastructure.Services;
+namespace dotFitness.Modules.Users.Application.Services;
 
 public interface IUserService
 {

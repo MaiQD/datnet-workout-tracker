@@ -475,6 +475,13 @@ Phase 5 — Operations & hardening
 - Domain/Application do not depend on Infrastructure; API/Bootstrap are outer layers.
 - Installers live in Infrastructure; database index configuration is separated into per-module configurators.
 
+### Service Interface Placement (Critical)
+- **Service interfaces MUST be defined in the Application layer** as application contracts
+- **Service implementations MUST be in the Infrastructure layer** as concrete implementations
+- This ensures proper dependency flow: Application → Infrastructure (not the reverse)
+- Handlers depend on Application layer interfaces, not Infrastructure layer contracts
+- Violates Clean Architecture if service interfaces are placed in Infrastructure layer
+
 ## 7. Development Environment Setup (Mac)
 
 - **Operating System:** macOS

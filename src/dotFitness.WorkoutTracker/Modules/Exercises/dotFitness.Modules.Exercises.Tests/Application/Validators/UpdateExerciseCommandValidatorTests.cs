@@ -1,4 +1,3 @@
-using FluentAssertions;
 using FluentValidation.TestHelper;
 using dotFitness.Modules.Exercises.Application.Commands;
 using dotFitness.Modules.Exercises.Application.Validators;

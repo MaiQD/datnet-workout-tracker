@@ -1,4 +1,3 @@
-using UnitsNet;
 using UnitsNet.Units;
 
 namespace dotFitness.SharedKernel.Utilities;
