@@ -445,6 +445,42 @@ public async Task<Result<UserDto>> Handle(CreateUserCommand request)
 - Background processing for event delivery
 - Prevents data inconsistency
 
+#### Design Choice: Direct Collection Access vs Repository Abstraction
+
+For the Outbox pattern, we use `IMongoCollection<OutboxMessage>` directly instead of creating an `IOutboxRepository`:
+
+```csharp
+// Current approach (recommended):
+public class UpdateUserProfileCommandHandler 
+{
+    private readonly IUserRepository _userRepository;           // Domain concept
+    private readonly IMongoCollection<OutboxMessage> _outboxCollection; // Infrastructure pattern
+}
+```
+
+**Why direct collection access?**
+
+1. **Outbox is Infrastructure, Not Domain**: The Outbox pattern is a technical concern for reliable event delivery, not a domain concept that needs abstraction.
+
+2. **YAGNI Principle**: Outbox operations are simple INSERTs in command handlers. Creating a repository would be over-abstraction for such basic operations.
+
+3. **Clear Intent**: Direct collection access makes it obvious this is infrastructure-level event storage, not domain logic.
+
+4. **Performance**: No unnecessary abstraction overhead for simple operations.
+
+**When to use Repository Pattern vs Direct Access:**
+- **Repository Pattern**: For domain entities (User, Exercise) with complex queries and business logic
+- **Direct Collection Access**: For infrastructure patterns (Outbox, Inbox) with simple CRUD operations
+
+**Alternative considered**: An `IEventDispatcher` abstraction could provide better testability while maintaining simplicity:
+```csharp
+public interface IEventDispatcher
+{
+    Task DispatchAsync<T>(T domainEvent) where T : class;
+}
+```
+This remains a valid option for future refactoring if enhanced testability is needed.
+
 ### 4. **Static Mappers**
 ```csharp
 // Compile-time mapping for zero runtime overhead

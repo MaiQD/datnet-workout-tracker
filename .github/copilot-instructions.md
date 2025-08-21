@@ -33,8 +33,17 @@ Eventing
 - Current design: Outbox on producers, Inbox per module on consumers for idempotency. No external broker unless requested.
 - Events are DTO payloads and include eventId, eventType, occurredOn, correlationId, traceId.
 
+TypeScript/Frontend
+- **NEVER use `any` type in TypeScript code.** Always define proper types/interfaces.
+- Use proper TypeScript types for all variables, function parameters, and return values.
+- Create interfaces for complex objects and API responses.
+- Prefer `unknown` over `any` when the type is truly unknown, then use type guards.
+- Use generic types `<T>` when creating reusable components or functions.
+- Leverage TypeScript's built-in utility types (Partial, Pick, Omit, etc.).
+
 Conventions
 - Keep handlers small; extract complex logic into application services or domain methods.
 - No direct cross-module data access; only via interfaces or events.
 - Update docs (URS.md, UI_DESIGN.md, TECHNICAL.md, ARCHITECTURE.md) when adding features.
 - Branch naming: feature/* with focused commits (what/why).
+- **Avoid `any` type in TypeScript - define proper types instead.**
