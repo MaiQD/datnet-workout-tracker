@@ -21,7 +21,7 @@
 
 ## MongoDB Usage
 - Obtain `IMongoCollection<T>` via DI as singletons (driver is thread-safe).
-- Create/maintain indexes in each module’s index configurator:
+- Create/maintain indexes in each module's index configurator:
   - Users: unique Email; GoogleId; Roles; metrics `{ UserId, Date }`.
   - Exercises: scoped unique `{ UserId, IsGlobal, Name }`; indexes for MuscleGroups, Equipment, Tags.
   - MuscleGroups: Name (unique per scope), BodyRegion, ParentId.
@@ -49,6 +49,14 @@
 - Always include all mock parameters (e.g., `CancellationToken`).
 - Prefer Result<T> assertions over exception-based flows for business errors.
 
+## TypeScript/Frontend Rules
+- **NEVER use `any` type in TypeScript code.** Always define proper types/interfaces.
+- Use proper TypeScript types for all variables, function parameters, and return values.
+- Create interfaces for complex objects and API responses.
+- Prefer `unknown` over `any` when the type is truly unknown, then use type guards.
+- Use generic types `<T>` when creating reusable components or functions.
+- Leverage TypeScript's built-in utility types (Partial, Pick, Omit, etc.).
+
 ## Documentation Discipline
 - When adding features, update: `URS.md`, `UI_DESIGN.md`, `TECHNICAL.md`, `ARCHITECTURE.md`.
 
@@ -56,11 +64,14 @@
 - Use `feature/*` branches.
 - Small, focused edits with high-signal commit messages (what/why).
 
-## Don’ts
-- Don’t introduce ASP.NET Core Identity or an external event broker unless requested.
-- Don’t access other modules’ collections directly.
-- Don’t store secrets in code; use configuration.
+## Don'ts
+- Don't introduce ASP.NET Core Identity or an external event broker unless requested.
+- Don't access other modules' collections directly.
+- Don't store secrets in code; use configuration.
+- **Don't use `any` type in TypeScript - define proper types instead.**
 
 ## Naming & Style
 - Descriptive names; avoid ambiguous abbreviations.
-- Prefer explaining “why” in comments where non-obvious.
+- Prefer explaining "why" in comments where non-obvious.
+- Using Fluent Validation for validation and Maperly for mapping
+- Minimum verbose comments

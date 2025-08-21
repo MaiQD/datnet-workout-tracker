@@ -20,7 +20,13 @@ public static class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddCoreApiServices(this IServiceCollection services)
     {
-        services.AddControllers();
+        services.AddControllers()
+            .AddJsonOptions(options =>
+            {
+                // Configure JSON serialization to handle enums as strings
+                options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+                options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+            });
         
         services.AddApiVersioning(opt =>
         {

@@ -1,11 +1,13 @@
-using MediatR;
-using Microsoft.Extensions.Logging;
 using dotFitness.Modules.Users.Application.Commands;
 using dotFitness.Modules.Users.Application.DTOs;
 using dotFitness.Modules.Users.Application.Mappers;
 using dotFitness.Modules.Users.Domain.Entities;
+using dotFitness.Modules.Users.Domain.Events;
 using dotFitness.Modules.Users.Domain.Repositories;
+using dotFitness.SharedKernel.Outbox;
 using dotFitness.SharedKernel.Results;
+using MediatR;
+using MongoDB.Driver;
 
 namespace dotFitness.Modules.Users.Infrastructure.Handlers;
 
@@ -13,61 +15,72 @@ public class UpdateUserProfileCommandHandler : IRequestHandler<UpdateUserProfile
 {
     private readonly IUserRepository _userRepository;
     private readonly UserMapper _userMapper;
-    private readonly ILogger<UpdateUserProfileCommandHandler> _logger;
+    private readonly IMongoCollection<OutboxMessage> _outboxCollection;
 
     public UpdateUserProfileCommandHandler(
         IUserRepository userRepository,
         UserMapper userMapper,
-        ILogger<UpdateUserProfileCommandHandler> logger)
+        IMongoCollection<OutboxMessage> outboxCollection)
     {
         _userRepository = userRepository;
         _userMapper = userMapper;
-        _logger = logger;
+        _outboxCollection = outboxCollection;
     }
 
     public async Task<Result<UserDto>> Handle(UpdateUserProfileCommand request, CancellationToken cancellationToken)
     {
-        try
+        var userResult = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
+        if (!userResult.IsSuccess)
         {
-            // Get existing user
-            var userResult = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
-            if (userResult.IsFailure)
-            {
-                return Result.Failure<UserDto>("User not found");
-            }
-
-            var user = userResult.Value!;
-
-            // Update user properties
-            // Only update display name if it's not empty/whitespace
-            if (!string.IsNullOrWhiteSpace(request.DisplayName))
-            {
-                user.DisplayName = request.DisplayName;
-            }
-            
-            user.Gender = string.IsNullOrEmpty(request.Gender) ? null : 
-                Enum.Parse<Gender>(request.Gender);
-            user.DateOfBirth = request.DateOfBirth;
-            user.UnitPreference = Enum.Parse<UnitPreference>(request.UnitPreference);
-            user.UpdatedAt = DateTime.UtcNow;
-
-            // Save changes
-            var updateResult = await _userRepository.UpdateAsync(user, cancellationToken);
-            if (updateResult.IsFailure)
-            {
-                return Result.Failure<UserDto>(updateResult.Error!);
-            }
-
-            var updatedUser = updateResult.Value!;
-            var userDto = _userMapper.ToDto(updatedUser);
-
-            _logger.LogInformation("User profile updated successfully for user {UserId}", request.UserId);
-            return Result.Success(userDto);
+            return Result.Failure<UserDto>("User not found.");
         }
-        catch (Exception ex)
+
+        var user = userResult.Value!;
+
+        // Store original values for change detection
+        var originalDisplayName = user.DisplayName;
+        var originalGender = user.Gender;
+        var originalDateOfBirth = user.DateOfBirth;
+        var originalUnitPreference = user.UnitPreference;
+
+        // Update the user profile using the domain method
+        user.UpdateProfile(
+            request.Request.DisplayName,
+            request.Request.Gender,
+            request.Request.DateOfBirth,
+            request.Request.UnitPreference);
+
+        // Check if any changes were made
+        if (user.DisplayName == originalDisplayName &&
+            user.Gender == originalGender &&
+            user.DateOfBirth == originalDateOfBirth &&
+            user.UnitPreference == originalUnitPreference)
         {
-            _logger.LogError(ex, "Failed to update user profile for user {UserId}", request.UserId);
-            return Result.Failure<UserDto>($"Failed to update user profile: {ex.Message}");
+            // No changes made, return current user
+            return Result.Success(_userMapper.ToDto(user));
         }
+
+        // Save the updated user
+        var updateResult = await _userRepository.UpdateAsync(user, cancellationToken);
+        if (!updateResult.IsSuccess)
+        {
+            return Result.Failure<UserDto>("Failed to update user profile.");
+        }
+
+        var updatedUser = updateResult.Value!;
+
+        // Create and save the domain event
+        var profileUpdatedEvent = new UserProfileUpdatedEvent(
+            user.Id,
+            user.DisplayName,
+            user.Gender?.ToString(),
+            user.DateOfBirth,
+            user.UnitPreference.ToString(),
+            user.UpdatedAt);
+
+        var outboxMessage = OutboxMessage.Create(profileUpdatedEvent);
+        await _outboxCollection.InsertOneAsync(outboxMessage, cancellationToken: cancellationToken);
+
+        return Result.Success(_userMapper.ToDto(updatedUser));
     }
 }

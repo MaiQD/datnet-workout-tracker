@@ -9,6 +9,12 @@ export interface User {
   name: string
   roles: string[]
   profilePicture?: string
+  gender?: string
+  dateOfBirth?: string
+  unitPreference?: string
+  loginMethod?: string
+  createdAt?: string
+  updatedAt?: string
 }
 
 export const useAuthStore = defineStore('auth', () => {
@@ -86,17 +92,28 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  const updateProfile = async (profileData: Partial<User>) => {
+  const updateUser = (updatedUserData: any) => {
     if (!user.value) return
     
-    try {
-      // TODO: Implement API call to backend
-      // const response = await userApi.updateProfile(profileData)
-      // user.value = { ...user.value, ...response }
-    } catch (error) {
-      console.error('Profile update failed:', error)
-      throw error
+    // Map backend DTO fields to frontend User interface
+    const mappedUser: User = {
+      id: updatedUserData.id,
+      email: updatedUserData.email,
+      name: updatedUserData.displayName,
+      roles: updatedUserData.roles || [],
+      profilePicture: updatedUserData.profilePicture,
+      gender: updatedUserData.gender,
+      dateOfBirth: updatedUserData.dateOfBirth,
+      unitPreference: updatedUserData.unitPreference,
+      loginMethod: updatedUserData.loginMethod,
+      createdAt: updatedUserData.createdAt,
+      updatedAt: updatedUserData.updatedAt
     }
+    
+    user.value = mappedUser
+    
+    // Update localStorage
+    localStorage.setItem('auth_user', JSON.stringify(mappedUser))
   }
 
   // Initialize auth state from localStorage
@@ -150,7 +167,7 @@ export const useAuthStore = defineStore('auth', () => {
     isUser,
     loginWithGoogle,
     logout,
-    updateProfile,
+    updateUser,
     initializeAuth,
     isTokenExpired,
     checkTokenExpiration

@@ -64,7 +64,7 @@ public class UsersController : ControllerBase
     /// <summary>
     /// Updates the current user's profile information
     /// </summary>
-    /// <param name="command">The profile update data</param>
+    /// <param name="request">The profile update data</param>
     /// <returns>Updated user profile</returns>
     [HttpPut("profile")]
     [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
@@ -72,7 +72,7 @@ public class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> UpdateProfile([FromBody] UpdateUserProfileCommand command)
+    public async Task<IActionResult> UpdateProfile([FromBody] UpdateUserProfileRequest request)
     {
         try
         {
@@ -82,9 +82,7 @@ public class UsersController : ControllerBase
                 return Unauthorized(new { error = "User ID not found in token" });
             }
 
-            // Set the user ID from the token to ensure user can only update their own profile
-            command.UserId = userId;
-
+            var command = new UpdateUserProfileCommand(userId, request);
             var result = await _mediator.Send(command);
 
             if (result.IsFailure)
