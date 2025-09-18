@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
@@ -10,17 +10,18 @@
     <ProjectReference Include="..\dotFitness.SharedKernel\dotFitness.SharedKernel.csproj" />
     <ProjectReference Include="..\dotFitness.Bootstrap\dotFitness.Bootstrap.csproj" />
     <ProjectReference Include="..\dotFitness.ModuleContracts\dotFitness.ModuleContracts.csproj" />
-    <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.1" />
-    <PackageReference Include="Google.Apis.Auth" Version="1.70.0" />
-    <PackageReference Include="MediatR" Version="12.5.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.12" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" Version="5.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.15" />
-    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="8.0.0" />
-    <PackageReference Include="MongoDB.Driver" Version="3.4.0" />
-    <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.12.0" />
+    <ProjectReference Include="..\dotFitness.Aspire.ServiceDefaults\dotFitness.Aspire.ServiceDefaults.csproj" />
+    <PackageReference Include="FluentValidation.AspNetCore" />
+    <PackageReference Include="Google.Apis.Auth" />
+    <PackageReference Include="MediatR" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" />
+    <PackageReference Include="MongoDB.Driver" />
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Swashbuckle.AspNetCore" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
     <ProjectReference Include="..\Modules\Users\dotFitness.Modules.Users.Application\dotFitness.Modules.Users.Application.csproj" />
     <ProjectReference Include="..\Modules\Exercises\dotFitness.Modules.Exercises.Application\dotFitness.Modules.Exercises.Application.csproj" />
   </ItemGroup>

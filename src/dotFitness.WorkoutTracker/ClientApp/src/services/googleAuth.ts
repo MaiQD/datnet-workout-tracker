@@ -8,7 +8,13 @@ export interface GoogleAuthResponse {
   displayName: string
   roles: string[]
   expiresAt: string
-  profilePicture?: string
+  profilePicture?: string,
+  gender?: string
+  dateOfBirth?: string
+  unitPreference?: string
+  loginMethod?: string
+  createdAt?: string
+  updatedAt?: string
 }
 
 class GoogleAuthService {

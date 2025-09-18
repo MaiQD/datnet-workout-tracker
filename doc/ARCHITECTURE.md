@@ -4,7 +4,7 @@
 
 ## 🏗️ Architectural Overview
 
-dotFitness implements a **Modular Monolith** architecture that combines the simplicity of a monolith with the scalability and maintainability of microservices. This pattern is inspired by Domain-Driven Design (DDD) principles and provides a clear path for future evolution.
+dotFitness implements a **Modular Monolith** architecture that combines the simplicity of a monolith with the scalability and maintainability of microservices. This pattern is inspired by Domain-Driven Design (DDD) principles and provides a clear path for future evolution. The architecture leverages a **hybrid database approach** (MongoDB + PostgreSQL) optimized for each module's specific data requirements.
 
 ## 🎯 Core Principles
 
@@ -121,6 +121,39 @@ dotFitness.WorkoutTracker/
     └── WorkoutLogs/                  # 📊 Workout Tracking Module (Planned)
         └── [Future implementation]
 ```
+
+## 🗄️ Database Architecture Decision
+
+### Hybrid Database Approach
+
+After comprehensive analysis of the dotFitness project requirements, we have chosen a **hybrid database architecture** that leverages both MongoDB and PostgreSQL, with each database optimized for specific module requirements.
+
+#### Decision Rationale
+
+**Why Hybrid?**
+- **ACID Compliance**: Critical for user authentication and data integrity (PostgreSQL)
+- **Schema Flexibility**: Required for exercise data and workout logs (MongoDB)
+- **Query Performance**: Optimized for each module's data patterns
+- **Migration Effort**: Minimal disruption to existing system (3-4 days vs 20-30 days)
+- **Cost Impact**: Maintains zero-cost deployment strategy
+
+#### Module-to-Database Mapping
+
+**PostgreSQL Modules (Relational Data):**
+- **Users Module**: User profiles, authentication, metrics, role management
+- **Routines Module** (Future): Workout routines, exercise sequences, templates
+
+**MongoDB Modules (Document Data):**
+- **Exercises Module**: Exercise definitions, muscle groups, equipment, search
+- **WorkoutLogs Module** (Future): Workout sessions, performance data, analytics
+
+#### Technical Benefits
+
+- **Optimal Performance**: Each database excels at its specific use case
+- **Zero Additional Cost**: Both databases have generous free tiers
+- **Minimal Migration Effort**: Only migrate 1 module, not 2+
+- **Future Flexibility**: Easy to scale each database independently
+- **Risk Mitigation**: Gradual migration, not big bang
 
 ## 🧩 Module Structure
 

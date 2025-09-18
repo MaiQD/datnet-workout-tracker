@@ -3,12 +3,12 @@ using dotFitness.Api.Infrastructure;
 using dotFitness.Api.Infrastructure.Extensions;
 using dotFitness.Api.Infrastructure.Settings;
 
-// Configure Serilog
-Log.Logger = new LoggerConfiguration()
-    .WriteTo.Console()
-    .CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);
+// Configure Serilog
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .CreateLogger();
 
 // Use Serilog as the logging provider
 builder.Host.UseSerilog();
@@ -26,17 +26,14 @@ builder.Services.AddSwaggerWithOAuth();
 // Add CORS policy
 builder.Services.AddCorsPolicy();
 
-// Add MongoDB services
-var mongoConnectionString = builder.Configuration.GetConnectionString("MongoDB") 
-    ?? throw new InvalidOperationException("MongoDB connection string is not configured");
-builder.Services.AddMongoDbServices(mongoConnectionString);
-
 // Set up module registry logger
 var loggerFactory = LoggerFactory.Create(builder => builder.AddSerilog(Log.Logger));
 var microsoftLogger = loggerFactory.CreateLogger("ModuleRegistry");
 
 // Add module services
 builder.Services.AddModuleServices(builder.Configuration, microsoftLogger);
+
+builder.AddServiceDefaults();
 
 var app = builder.Build();
 
@@ -49,7 +46,8 @@ await MongoDbSeeder.ConfigureSeedsAsync(app.Services);
 app.ConfigureSwaggerUi()
    .ConfigureCoreMiddleware()
    .ConfigureHealthChecks()
-   .ConfigureEndpoints();
+   .ConfigureEndpoints()
+   .MapDefaultEndpoints();
 
 Log.Information("dotFitness API starting up...");
 

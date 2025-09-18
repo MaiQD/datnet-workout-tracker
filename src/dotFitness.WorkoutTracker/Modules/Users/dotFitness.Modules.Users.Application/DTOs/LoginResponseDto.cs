@@ -21,4 +21,14 @@ public class LoginResponseDto
     public List<string> Roles { get; set; } = new();
     
     public DateTime ExpiresAt { get; set; }
+    
+    public string? Gender { get; set; }
+    
+    public DateTime? DateOfBirth { get; set; }
+    
+    public string UnitPreference { get; set; } = "Metric";
+    
+    public DateTime CreatedAt { get; set; }
+    
+    public DateTime UpdatedAt { get; set; }
 }

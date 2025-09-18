@@ -5,6 +5,7 @@ using MongoDB.Driver;
 using dotFitness.ModuleContracts;
 using dotFitness.Modules.Users.Infrastructure.Configuration;
 using dotFitness.Modules.Exercises.Infrastructure.Configuration;
+using dotFitness.SharedKernel.Outbox;
 using FluentValidation;
 
 namespace dotFitness.Bootstrap;
@@ -29,17 +30,26 @@ public static class ModuleRegistry
         // Shared infra
         services.AddSingleton<IMongoClient>(sp =>
         {
-            var conn = configuration.GetConnectionString("MongoDB");
+            var conn = configuration.GetConnectionString("dotFitnessDb-mongo");
             return new MongoClient(conn);
         });
 
         services.AddSingleton<IMongoDatabase>(sp =>
         {
             var client = sp.GetRequiredService<IMongoClient>();
-            var dbName = configuration["MongoDB:DatabaseName"] ?? "dotFitness";
+            var connectionString = configuration.GetConnectionString("dotFitnessDb-mongo");
+            var mongoUrl = new MongoUrl(connectionString);
+            var dbName = mongoUrl.DatabaseName ?? "dotFitness";
             return client.GetDatabase(dbName);
         });
-
+        
+        // Register base MongoDB Collections for shared types
+        services.AddSingleton(sp =>
+        {
+            var database = sp.GetRequiredService<IMongoDatabase>();
+            return database.GetCollection<OutboxMessage>("outboxMessages");
+        });
+        
         // MediatR handlers
         services.AddMediatR(cfg =>
         {
