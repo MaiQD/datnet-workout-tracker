@@ -34,6 +34,7 @@
     <PackageVersion Include="UnitsNet" Version="5.74.0" />
   </ItemGroup>
   <ItemGroup Label="Aspire Packages">
+    <PackageVersion Include="Aspire.Hosting.NodeJs" Version="9.4.2" />
     <PackageVersion Include="Aspire.Hosting.MongoDB" Version="9.4.2" />
     <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="9.4.2" />
     <PackageVersion Include="Aspire.Hosting.AppHost" Version="9.4.2" />

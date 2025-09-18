@@ -59,7 +59,12 @@ public class LoginWithGoogleCommandHandler : IRequestHandler<LoginWithGoogleComm
                 DisplayName = user.DisplayName,
                 ProfilePicture = user.ProfilePicture,
                 Roles = user.Roles.ToList(),
-                ExpiresAt = expiresAt
+                ExpiresAt = expiresAt,
+                Gender = user.Gender?.ToString(),
+                DateOfBirth = user.DateOfBirth,
+                UnitPreference = user.UnitPreference.ToString(),
+                CreatedAt = user.CreatedAt,
+                UpdatedAt = user.UpdatedAt
             };
 
             _logger.LogInformation("User {Email} logged in successfully", user.Email);
