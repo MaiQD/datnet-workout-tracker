@@ -142,29 +142,6 @@ public static class ServiceCollectionExtensions
     }
 
     /// <summary>
-    /// Adds MongoDB services and configuration
-    /// </summary>
-    public static IServiceCollection AddMongoDbServices(this IServiceCollection services, string connectionString)
-    {
-        services.AddSingleton<IMongoClient>(sp => new MongoClient(connectionString));
-        
-        services.AddSingleton<IMongoDatabase>(sp =>
-        {
-            var client = sp.GetRequiredService<IMongoClient>();
-            return client.GetDatabase("dotFitnessDb");
-        });
-
-        // Register base MongoDB Collections for shared types
-        services.AddSingleton(sp =>
-        {
-            var database = sp.GetRequiredService<IMongoDatabase>();
-            return database.GetCollection<OutboxMessage>("outboxMessages");
-        });
-
-        return services;
-    }
-
-    /// <summary>
     /// Adds module-related services including health checks and MediatR
     /// </summary>
     public static IServiceCollection AddModuleServices(this IServiceCollection services, IConfiguration configuration, ILogger logger)

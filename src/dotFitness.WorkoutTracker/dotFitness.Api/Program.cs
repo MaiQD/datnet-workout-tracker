@@ -26,11 +26,6 @@ builder.Services.AddSwaggerWithOAuth();
 // Add CORS policy
 builder.Services.AddCorsPolicy();
 
-// Add MongoDB services
-var mongoConnectionString = builder.Configuration.GetConnectionString("MongoDB") 
-    ?? throw new InvalidOperationException("MongoDB connection string is not configured");
-builder.Services.AddMongoDbServices(mongoConnectionString);
-
 // Set up module registry logger
 var loggerFactory = LoggerFactory.Create(builder => builder.AddSerilog(Log.Logger));
 var microsoftLogger = loggerFactory.CreateLogger("ModuleRegistry");
