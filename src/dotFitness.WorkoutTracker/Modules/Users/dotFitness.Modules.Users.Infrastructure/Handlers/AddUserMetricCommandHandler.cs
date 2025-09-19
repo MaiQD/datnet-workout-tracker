@@ -1,56 +1,56 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 using dotFitness.Modules.Users.Application.Commands;
 using dotFitness.Modules.Users.Application.DTOs;
 using dotFitness.Modules.Users.Application.Mappers;
 using dotFitness.Modules.Users.Domain.Entities;
-using dotFitness.Modules.Users.Domain.Repositories;
+using dotFitness.Modules.Users.Infrastructure.Data;
 using dotFitness.SharedKernel.Results;
 
 namespace dotFitness.Modules.Users.Infrastructure.Handlers;
 
 public class AddUserMetricCommandHandler : IRequestHandler<AddUserMetricCommand, Result<UserMetricDto>>
 {
-    private readonly IUserMetricsRepository _userMetricsRepository;
-    private readonly IUserRepository _userRepository;
+    private readonly UsersDbContext _context;
     private readonly UserMetricMapper _userMetricMapper;
     private readonly ILogger<AddUserMetricCommandHandler> _logger;
 
     public AddUserMetricCommandHandler(
-        IUserMetricsRepository userMetricsRepository,
-        IUserRepository userRepository,
+        UsersDbContext context,
         UserMetricMapper userMetricMapper,
         ILogger<AddUserMetricCommandHandler> logger)
     {
-        _userMetricsRepository = userMetricsRepository;
-        _userRepository = userRepository;
+        _context = context;
         _userMetricMapper = userMetricMapper;
         _logger = logger;
     }
 
     public async Task<Result<UserMetricDto>> Handle(AddUserMetricCommand request, CancellationToken cancellationToken)
     {
+        using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+        
         try
         {
-            // Get user to verify existence and get unit preference
-            var userResult = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
-            if (userResult.IsFailure)
+            // 1. Get user to verify existence and get unit preference
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
+            
+            if (user == null)
             {
                 return Result.Failure<UserMetricDto>("User not found");
             }
 
-            var user = userResult.Value!;
-
-            // Check if metric already exists for this date
-            var existingMetricResult = await _userMetricsRepository.ExistsForUserAndDateAsync(
-                request.UserId, request.Date, cancellationToken);
+            // 2. Check if metric already exists for this date
+            var existingMetric = await _context.UserMetrics
+                .FirstOrDefaultAsync(um => um.UserId == request.UserId && um.Date.Date == request.Date.Date, cancellationToken);
             
-            if (existingMetricResult.IsSuccess && existingMetricResult.Value)
+            if (existingMetric != null)
             {
                 return Result.Failure<UserMetricDto>("A metric already exists for this date. Please update the existing metric instead.");
             }
 
-            // Create new user metric
+            // 3. Create new user metric
             var userMetric = new UserMetric
             {
                 UserId = request.UserId,
@@ -62,21 +62,19 @@ public class AddUserMetricCommandHandler : IRequestHandler<AddUserMetricCommand,
                 UpdatedAt = DateTime.UtcNow
             };
 
-            // Calculate BMI if both weight and height are provided
+            // 4. Calculate BMI if both weight and height are provided
             if (request.Weight.HasValue && request.Height.HasValue)
             {
                 userMetric.CalculateBmi(user.UnitPreference);
             }
 
-            // Save the metric
-            var createResult = await _userMetricsRepository.CreateAsync(userMetric, cancellationToken);
-            if (createResult.IsFailure)
-            {
-                return Result.Failure<UserMetricDto>(createResult.Error!);
-            }
+            // 5. Save the metric
+            _context.UserMetrics.Add(userMetric);
+            await _context.SaveChangesAsync(cancellationToken);
 
-            var createdMetric = createResult.Value!;
-            var metricDto = _userMetricMapper.ToDto(createdMetric);
+            await transaction.CommitAsync(cancellationToken);
+
+            var metricDto = _userMetricMapper.ToDto(userMetric);
 
             _logger.LogInformation("User metric added successfully for user {UserId} on {Date}", 
                 request.UserId, request.Date.ToString("yyyy-MM-dd"));
@@ -85,6 +83,7 @@ public class AddUserMetricCommandHandler : IRequestHandler<AddUserMetricCommand,
         }
         catch (Exception ex)
         {
+            await transaction.RollbackAsync(cancellationToken);
             _logger.LogError(ex, "Failed to add user metric for user {UserId} on {Date}", 
                 request.UserId, request.Date.ToString("yyyy-MM-dd"));
             return Result.Failure<UserMetricDto>($"Failed to add user metric: {ex.Message}");

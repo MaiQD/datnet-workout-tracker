@@ -1,86 +1,117 @@
 using dotFitness.Modules.Users.Application.Commands;
 using dotFitness.Modules.Users.Application.DTOs;
 using dotFitness.Modules.Users.Application.Mappers;
-using dotFitness.Modules.Users.Domain.Entities;
 using dotFitness.Modules.Users.Domain.Events;
-using dotFitness.Modules.Users.Domain.Repositories;
-using dotFitness.SharedKernel.Outbox;
+using dotFitness.Modules.Users.Infrastructure.Data;
+using dotFitness.Modules.Users.Infrastructure.Data.Entities;
 using dotFitness.SharedKernel.Results;
 using MediatR;
-using MongoDB.Driver;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using System.Text.Json;
 
 namespace dotFitness.Modules.Users.Infrastructure.Handlers;
 
 public class UpdateUserProfileCommandHandler : IRequestHandler<UpdateUserProfileCommand, Result<UserDto>>
 {
-    private readonly IUserRepository _userRepository;
+    private readonly UsersDbContext _context;
     private readonly UserMapper _userMapper;
-    private readonly IMongoCollection<OutboxMessage> _outboxCollection;
+    private readonly ILogger<UpdateUserProfileCommandHandler> _logger;
 
     public UpdateUserProfileCommandHandler(
-        IUserRepository userRepository,
+        UsersDbContext context,
         UserMapper userMapper,
-        IMongoCollection<OutboxMessage> outboxCollection)
+        ILogger<UpdateUserProfileCommandHandler> logger)
     {
-        _userRepository = userRepository;
+        _context = context;
         _userMapper = userMapper;
-        _outboxCollection = outboxCollection;
+        _logger = logger;
     }
 
     public async Task<Result<UserDto>> Handle(UpdateUserProfileCommand request, CancellationToken cancellationToken)
     {
-        var userResult = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
-        if (!userResult.IsSuccess)
+        try
         {
-            return Result.Failure<UserDto>("User not found.");
+            // Use execution strategy to handle retries and transactions together
+            var strategy = _context.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
+                using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+                
+                try
+                {
+                    // 1. Get user from database
+                    var user = await _context.Users
+                        .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
+                    
+                    if (user == null)
+                    {
+                        return Result.Failure<UserDto>("User not found.");
+                    }
+
+                    // Store original values for change detection
+                    var originalDisplayName = user.DisplayName;
+                    var originalGender = user.Gender;
+                    var originalDateOfBirth = user.DateOfBirth;
+                    var originalUnitPreference = user.UnitPreference;
+
+                    // 2. Update the user profile using the domain method
+                    user.UpdateProfile(
+                        request.Request.DisplayName,
+                        request.Request.Gender,
+                        request.Request.DateOfBirth,
+                        request.Request.UnitPreference);
+
+                    // Check if any changes were made
+                    if (user.DisplayName == originalDisplayName &&
+                        user.Gender == originalGender &&
+                        user.DateOfBirth == originalDateOfBirth &&
+                        user.UnitPreference == originalUnitPreference)
+                    {
+                        // No changes made, return current user
+                        return Result.Success(_userMapper.ToDto(user));
+                    }
+
+                    // 3. Save changes to database
+                    await _context.SaveChangesAsync(cancellationToken);
+
+                    // 4. Create and save the domain event to outbox
+                    var profileUpdatedEvent = new UserProfileUpdatedEvent(
+                        user.Id,
+                        user.DisplayName,
+                        user.Gender?.ToString(),
+                        user.DateOfBirth,
+                        user.UnitPreference.ToString(),
+                        user.UpdatedAt);
+
+                    var outboxMessage = new OutboxMessageEntity
+                    {
+                        EventId = Guid.NewGuid().ToString(),
+                        EventType = nameof(UserProfileUpdatedEvent),
+                        EventData = JsonSerializer.Serialize(profileUpdatedEvent),
+                        CreatedAt = DateTime.UtcNow,
+                        IsProcessed = false
+                    };
+
+                    _context.OutboxMessages.Add(outboxMessage);
+                    await _context.SaveChangesAsync(cancellationToken);
+
+                    await transaction.CommitAsync(cancellationToken);
+                    
+                    _logger.LogInformation("Successfully updated profile for user {UserId}", user.Id);
+                    return Result.Success(_userMapper.ToDto(user));
+                }
+                catch
+                {
+                    await transaction.RollbackAsync(cancellationToken);
+                    throw;
+                }
+            });
         }
-
-        var user = userResult.Value!;
-
-        // Store original values for change detection
-        var originalDisplayName = user.DisplayName;
-        var originalGender = user.Gender;
-        var originalDateOfBirth = user.DateOfBirth;
-        var originalUnitPreference = user.UnitPreference;
-
-        // Update the user profile using the domain method
-        user.UpdateProfile(
-            request.Request.DisplayName,
-            request.Request.Gender,
-            request.Request.DateOfBirth,
-            request.Request.UnitPreference);
-
-        // Check if any changes were made
-        if (user.DisplayName == originalDisplayName &&
-            user.Gender == originalGender &&
-            user.DateOfBirth == originalDateOfBirth &&
-            user.UnitPreference == originalUnitPreference)
+        catch (Exception ex)
         {
-            // No changes made, return current user
-            return Result.Success(_userMapper.ToDto(user));
+            _logger.LogError(ex, "Failed to update profile for user {UserId}: {ErrorMessage}", request.UserId, ex.Message);
+            return Result.Failure<UserDto>($"Failed to update user profile: {ex.Message}");
         }
-
-        // Save the updated user
-        var updateResult = await _userRepository.UpdateAsync(user, cancellationToken);
-        if (!updateResult.IsSuccess)
-        {
-            return Result.Failure<UserDto>("Failed to update user profile.");
-        }
-
-        var updatedUser = updateResult.Value!;
-
-        // Create and save the domain event
-        var profileUpdatedEvent = new UserProfileUpdatedEvent(
-            user.Id,
-            user.DisplayName,
-            user.Gender?.ToString(),
-            user.DateOfBirth,
-            user.UnitPreference.ToString(),
-            user.UpdatedAt);
-
-        var outboxMessage = OutboxMessage.Create(profileUpdatedEvent);
-        await _outboxCollection.InsertOneAsync(outboxMessage, cancellationToken: cancellationToken);
-
-        return Result.Success(_userMapper.ToDto(updatedUser));
     }
 }

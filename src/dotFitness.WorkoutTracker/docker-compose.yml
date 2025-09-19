@@ -16,6 +16,21 @@ services:
     networks:
       - dotfitness-network
 
+  postgresql:
+    image: postgres:16-alpine
+    container_name: dotfitness-postgresql
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: dotFitnessDb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgresql_data:/var/lib/postgresql/data
+    networks:
+      - dotfitness-network
+
   mongo-express:
     image: mongo-express:1.0.2
     container_name: dotfitness-mongo-express
@@ -34,6 +49,7 @@ services:
 
 volumes:
   mongodb_data:
+  postgresql_data:
 
 networks:
   dotfitness-network:

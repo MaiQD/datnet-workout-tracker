@@ -122,6 +122,9 @@ public class UsersModuleInstaller : IModuleInstaller
 
         // Register Users module configuration validator
         services.AddScoped<dotFitness.SharedKernel.Configuration.IModuleConfigurationValidator, UsersConfigurationValidator>();
+
+        // Register database migration service for auto-applying migrations
+        services.AddHostedService<DatabaseMigrationService>();
     }
 
     public void ConfigureIndexes(IMongoDatabase database)
