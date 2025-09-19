@@ -14,6 +14,7 @@ using dotFitness.Modules.Users.Application.Mappers;
 using dotFitness.Modules.Users.Application.Services;
 using dotFitness.Modules.Users.Infrastructure.Settings;
 using dotFitness.Modules.Users.Infrastructure.Data;
+using dotFitness.Modules.Users.Infrastructure.HealthChecks;
 using dotFitness.SharedKernel.Inbox;
 
 namespace dotFitness.Modules.Users.Infrastructure.Configuration;
@@ -114,6 +115,13 @@ public class UsersModuleInstaller : IModuleInstaller
         // Register Mapperly mappers - they will be generated as implementations
         services.AddScoped<UserMapper>();
         services.AddScoped<UserMetricMapper>();
+
+        // Register Users module health check
+        services.AddHealthChecks()
+            .AddCheck<UsersModuleHealthCheck>("users-module", tags: new[] { "module", "users", "live" });
+
+        // Register Users module configuration validator
+        services.AddScoped<dotFitness.SharedKernel.Configuration.IModuleConfigurationValidator, UsersConfigurationValidator>();
     }
 
     public void ConfigureIndexes(IMongoDatabase database)

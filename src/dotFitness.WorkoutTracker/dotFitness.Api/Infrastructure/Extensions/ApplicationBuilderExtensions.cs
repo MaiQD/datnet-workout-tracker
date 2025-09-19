@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Options;
+using System.Text.Json;
 using dotFitness.Api.Infrastructure.Settings;
 
 namespace dotFitness.Api.Infrastructure.Extensions;
@@ -49,11 +50,13 @@ public static class ApplicationBuilderExtensions
     }
 
     /// <summary>
-    /// Configures health check endpoints with custom response writers
+    /// Configures additional health check endpoints that complement Aspire's default endpoints
+    /// Note: Aspire already maps /health and /alive endpoints, so we add module-specific endpoints
     /// </summary>
     public static WebApplication ConfigureHealthChecks(this WebApplication app)
     {
-        app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+        // Detailed health check endpoint with custom JSON response (complements Aspire's /health)
+        app.MapHealthChecks("/health/detailed", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
         {
             ResponseWriter = async (context, report) =>
             {
@@ -61,18 +64,23 @@ public static class ApplicationBuilderExtensions
                 var response = new
                 {
                     status = report.Status.ToString(),
+                    timestamp = DateTime.UtcNow,
+                    totalDuration = report.TotalDuration.ToString(),
                     checks = report.Entries.Select(e => new
                     {
                         name = e.Key,
                         status = e.Value.Status.ToString(),
                         description = e.Value.Description,
-                        duration = e.Value.Duration.ToString()
+                        duration = e.Value.Duration.ToString(),
+                        tags = e.Value.Tags,
+                        data = e.Value.Data
                     })
                 };
-                await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(response));
+                await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(response, new JsonSerializerOptions { WriteIndented = true }));
             }
         });
 
+        // Module-specific health checks endpoint
         app.MapHealthChecks("/health/modules", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
         {
             Predicate = check => check.Tags.Contains("module"),
@@ -82,15 +90,45 @@ public static class ApplicationBuilderExtensions
                 var response = new
                 {
                     status = report.Status.ToString(),
-                    modules = report.Entries.Where(e => e.Value.Tags.Contains("module")).Select(e => new
-                    {
-                        name = e.Key,
-                        status = e.Value.Status.ToString(),
-                        description = e.Value.Description,
-                        duration = e.Value.Duration.ToString()
-                    })
+                    timestamp = DateTime.UtcNow,
+                    modules = report.Entries
+                        .Where(e => e.Value.Tags.Contains("module"))
+                        .Select(e => new
+                        {
+                            name = e.Key,
+                            status = e.Value.Status.ToString(),
+                            description = e.Value.Description,
+                            duration = e.Value.Duration.ToString(),
+                            data = e.Value.Data
+                        })
                 };
-                await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(response));
+                await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(response, new JsonSerializerOptions { WriteIndented = true }));
+            }
+        });
+
+        // Global/registry health checks endpoint
+        app.MapHealthChecks("/health/global", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+        {
+            Predicate = check => check.Tags.Contains("global"),
+            ResponseWriter = async (context, report) =>
+            {
+                context.Response.ContentType = "application/json";
+                var response = new
+                {
+                    status = report.Status.ToString(),
+                    timestamp = DateTime.UtcNow,
+                    global = report.Entries
+                        .Where(e => e.Value.Tags.Contains("global"))
+                        .Select(e => new
+                        {
+                            name = e.Key,
+                            status = e.Value.Status.ToString(),
+                            description = e.Value.Description,
+                            duration = e.Value.Duration.ToString(),
+                            data = e.Value.Data
+                        })
+                };
+                await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(response, new JsonSerializerOptions { WriteIndented = true }));
             }
         });
 
