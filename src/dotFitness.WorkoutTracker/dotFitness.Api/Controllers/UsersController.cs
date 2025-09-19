@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Authorization;
 using MediatR;
 using System.Security.Claims;
 using dotFitness.Modules.Users.Application.Commands;
-using dotFitness.Modules.Users.Application.Queries;
 using dotFitness.Modules.Users.Application.DTOs;
+using dotFitness.Modules.Users.Application.Queries;
 
 namespace dotFitness.Api.Controllers;
 

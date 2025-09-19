@@ -2,6 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.EntityFrameworkCore;
 using MongoDB.Driver;
 using System.Text;
 using dotFitness.ModuleContracts;
@@ -12,6 +13,7 @@ using dotFitness.Modules.Users.Infrastructure.Services;
 using dotFitness.Modules.Users.Application.Mappers;
 using dotFitness.Modules.Users.Application.Services;
 using dotFitness.Modules.Users.Infrastructure.Settings;
+using dotFitness.Modules.Users.Infrastructure.Data;
 using dotFitness.SharedKernel.Inbox;
 
 namespace dotFitness.Modules.Users.Infrastructure.Configuration;
@@ -48,6 +50,31 @@ public class UsersModuleInstaller : IModuleInstaller
             });
 
         services.AddAuthorization();
+
+        // Configure PostgreSQL DbContext for Users module
+        services.AddDbContext<UsersDbContext>(options =>
+        {
+            // Try Aspire connection first, then fallback to manual configuration
+            var connectionString = configuration.GetConnectionString("dotFitnessDb-pg") 
+                                   ?? configuration.GetConnectionString("PostgreSQL");
+            options.UseNpgsql(connectionString, npgsqlOptions =>
+            {
+                npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "users");
+                npgsqlOptions.EnableRetryOnFailure(maxRetryCount: 3, maxRetryDelay: TimeSpan.FromSeconds(5), errorCodesToAdd: null);
+            });
+            
+            // Enable sensitive data logging in development
+            if (configuration.GetValue<bool>("Logging:EnableSensitiveDataLogging"))
+            {
+                options.EnableSensitiveDataLogging();
+            }
+            
+            // Enable detailed errors in development
+            if (configuration.GetValue<bool>("Logging:EnableDetailedErrors"))
+            {
+                options.EnableDetailedErrors();
+            }
+        });
 
         // Register MongoDB collections specific to Users module
         services.AddSingleton(sp =>

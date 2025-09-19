@@ -2,7 +2,7 @@ namespace dotFitness.SharedKernel.Interfaces;
 
 public interface IEntity
 {
-    string Id { get; }
-    DateTime CreatedAt { get; }
-    DateTime UpdatedAt { get; }
+    string Id { get; set; }
+    DateTime CreatedAt { get; set; }
+    DateTime UpdatedAt { get; set; }
 }
