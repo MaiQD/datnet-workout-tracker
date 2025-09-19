@@ -61,7 +61,13 @@ public class UsersModuleInstaller : IModuleInstaller
             options.UseNpgsql(connectionString, npgsqlOptions =>
             {
                 npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "users");
-                npgsqlOptions.EnableRetryOnFailure(maxRetryCount: 3, maxRetryDelay: TimeSpan.FromSeconds(5), errorCodesToAdd: null);
+                
+                // Configure retry strategy - can be disabled for explicit transaction control
+                var enableRetryStrategy = configuration.GetValue<bool>("Database:EnableRetryStrategy", defaultValue: true);
+                if (enableRetryStrategy)
+                {
+                    npgsqlOptions.EnableRetryOnFailure(maxRetryCount: 3, maxRetryDelay: TimeSpan.FromSeconds(5), errorCodesToAdd: null);
+                }
             });
             
             // Enable sensitive data logging in development
