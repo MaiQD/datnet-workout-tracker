@@ -8,7 +8,7 @@ public class LoginResponseDto
     public string Token { get; set; } = string.Empty;
     
     [Required]
-    public string UserId { get; set; } = string.Empty;
+    public int UserId { get; set; }
     
     [Required]
     public string Email { get; set; } = string.Empty;

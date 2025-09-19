@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using MediatR;
 using System.Security.Claims;
+using dotFitness.Api.Infrastructure.Extensions;
 using dotFitness.Modules.Exercises.Application.Commands;
 using dotFitness.Modules.Exercises.Application.Queries;
 using dotFitness.Modules.Exercises.Application.DTOs;
@@ -44,13 +45,9 @@ public class ExercisesController : ControllerBase
     {
         try
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId))
-            {
-                return Unauthorized(new { error = "User ID not found in token" });
-            }
+            var userId = User.GetRequiredUserId();
 
-            var query = new GetAllExercisesQuery(userId, searchTerm, muscleGroups, equipment, difficulty);
+            var query = new GetAllExercisesQuery(userId.ToString(), searchTerm, muscleGroups, equipment, difficulty);
             var result = await _mediator.Send(query);
 
             if (result.IsFailure)
@@ -82,18 +79,15 @@ public class ExercisesController : ControllerBase
     {
         try
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId))
-            {
-                return Unauthorized(new { error = "User ID not found in token" });
-            }
+            var userId = User.GetRequiredUserId();
 
-            var query = new GetExerciseByIdQuery(id, userId);
+            var query = new GetExerciseByIdQuery(id, userId.ToString());
             var result = await _mediator.Send(query);
 
             if (result.IsFailure)
             {
-                _logger.LogError("Failed to get exercise {ExerciseId} for user {UserId}: {Error}", id, userId, result.Error);
+                _logger.LogError("Failed to get exercise {ExerciseId} for user {UserId}: {Error}", id, userId,
+                    result.Error);
                 return StatusCode(500, new { error = "Failed to retrieve exercise" });
             }
 
@@ -125,14 +119,10 @@ public class ExercisesController : ControllerBase
     {
         try
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId))
-            {
-                return Unauthorized(new { error = "User ID not found in token" });
-            }
+            var userId = User.GetRequiredUserId();
 
             var command = new CreateExerciseCommand(
-                userId,
+                userId.ToString(),
                 request.Name,
                 request.Description,
                 request.MuscleGroups,
@@ -178,15 +168,12 @@ public class ExercisesController : ControllerBase
     {
         try
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId))
-            {
-                return Unauthorized(new { error = "User ID not found in token" });
-            }
+            var userId = User.GetRequiredUserId();
+
 
             var command = new UpdateExerciseCommand(
                 id,
-                userId,
+                userId.ToString(),
                 request.Name,
                 request.Description,
                 request.MuscleGroups,
@@ -202,13 +189,14 @@ public class ExercisesController : ControllerBase
 
             if (result.IsFailure)
             {
-                _logger.LogError("Failed to update exercise {ExerciseId} for user {UserId}: {Error}", id, userId, result.Error);
-                
+                _logger.LogError("Failed to update exercise {ExerciseId} for user {UserId}: {Error}", id, userId,
+                    result.Error);
+
                 if (result.Error!.Contains("not found"))
                     return NotFound(new { error = result.Error });
                 if (result.Error.Contains("permission"))
                     return Forbid();
-                
+
                 return BadRequest(new { error = result.Error });
             }
 
@@ -236,24 +224,22 @@ public class ExercisesController : ControllerBase
     {
         try
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId))
-            {
-                return Unauthorized(new { error = "User ID not found in token" });
-            }
+            var userId = User.GetRequiredUserId();
 
-            var command = new DeleteExerciseCommand(id, userId);
+
+            var command = new DeleteExerciseCommand(id, userId.ToString());
             var result = await _mediator.Send(command);
 
             if (result.IsFailure)
             {
-                _logger.LogError("Failed to delete exercise {ExerciseId} for user {UserId}: {Error}", id, userId, result.Error);
-                
+                _logger.LogError("Failed to delete exercise {ExerciseId} for user {UserId}: {Error}", id, userId,
+                    result.Error);
+
                 if (result.Error!.Contains("not found"))
                     return NotFound(new { error = result.Error });
                 if (result.Error.Contains("permission"))
                     return Forbid();
-                
+
                 return BadRequest(new { error = result.Error });
             }
 
@@ -278,13 +264,9 @@ public class ExercisesController : ControllerBase
     {
         try
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId))
-            {
-                return Unauthorized(new { error = "User ID not found in token" });
-            }
+            var userId = User.GetRequiredUserId();
 
-            var query = new GetAllMuscleGroupsQuery(userId);
+            var query = new GetAllMuscleGroupsQuery(userId.ToString());
             var result = await _mediator.Send(query);
 
             if (result.IsFailure)
@@ -314,13 +296,9 @@ public class ExercisesController : ControllerBase
     {
         try
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId))
-            {
-                return Unauthorized(new { error = "User ID not found in token" });
-            }
+            var userId = User.GetRequiredUserId();
 
-            var query = new GetAllEquipmentQuery(userId);
+            var query = new GetAllEquipmentQuery(userId.ToString());
             var result = await _mediator.Send(query);
 
             if (result.IsFailure)

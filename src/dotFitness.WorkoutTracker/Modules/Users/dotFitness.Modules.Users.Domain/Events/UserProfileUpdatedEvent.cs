@@ -1,7 +1,7 @@
 namespace dotFitness.Modules.Users.Domain.Events;
 
 public record UserProfileUpdatedEvent(
-    string UserId,
+    int UserId,
     string DisplayName,
     string? Gender,
     DateTime? DateOfBirth,

@@ -1,19 +1,20 @@
-using MongoDB.Driver;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using dotFitness.Modules.Users.Domain.Entities;
 using dotFitness.Modules.Users.Domain.Repositories;
+using dotFitness.Modules.Users.Infrastructure.Data;
 using dotFitness.SharedKernel.Results;
 
 namespace dotFitness.Modules.Users.Infrastructure.Repositories;
 
 public class UserRepository : IUserRepository
 {
-    private readonly IMongoCollection<User> _users;
+    private readonly UsersDbContext _context;
     private readonly ILogger<UserRepository> _logger;
 
-    public UserRepository(IMongoDatabase database, ILogger<UserRepository> logger)
+    public UserRepository(UsersDbContext context, ILogger<UserRepository> logger)
     {
-        _users = database.GetCollection<User>("users");
+        _context = context;
         _logger = logger;
     }
 
@@ -21,7 +22,8 @@ public class UserRepository : IUserRepository
     {
         try
         {
-            await _users.InsertOneAsync(user, cancellationToken: cancellationToken);
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync(cancellationToken);
             _logger.LogInformation("Successfully created user with ID: {UserId}", user.Id);
             return Result.Success(user);
         }
@@ -32,11 +34,11 @@ public class UserRepository : IUserRepository
         }
     }
 
-    public async Task<Result<User>> GetByIdAsync(string id, CancellationToken cancellationToken = default)
+    public async Task<Result<User>> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         try
         {
-            var user = await _users.Find(u => u.Id == id).FirstOrDefaultAsync(cancellationToken);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
             return user != null 
                 ? Result.Success(user) 
                 : Result.Failure<User>("User not found");
@@ -52,7 +54,7 @@ public class UserRepository : IUserRepository
     {
         try
         {
-            var user = await _users.Find(u => u.Email == email).FirstOrDefaultAsync(cancellationToken);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
             return user != null 
                 ? Result.Success(user) 
                 : Result.Failure<User>("User not found");
@@ -68,7 +70,7 @@ public class UserRepository : IUserRepository
     {
         try
         {
-            var user = await _users.Find(u => u.GoogleId == googleId).FirstOrDefaultAsync(cancellationToken);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.GoogleId == googleId, cancellationToken);
             return user != null 
                 ? Result.Success(user) 
                 : Result.Failure<User>("User not found");
@@ -84,10 +86,10 @@ public class UserRepository : IUserRepository
     {
         try
         {
-            user.UpdatedAt = DateTime.UtcNow;
-            var result = await _users.ReplaceOneAsync(u => u.Id == user.Id, user, cancellationToken: cancellationToken);
+            _context.Users.Update(user);
+            var affectedRows = await _context.SaveChangesAsync(cancellationToken);
             
-            return result.ModifiedCount > 0 
+            return affectedRows > 0 
                 ? Result.Success(user) 
                 : Result.Failure<User>("User not found or not modified");
         }
@@ -98,12 +100,17 @@ public class UserRepository : IUserRepository
         }
     }
 
-    public async Task<Result> DeleteAsync(string id, CancellationToken cancellationToken = default)
+    public async Task<Result> DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
         try
         {
-            var result = await _users.DeleteOneAsync(u => u.Id == id, cancellationToken);
-            return result.DeletedCount > 0 
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+            if (user == null)
+                return Result.Failure("User not found");
+
+            _context.Users.Remove(user);
+            var affectedRows = await _context.SaveChangesAsync(cancellationToken);
+            return affectedRows > 0 
                 ? Result.Success() 
                 : Result.Failure("User not found");
         }
@@ -114,12 +121,12 @@ public class UserRepository : IUserRepository
         }
     }
 
-    public async Task<Result<bool>> ExistsAsync(string id, CancellationToken cancellationToken = default)
+    public async Task<Result<bool>> ExistsAsync(int id, CancellationToken cancellationToken = default)
     {
         try
         {
-            var count = await _users.CountDocumentsAsync(u => u.Id == id, cancellationToken: cancellationToken);
-            return Result.Success(count > 0);
+            var exists = await _context.Users.AnyAsync(u => u.Id == id, cancellationToken);
+            return Result.Success(exists);
         }
         catch (Exception ex)
         {
@@ -132,8 +139,8 @@ public class UserRepository : IUserRepository
     {
         try
         {
-            var count = await _users.CountDocumentsAsync(u => u.Email == email, cancellationToken: cancellationToken);
-            return Result.Success(count > 0);
+            var exists = await _context.Users.AnyAsync(u => u.Email == email, cancellationToken);
+            return Result.Success(exists);
         }
         catch (Exception ex)
         {
@@ -146,10 +153,9 @@ public class UserRepository : IUserRepository
     {
         try
         {
-            var users = await _users
-                .Find(_ => true)
+            var users = await _context.Users
                 .Skip(skip)
-                .Limit(take)
+                .Take(take)
                 .ToListAsync(cancellationToken);
             
             return Result.Success(users.AsEnumerable());
@@ -165,8 +171,8 @@ public class UserRepository : IUserRepository
     {
         try
         {
-            var count = await _users.CountDocumentsAsync(_ => true, cancellationToken: cancellationToken);
-            return Result.Success(count);
+            var count = await _context.Users.CountAsync(cancellationToken);
+            return Result.Success((long)count);
         }
         catch (Exception ex)
         {
@@ -179,7 +185,9 @@ public class UserRepository : IUserRepository
     {
         try
         {
-            var users = await _users.Find(u => u.Roles.Contains(role)).ToListAsync(cancellationToken);
+            var users = await _context.Users
+                .Where(u => u.Roles.Contains(role))
+                .ToListAsync(cancellationToken);
             return Result.Success(users.AsEnumerable());
         }
         catch (Exception ex)

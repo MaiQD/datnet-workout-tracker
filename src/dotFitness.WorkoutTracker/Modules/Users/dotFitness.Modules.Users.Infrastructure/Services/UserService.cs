@@ -77,7 +77,6 @@ public class UserService : IUserService
     {
         var user = new User
         {
-            Id = ObjectId.GenerateNewId().ToString(),
             GoogleId = googleUserInfo.Id,
             Email = googleUserInfo.Email,
             DisplayName = googleUserInfo.Name,

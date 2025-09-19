@@ -31,7 +31,7 @@ public class UserMetricsRepository : IUserMetricsRepository
         }
     }
 
-    public async Task<Result<UserMetric>> GetByIdAsync(string id, CancellationToken cancellationToken = default)
+    public async Task<Result<UserMetric>> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -47,7 +47,7 @@ public class UserMetricsRepository : IUserMetricsRepository
         }
     }
 
-    public async Task<Result<IEnumerable<UserMetric>>> GetByUserIdAsync(string userId, int skip = 0, int take = 50, CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<UserMetric>>> GetByUserIdAsync(int userId, int skip = 0, int take = 50, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -67,7 +67,7 @@ public class UserMetricsRepository : IUserMetricsRepository
         }
     }
 
-    public async Task<Result<UserMetric>> GetLatestByUserIdAsync(string userId, CancellationToken cancellationToken = default)
+    public async Task<Result<UserMetric>> GetLatestByUserIdAsync(int userId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -88,7 +88,7 @@ public class UserMetricsRepository : IUserMetricsRepository
     }
 
     public async Task<Result<IEnumerable<UserMetric>>> GetByUserIdAndDateRangeAsync(
-        string userId, 
+        int userId, 
         DateTime startDate, 
         DateTime endDate, 
         CancellationToken cancellationToken = default)
@@ -110,7 +110,7 @@ public class UserMetricsRepository : IUserMetricsRepository
     }
 
     public async Task<Result<UserMetric>> GetByUserIdAndDateAsync(
-        string userId, 
+        int userId, 
         DateTime date, 
         CancellationToken cancellationToken = default)
     {
@@ -152,7 +152,7 @@ public class UserMetricsRepository : IUserMetricsRepository
         }
     }
 
-    public async Task<Result> DeleteAsync(string id, CancellationToken cancellationToken = default)
+    public async Task<Result> DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -168,7 +168,7 @@ public class UserMetricsRepository : IUserMetricsRepository
         }
     }
 
-    public async Task<Result<long>> GetCountByUserIdAsync(string userId, CancellationToken cancellationToken = default)
+    public async Task<Result<long>> GetCountByUserIdAsync(int userId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -183,7 +183,7 @@ public class UserMetricsRepository : IUserMetricsRepository
     }
 
     public async Task<Result<bool>> ExistsForUserAndDateAsync(
-        string userId, 
+        int userId, 
         DateTime date, 
         CancellationToken cancellationToken = default)
     {

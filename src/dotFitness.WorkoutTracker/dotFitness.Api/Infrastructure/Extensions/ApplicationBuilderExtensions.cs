@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Options;
 using System.Text.Json;
 using dotFitness.Api.Infrastructure.Settings;
+using dotFitness.Api.Infrastructure.Middleware;
 
 namespace dotFitness.Api.Infrastructure.Extensions;
 
@@ -132,6 +133,15 @@ public static class ApplicationBuilderExtensions
             }
         });
 
+        return app;
+    }
+
+    /// <summary>
+    /// Configures global error handling middleware
+    /// </summary>
+    public static WebApplication UseGlobalErrorHandler(this WebApplication app)
+    {
+        app.UseMiddleware<GlobalErrorHandlerMiddleware>();
         return app;
     }
 

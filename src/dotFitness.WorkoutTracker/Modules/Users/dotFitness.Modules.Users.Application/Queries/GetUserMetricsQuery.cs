@@ -12,14 +12,14 @@ public class GetUserMetricsQuery : IRequest<Result<IEnumerable<UserMetricDto>>>
         
     }
 
-    public GetUserMetricsQuery(string userId, DateTime? fromDate, DateTime? toDate)
+    public GetUserMetricsQuery(int userId, DateTime? fromDate, DateTime? toDate)
     {
         UserId = userId;
         StartDate = fromDate;
         EndDate = toDate;
     }
     [Required]
-    public string UserId { get; set; } = string.Empty;
+    public int UserId { get; set; }
     
     [Range(0, int.MaxValue)]
     public int Skip { get; set; } = 0;

@@ -4,7 +4,7 @@ using dotFitness.SharedKernel.Interfaces;
 
 namespace dotFitness.Modules.Exercises.Domain.Entities;
 
-public class MuscleGroup : IEntity
+public class MuscleGroup : IEntity<string>
 {
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]

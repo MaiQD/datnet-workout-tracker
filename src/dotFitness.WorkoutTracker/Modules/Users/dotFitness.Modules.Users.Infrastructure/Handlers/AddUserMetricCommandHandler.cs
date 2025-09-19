@@ -53,7 +53,6 @@ public class AddUserMetricCommandHandler : IRequestHandler<AddUserMetricCommand,
             // Create new user metric
             var userMetric = new UserMetric
             {
-                Id = Guid.NewGuid().ToString(),
                 UserId = request.UserId,
                 Date = request.Date,
                 Weight = request.Weight,

@@ -43,7 +43,8 @@ await MongoDbIndexConfigurator.ConfigureIndexesAsync(app.Services);
 await MongoDbSeeder.ConfigureSeedsAsync(app.Services);
 
 // Configure the application pipeline
-app.ConfigureSwaggerUi()
+app.UseGlobalErrorHandler()
+   .ConfigureSwaggerUi()
    .ConfigureCoreMiddleware()
    .ConfigureHealthChecks()
    .ConfigureEndpoints()
