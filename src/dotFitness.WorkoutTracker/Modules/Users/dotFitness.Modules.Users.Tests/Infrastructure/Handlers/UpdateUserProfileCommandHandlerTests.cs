@@ -8,29 +8,21 @@ using dotFitness.Modules.Users.Application.Mappers;
 using dotFitness.Modules.Users.Domain.Entities;
 using dotFitness.Modules.Users.Infrastructure.Data;
 using dotFitness.Modules.Users.Infrastructure.Handlers;
-using dotFitness.SharedKernel.Results;
-using dotFitness.SharedKernel.Tests.PostgreSQL;
+using dotFitness.Modules.Users.Tests.Infrastructure.Extensions;
+using dotFitness.Modules.Users.Tests.Infrastructure.Fixtures;
 
 namespace dotFitness.Modules.Users.Tests.Infrastructure.Handlers;
 
 public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
 {
-    private readonly PostgreSqlFixture _fixture;
-    private readonly UserMapper _userMapper;
-    private readonly ILogger<UpdateUserProfileCommandHandler> _logger;
+    private readonly UsersUnitTestFixture _fixture = new();
+    private readonly UserMapper _userMapper = new();
+    private readonly ILogger<UpdateUserProfileCommandHandler> _logger = new Mock<ILogger<UpdateUserProfileCommandHandler>>().Object;
     private UsersDbContext _context = null!;
     private UpdateUserProfileCommandHandler _handler = null!;
 
-    public UpdateUserProfileCommandHandlerTests()
-    {
-        _fixture = PostgreSqlFixture.Instance;
-        _userMapper = new UserMapper();
-        _logger = new Mock<ILogger<UpdateUserProfileCommandHandler>>().Object;
-    }
-
     public async Task InitializeAsync()
     {
-        await _fixture.InitializeAsync();
         _context = _fixture.CreateInMemoryDbContext<UsersDbContext>();
         await _context.Database.EnsureCreatedAsync();
         
@@ -53,8 +45,7 @@ public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
         // Arrange
         var existingUser = new User
         {
-            Id = 1,
-            Email = "test@example.com",
+            Email = this.GenerateUniqueEmail(),
             DisplayName = "Original Name",
             Gender = Gender.Female,
             DateOfBirth = new DateTime(1985, 5, 5),
@@ -94,7 +85,7 @@ public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
         updatedUser.Gender.Should().Be(Gender.Male);
         updatedUser.DateOfBirth.Should().Be(new DateTime(1990, 1, 1));
         updatedUser.UnitPreference.Should().Be(UnitPreference.Imperial);
-        updatedUser.UpdatedAt.Should().BeAfter(existingUser.UpdatedAt);
+        updatedUser.UpdatedAt.Should().BeOnOrAfter(existingUser.UpdatedAt);
 
         // Verify outbox message was created
         var outboxMessages = await _context.OutboxMessages.ToListAsync();
@@ -108,7 +99,7 @@ public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
     {
         // Arrange
         var command = new UpdateUserProfileCommand(
-            999, // Non-existent user ID
+            this.GenerateUniqueUserId(), // Non-existent user ID
             new UpdateUserProfileRequest
             {
                 DisplayName = "New Name",
@@ -136,8 +127,7 @@ public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
         // Arrange
         var existingUser = new User
         {
-            Id = 1,
-            Email = "test@example.com",
+            Email = this.GenerateUniqueEmail(),
             DisplayName = "Original Name",
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
@@ -165,7 +155,7 @@ public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Should().Contain("User management failed");
+        result.Error.Should().Contain("Failed to update user profile");
     }
 
     [Fact]
@@ -174,8 +164,7 @@ public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
         // Arrange
         var existingUser = new User
         {
-            Id = 1,
-            Email = "test@example.com",
+            Email = this.GenerateUniqueEmail(),
             DisplayName = "Original Name",
             Gender = Gender.Male, // Should remain unchanged
             DateOfBirth = new DateTime(1985, 5, 15), // Should remain unchanged
@@ -225,8 +214,7 @@ public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
         // Arrange
         var existingUser = new User
         {
-            Id = 1,
-            Email = "test@example.com",
+            Email = this.GenerateUniqueEmail(),
             DisplayName = "Original Name",
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow

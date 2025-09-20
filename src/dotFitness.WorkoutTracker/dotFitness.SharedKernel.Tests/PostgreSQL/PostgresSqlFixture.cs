@@ -3,9 +3,8 @@ using Testcontainers.PostgreSql;
 
 namespace dotFitness.SharedKernel.Tests.PostgreSQL;
 
-public class PostgreSqlFixture : IAsyncLifetime
+public class PostgresSqlFixture : IAsyncLifetime
 {
-    private static readonly Lazy<PostgreSqlFixture> _instance = new(() => new PostgreSqlFixture());
     private readonly PostgreSqlContainer _postgresContainer;
     private readonly SemaphoreSlim _initializationSemaphore = new(1, 1);
     private bool _isInitialized = false;
@@ -13,9 +12,7 @@ public class PostgreSqlFixture : IAsyncLifetime
     
     public string ConnectionString { get; private set; } = string.Empty;
 
-    public static PostgreSqlFixture Instance => _instance.Value;
-
-    private PostgreSqlFixture()
+    public PostgresSqlFixture()
     {
         _postgresContainer = new PostgreSqlBuilder()
             .WithImage("postgres:16-alpine")
@@ -30,7 +27,7 @@ public class PostgreSqlFixture : IAsyncLifetime
     public async Task InitializeAsync()
     {
         if (_isDisposed)
-            throw new ObjectDisposedException(nameof(PostgreSqlFixture));
+            throw new ObjectDisposedException(nameof(PostgresSqlFixture));
             
         if (_isInitialized)
             return;
@@ -60,10 +57,17 @@ public class PostgreSqlFixture : IAsyncLifetime
     /// <summary>
     /// Creates a DbContext with the test database connection
     /// </summary>
-    public TContext CreateDbContext<TContext>() where TContext : DbContext
+    public TContext CreateDbContext<TContext>(string? schema = null) where TContext : DbContext
     {
         var options = new DbContextOptionsBuilder<TContext>()
-            .UseNpgsql(ConnectionString)
+            .UseNpgsql(ConnectionString, options =>
+            {
+                if (!string.IsNullOrEmpty(schema))
+                {
+                    options.MigrationsHistoryTable("__EFMigrationsHistory", schema);
+                }
+                options.EnableRetryOnFailure(maxRetryCount: 3, maxRetryDelay: TimeSpan.FromSeconds(5), errorCodesToAdd: null);
+            })
             .Options;
 
         return (TContext)Activator.CreateInstance(typeof(TContext), options)!;
@@ -76,8 +80,38 @@ public class PostgreSqlFixture : IAsyncLifetime
     {
         var options = new DbContextOptionsBuilder<TContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .ConfigureWarnings(warnings => warnings
+                .Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning)
+                .Throw(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.QueryPossibleUnintendedUseOfEqualsWarning))
+            .EnableSensitiveDataLogging()
+            .Options;
+
+        return (TContext)Activator.CreateInstance(typeof(TContext), options)!;
+    }
+
+    /// <summary>
+    /// Creates a fresh DbContext with a unique database name for test isolation
+    /// </summary>
+    public TContext CreateFreshDbContext<TContext>(string? schema = null) where TContext : DbContext
+    {
+        var uniqueDbName = $"testdb_{Guid.NewGuid():N}";
+        var uniqueConnectionString = ConnectionString.Replace($"testdb_{ConnectionString.Split('_')[1].Split(';')[0]}", uniqueDbName);
+        
+        var options = new DbContextOptionsBuilder<TContext>()
+            .UseNpgsql(uniqueConnectionString, options =>
+            {
+                if (!string.IsNullOrEmpty(schema))
+                {
+                    options.MigrationsHistoryTable("__EFMigrationsHistory", schema);
+                }
+                options.EnableRetryOnFailure(maxRetryCount: 3, maxRetryDelay: TimeSpan.FromSeconds(5), errorCodesToAdd: null);
+            })
             .Options;
 
         return (TContext)Activator.CreateInstance(typeof(TContext), options)!;
     }
 }
+
+[CollectionDefinition("PostgresSQL.Shared")]
+public class PostgresSqlSharedCollectionFixture : ICollectionFixture<PostgresSqlFixture> { }
+

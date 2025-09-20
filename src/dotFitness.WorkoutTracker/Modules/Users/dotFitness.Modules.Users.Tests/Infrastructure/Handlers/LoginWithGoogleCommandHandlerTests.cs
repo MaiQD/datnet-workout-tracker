@@ -1,7 +1,6 @@
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.EntityFrameworkCore;
 using Moq;
 using dotFitness.Modules.Users.Application.Commands;
 using dotFitness.Modules.Users.Application.DTOs;
@@ -10,48 +9,38 @@ using dotFitness.Modules.Users.Domain.Entities;
 using dotFitness.Modules.Users.Infrastructure.Data;
 using dotFitness.Modules.Users.Infrastructure.Handlers;
 using dotFitness.Modules.Users.Infrastructure.Settings;
+using dotFitness.Modules.Users.Tests.Infrastructure.Extensions;
 using dotFitness.SharedKernel.Results;
-using dotFitness.SharedKernel.Tests.PostgreSQL;
+using dotFitness.Modules.Users.Tests.Infrastructure.Fixtures;
 
 namespace dotFitness.Modules.Users.Tests.Infrastructure.Handlers;
 
 public class LoginWithGoogleCommandHandlerTests : IAsyncLifetime
 {
-    private readonly PostgreSqlFixture _fixture;
-    private readonly Mock<ILogger<LoginWithGoogleCommandHandler>> _loggerMock;
-    private readonly Mock<IOptions<JwtSettings>> _jwtSettingsMock;
-    private readonly Mock<IOptions<AdminSettings>> _adminSettingsMock;
-    private readonly Mock<IGoogleAuthService> _googleAuthServiceMock;
-    private readonly Mock<IUserService> _userServiceMock;
-    private readonly Mock<IJwtService> _jwtServiceMock;
-    private readonly LoginWithGoogleCommandHandler _handler;
-    private readonly JwtSettings _jwtSettings;
-    private readonly AdminSettings _adminSettings;
+    private readonly UsersUnitTestFixture _fixture = new();
+    private readonly Mock<ILogger<LoginWithGoogleCommandHandler>> _loggerMock = new();
+    private readonly Mock<IOptions<JwtSettings>> _jwtSettingsMock = new();
+    private readonly Mock<IOptions<AdminSettings>> _adminSettingsMock = new();
+    private readonly Mock<IGoogleAuthService> _googleAuthServiceMock = new();
+    private readonly Mock<IUserService> _userServiceMock = new();
+    private readonly Mock<IJwtService> _jwtServiceMock = new();
+    private readonly JwtSettings _jwtSettings = new()
+    {
+        SecretKey = "TestSecretKeyThatIsLongEnoughForTestingPurposes123456789012345678901234567890",
+        Issuer = "TestIssuer",
+        Audience = "TestAudience",
+        ExpirationInHours = 1
+    };
+    private readonly AdminSettings _adminSettings = new()
+    {
+        AdminEmails = ["admin@dotfitness.com"]
+    };
+    private LoginWithGoogleCommandHandler _handler = null!;
     private UsersDbContext _context = null!;
 
-    public LoginWithGoogleCommandHandlerTests()
+
+    public async Task InitializeAsync()
     {
-        _fixture = PostgreSqlFixture.Instance;
-        _googleAuthServiceMock = new Mock<IGoogleAuthService>();
-        _userServiceMock = new Mock<IUserService>();
-        _jwtServiceMock = new Mock<IJwtService>();
-        _loggerMock = new Mock<ILogger<LoginWithGoogleCommandHandler>>();
-        _jwtSettingsMock = new Mock<IOptions<JwtSettings>>();
-        _adminSettingsMock = new Mock<IOptions<AdminSettings>>();
-
-        _jwtSettings = new JwtSettings
-        {
-            SecretKey = "TestSecretKeyThatIsLongEnoughForTestingPurposes123456789012345678901234567890",
-            Issuer = "TestIssuer",
-            Audience = "TestAudience",
-            ExpirationInHours = 1
-        };
-
-        _adminSettings = new AdminSettings
-        {
-            AdminEmails = ["admin@dotfitness.com"]
-        };
-
         _jwtSettingsMock.Setup(x => x.Value).Returns(_jwtSettings);
         _adminSettingsMock.Setup(x => x.Value).Returns(_adminSettings);
 
@@ -61,12 +50,8 @@ public class LoginWithGoogleCommandHandlerTests : IAsyncLifetime
             _jwtServiceMock.Object,
             _loggerMock.Object
         );
-    }
 
-    public async Task InitializeAsync()
-    {
-        await _fixture.InitializeAsync();
-        _context = _fixture.CreateDbContext<UsersDbContext>();
+        _context = _fixture.CreateInMemoryDbContext<UsersDbContext>();
         await _context.Database.EnsureCreatedAsync();
     }
 
@@ -80,10 +65,10 @@ public class LoginWithGoogleCommandHandlerTests : IAsyncLifetime
     public async Task Should_Handle_Valid_Command_Successfully_For_Existing_User()
     {
         // Arrange
+        var email = this.GenerateUniqueEmail();
         var existingUser = new User
         {
-            Id = 1,
-            Email = "test@example.com",
+            Email = email,
             DisplayName = "Test User",
             GoogleId = "google123",
             CreatedAt = DateTime.UtcNow,
@@ -102,7 +87,7 @@ public class LoginWithGoogleCommandHandlerTests : IAsyncLifetime
         // Mock Google auth service to return user info
         var googleUserInfo = new GoogleUserInfo(
             "google123",
-            "test@example.com",
+            email,
             "Test User",
             "https://example.com/profile.jpg"
         );
@@ -180,13 +165,14 @@ public class LoginWithGoogleCommandHandlerTests : IAsyncLifetime
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Should().Contain("User management failed");
+        result.Error.Should().Contain("Database connection failed");
     }
 
     [Fact]
     public async Task Should_Create_New_User_For_First_Time_Google_Login()
     {
         // Arrange
+        var email = this.GenerateUniqueEmail();
         var request = new LoginWithGoogleRequest
         {
             GoogleToken = "valid_google_token_123"
@@ -196,15 +182,14 @@ public class LoginWithGoogleCommandHandlerTests : IAsyncLifetime
         // Mock Google auth service to return user info
         var googleUserInfo = new GoogleUserInfo(
             "newgoogle123",
-            "newuser@example.com",
+            email,
             "New User",
             "https://example.com/profile.jpg"
         );
 
         var newUser = new User
         {
-            Id = 1,
-            Email = "newuser@example.com",
+            Email = email,
             DisplayName = "New User",
             GoogleId = "newgoogle123",
             CreatedAt = DateTime.UtcNow,
@@ -238,7 +223,6 @@ public class LoginWithGoogleCommandHandlerTests : IAsyncLifetime
         // Arrange
         var adminUser = new User
         {
-            Id = 1,
             Email = "admin@dotfitness.com", // This is in the admin emails list
             DisplayName = "Admin User",
             GoogleId = "admingoogle123",

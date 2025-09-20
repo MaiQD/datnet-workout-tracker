@@ -3,36 +3,26 @@ using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using dotFitness.Modules.Users.Application.Commands;
-using dotFitness.Modules.Users.Application.DTOs;
 using dotFitness.Modules.Users.Application.Mappers;
 using dotFitness.Modules.Users.Domain.Entities;
 using dotFitness.Modules.Users.Infrastructure.Data;
 using dotFitness.Modules.Users.Infrastructure.Handlers;
 using dotFitness.Modules.Users.Tests.Infrastructure.Extensions;
-using dotFitness.SharedKernel.Results;
-using dotFitness.SharedKernel.Tests.PostgreSQL;
+using dotFitness.Modules.Users.Tests.Infrastructure.Fixtures;
 
 namespace dotFitness.Modules.Users.Tests.Infrastructure.Handlers;
 
 public class AddUserMetricCommandHandlerTests : IAsyncLifetime
 {
-    private readonly PostgreSqlFixture _fixture;
-    private readonly UserMetricMapper _userMetricMapper;
-    private readonly ILogger<AddUserMetricCommandHandler> _logger;
+    private readonly UsersUnitTestFixture _fixture = new();
+    private readonly UserMetricMapper _userMetricMapper = new();
+    private readonly ILogger<AddUserMetricCommandHandler> _logger = new Mock<ILogger<AddUserMetricCommandHandler>>().Object;
     private UsersDbContext _context = null!;
     private AddUserMetricCommandHandler _handler = null!;
 
-    public AddUserMetricCommandHandlerTests()
-    {
-        _fixture = PostgreSqlFixture.Instance;
-        _userMetricMapper = new UserMetricMapper();
-        _logger = new Mock<ILogger<AddUserMetricCommandHandler>>().Object;
-    }
-
     public async Task InitializeAsync()
     {
-        await _fixture.InitializeAsync();
-        _context = _fixture.CreateDbContext<UsersDbContext>();
+        _context = _fixture.CreateInMemoryDbContext<UsersDbContext>();
         await _context.Database.EnsureCreatedAsync();
         
         _handler = new AddUserMetricCommandHandler(
@@ -188,7 +178,7 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
-        var errorContext = _fixture.CreateDbContext<UsersDbContext>();
+        var errorContext = _fixture.CreateInMemoryDbContext<UsersDbContext>();
         await errorContext.DisposeAsync();
         
         var errorHandler = new AddUserMetricCommandHandler(

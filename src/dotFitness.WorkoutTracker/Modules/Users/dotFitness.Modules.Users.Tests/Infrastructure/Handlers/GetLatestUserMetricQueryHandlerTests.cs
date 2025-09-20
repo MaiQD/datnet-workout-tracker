@@ -1,37 +1,27 @@
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
-using Microsoft.EntityFrameworkCore;
 using Moq;
-using dotFitness.Modules.Users.Application.DTOs;
 using dotFitness.Modules.Users.Application.Mappers;
 using dotFitness.Modules.Users.Application.Queries;
 using dotFitness.Modules.Users.Domain.Entities;
 using dotFitness.Modules.Users.Infrastructure.Data;
 using dotFitness.Modules.Users.Infrastructure.Handlers;
-using dotFitness.SharedKernel.Results;
-using dotFitness.SharedKernel.Tests.PostgreSQL;
+using dotFitness.Modules.Users.Tests.Infrastructure.Extensions;
+using dotFitness.Modules.Users.Tests.Infrastructure.Fixtures;
 
 namespace dotFitness.Modules.Users.Tests.Infrastructure.Handlers;
 
 public class GetLatestUserMetricQueryHandlerTests : IAsyncLifetime
 {
-    private readonly PostgreSqlFixture _fixture;
-    private readonly UserMetricMapper _userMetricMapper;
-    private readonly ILogger<GetLatestUserMetricQueryHandler> _logger;
+    private readonly UsersUnitTestFixture _fixture = new();
+    private readonly UserMetricMapper _userMetricMapper = new();
+    private readonly ILogger<GetLatestUserMetricQueryHandler> _logger = new Mock<ILogger<GetLatestUserMetricQueryHandler>>().Object;
     private UsersDbContext _context = null!;
     private GetLatestUserMetricQueryHandler _handler = null!;
 
-    public GetLatestUserMetricQueryHandlerTests()
-    {
-        _fixture = PostgreSqlFixture.Instance;
-        _userMetricMapper = new UserMetricMapper();
-        _logger = new Mock<ILogger<GetLatestUserMetricQueryHandler>>().Object;
-    }
-
     public async Task InitializeAsync()
     {
-        await _fixture.InitializeAsync();
-        _context = _fixture.CreateDbContext<UsersDbContext>();
+        _context = _fixture.CreateInMemoryDbContext<UsersDbContext>();
         await _context.Database.EnsureCreatedAsync();
         
         _handler = new GetLatestUserMetricQueryHandler(
@@ -53,19 +43,20 @@ public class GetLatestUserMetricQueryHandlerTests : IAsyncLifetime
         // Arrange
         var user = new User
         {
-            Id = 1,
-            Email = "test@example.com",
+            Email = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+
         var latestMetric = new UserMetric
         {
-            Id = 1,
             UserId = user.Id,
-            Date = new DateTime(2024, 1, 15),
+            Date = this.GenerateUniqueDate(),
             Weight = 72.0,
             Height = 175.0,
             Bmi = 23.51,
@@ -73,7 +64,6 @@ public class GetLatestUserMetricQueryHandlerTests : IAsyncLifetime
             UpdatedAt = DateTime.UtcNow
         };
 
-        _context.Users.Add(user);
         _context.UserMetrics.Add(latestMetric);
         await _context.SaveChangesAsync();
 
@@ -97,8 +87,7 @@ public class GetLatestUserMetricQueryHandlerTests : IAsyncLifetime
         // Arrange
         var user = new User
         {
-            Id = 1,
-            Email = "test@example.com",
+            Email = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
@@ -124,8 +113,7 @@ public class GetLatestUserMetricQueryHandlerTests : IAsyncLifetime
         // Arrange
         var user = new User
         {
-            Id = 1,
-            Email = "test@example.com",
+            Email = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
@@ -145,20 +133,20 @@ public class GetLatestUserMetricQueryHandlerTests : IAsyncLifetime
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Should().Contain("User management failed");
+        result.Error.Should().Contain("Failed to get latest user metric");
     }
 
     [Fact]
     public async Task Should_Handle_Invalid_User_Id()
     {
         // Arrange
-        var query = new GetLatestUserMetricQuery(999); // Non-existent user
+        var query = new GetLatestUserMetricQuery(this.GenerateUniqueUserId()); // Non-existent user
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Should().Be("User not found");
+        result.Error.Should().Be("No metrics found for user");
     }
 }

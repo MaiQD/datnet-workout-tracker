@@ -1,37 +1,27 @@
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
-using Microsoft.EntityFrameworkCore;
 using Moq;
-using dotFitness.Modules.Users.Application.DTOs;
 using dotFitness.Modules.Users.Application.Mappers;
 using dotFitness.Modules.Users.Application.Queries;
 using dotFitness.Modules.Users.Domain.Entities;
 using dotFitness.Modules.Users.Infrastructure.Data;
 using dotFitness.Modules.Users.Infrastructure.Handlers;
-using dotFitness.SharedKernel.Results;
-using dotFitness.SharedKernel.Tests.PostgreSQL;
+using dotFitness.Modules.Users.Tests.Infrastructure.Extensions;
+using dotFitness.Modules.Users.Tests.Infrastructure.Fixtures;
 
 namespace dotFitness.Modules.Users.Tests.Infrastructure.Handlers;
 
 public class GetUserByIdQueryHandlerTests : IAsyncLifetime
 {
-    private readonly PostgreSqlFixture _fixture;
-    private readonly UserMapper _userMapper;
-    private readonly ILogger<GetUserByIdQueryHandler> _logger;
+    private readonly UsersUnitTestFixture _fixture = new();
+    private readonly UserMapper _userMapper = new();
+    private readonly ILogger<GetUserByIdQueryHandler> _logger = new Mock<ILogger<GetUserByIdQueryHandler>>().Object;
     private UsersDbContext _context = null!;
     private GetUserByIdQueryHandler _handler = null!;
 
-    public GetUserByIdQueryHandlerTests()
-    {
-        _fixture = PostgreSqlFixture.Instance;
-        _userMapper = new UserMapper();
-        _logger = new Mock<ILogger<GetUserByIdQueryHandler>>().Object;
-    }
-
     public async Task InitializeAsync()
     {
-        await _fixture.InitializeAsync();
-        _context = _fixture.CreateDbContext<UsersDbContext>();
+        _context = _fixture.CreateInMemoryDbContext<UsersDbContext>();
         await _context.Database.EnsureCreatedAsync();
         
         _handler = new GetUserByIdQueryHandler(
@@ -53,8 +43,7 @@ public class GetUserByIdQueryHandlerTests : IAsyncLifetime
         // Arrange
         var user = new User
         {
-            Id = 1,
-            Email = "test@example.com",
+            Email = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             Gender = Gender.Male,
             UnitPreference = UnitPreference.Metric,
@@ -74,7 +63,7 @@ public class GetUserByIdQueryHandlerTests : IAsyncLifetime
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
         result.Value!.Id.Should().Be(user.Id);
-        result.Value.Email.Should().Be("test@example.com");
+        result.Value.Email.Should().Be(user.Email);
         result.Value.DisplayName.Should().Be("Test User");
     }
 
@@ -82,7 +71,7 @@ public class GetUserByIdQueryHandlerTests : IAsyncLifetime
     public async Task Should_Return_NotFound_When_User_DoesNot_Exist()
     {
         // Arrange
-        var query = new GetUserByIdQuery(999); // Non-existent user
+        var query = new GetUserByIdQuery(this.GenerateUniqueUserId()); // Non-existent user
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
@@ -98,8 +87,7 @@ public class GetUserByIdQueryHandlerTests : IAsyncLifetime
         // Arrange
         var user = new User
         {
-            Id = 1,
-            Email = "test@example.com",
+            Email = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
@@ -119,7 +107,7 @@ public class GetUserByIdQueryHandlerTests : IAsyncLifetime
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Should().Contain("User management failed");
+        result.Error.Should().Contain("Failed to get user");
     }
 
     [Fact]

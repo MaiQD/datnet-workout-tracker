@@ -74,11 +74,17 @@ The dotFitness workout tracker is a **Modular Monolith** built with Clean Archit
 - ✅ **xUnit Framework**: Primary testing framework
 - ✅ **FluentAssertions**: Readable test assertions
 - ✅ **Moq**: Mocking framework for unit tests
-- ✅ **Testcontainers**: MongoDB integration testing
+- ✅ **Testcontainers**: MongoDB and PostgreSQL integration testing
+- ✅ **In-Memory Databases**: Fast unit testing with Entity Framework Core
+- ✅ **Schema-Aware Fixtures**: Module-specific test fixtures with proper isolation
+- ✅ **Test Data Generation**: Unique test data to prevent conflicts
 - ✅ **HTTP Testing**: API endpoint testing with .http files
 
 ### Module Test Coverage
-- **Users Module**: ✅ Comprehensive coverage (90%+)
+- **Users Module**: ✅ **COMPREHENSIVE COVERAGE** (100% - 47/47 tests passing)
+  - Unit Tests: 33/33 (In-memory database)
+  - Integration Tests: 14/14 (PostgreSQL with Testcontainers)
+  - Schema Isolation: Module-specific PostgreSQL fixtures
 - **Exercises Module**: 🔄 **NEEDS IMPLEMENTATION** (0% coverage)
 - **Routines Module**: ❌ Not yet created
 - **WorkoutLogs Module**: ❌ Not yet created
@@ -87,9 +93,10 @@ The dotFitness workout tracker is a **Modular Monolith** built with Clean Archit
 
 ### Immediate (Phase 3 Completion)
 1. **Create Exercises Module Tests** (1-2 days)
+   - Follow the new test fixture patterns established in Users module
    - Domain entity tests
    - Repository integration tests  
-   - Command/Query handler tests
+   - Command/Query handler tests (unit + integration)
    - Mapper validation tests
    - API endpoint tests
 

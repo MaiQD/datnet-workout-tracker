@@ -1,33 +1,27 @@
-using FluentAssertions;
-using Microsoft.Extensions.Logging;
-using Microsoft.EntityFrameworkCore;
-using Moq;
 using dotFitness.Modules.Users.Application.Commands;
 using dotFitness.Modules.Users.Application.Mappers;
 using dotFitness.Modules.Users.Domain.Entities;
 using dotFitness.Modules.Users.Infrastructure.Data;
 using dotFitness.Modules.Users.Infrastructure.Handlers;
-using dotFitness.SharedKernel.Tests.PostgreSQL;
+using dotFitness.Modules.Users.Tests.Infrastructure.Extensions;
+using dotFitness.Modules.Users.Tests.Infrastructure.Fixtures;
+using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Moq;
 
-namespace dotFitness.Modules.Users.Tests.Infrastructure.Handlers;
+namespace dotFitness.Modules.Users.Tests.Infrastructure.Intergrations.Handler;
 
-public class AddUserMetricCommandHandlerIntegrationTests
+[Collection("UsersPostgreSQL.Shared")]
+public class AddUserMetricCommandHandlerIntegrationTests(UsersPostgresSqlFixture fixture)
 {
-    private readonly PostgreSqlFixture _fixture;
-    private readonly UserMetricMapper _userMetricMapper;
-    private readonly ILogger<AddUserMetricCommandHandler> _logger;
-
-    public AddUserMetricCommandHandlerIntegrationTests()
-    {
-        _fixture = PostgreSqlFixture.Instance;
-        _userMetricMapper = new UserMetricMapper();
-        _logger = new Mock<ILogger<AddUserMetricCommandHandler>>().Object;
-    }
+    private readonly UserMetricMapper _userMetricMapper = new();
+    private readonly ILogger<AddUserMetricCommandHandler> _logger = new Mock<ILogger<AddUserMetricCommandHandler>>().Object;
 
     private async Task<(UsersDbContext context, AddUserMetricCommandHandler handler)> CreateHandlerAsync()
     {
-        await _fixture.InitializeAsync();
-        var context = _fixture.CreateDbContext<UsersDbContext>();
+        await fixture.InitializeAsync();
+        var context = fixture.CreateFreshUsersDbContext();
         await context.Database.EnsureCreatedAsync();
         
         // Clear any existing data to ensure test isolation
@@ -49,11 +43,9 @@ public class AddUserMetricCommandHandlerIntegrationTests
     {
         // Arrange
         var (context, handler) = await CreateHandlerAsync();
-        var userId = Random.Shared.Next(1000, 9999);
         var user = new User
         {
-            Id = userId,
-            Email = $"test{userId}@example.com",
+            Email = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
@@ -66,7 +58,7 @@ public class AddUserMetricCommandHandlerIntegrationTests
         var command = new AddUserMetricCommand
         {
             UserId = user.Id,
-            Date = DateTime.UtcNow.Date,
+            Date = this.GenerateUniqueDate(),
             Weight = 75.5,
             Height = 180.0,
             Notes = "Weekly weigh-in"
@@ -102,8 +94,8 @@ public class AddUserMetricCommandHandlerIntegrationTests
         var (context, handler) = await CreateHandlerAsync();
         var command = new AddUserMetricCommand
         {
-            UserId = 999, // Non-existent user
-            Date = DateTime.UtcNow.Date,
+            UserId = this.GenerateUniqueUserId(), // Non-existent user
+            Date = this.GenerateUniqueDate(),
             Weight = 75.5,
             Height = 180.0,
             Notes = "Test metric"
@@ -129,35 +121,35 @@ public class AddUserMetricCommandHandlerIntegrationTests
     {
         // Arrange
         var (context, handler) = await CreateHandlerAsync();
-        var userId = Random.Shared.Next(1000, 9999);
         var user = new User
         {
-            Id = userId,
-            Email = $"test{userId}@example.com",
+            Email = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+        
+        var testDate = this.GenerateUniqueDate();
         var existingMetric = new UserMetric
         {
-            Id = Random.Shared.Next(1000, 9999),
             UserId = user.Id,
-            Date = DateTime.UtcNow.Date,
+            Date = testDate,
             Weight = 80.0,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
-        context.Users.Add(user);
         context.UserMetrics.Add(existingMetric);
         await context.SaveChangesAsync();
 
         var command = new AddUserMetricCommand
         {
             UserId = user.Id,
-            Date = DateTime.UtcNow.Date, // Same date as existing metric
+            Date = testDate, // Same date as existing metric
             Weight = 75.5,
             Height = 180.0,
             Notes = "Duplicate metric"
@@ -184,11 +176,9 @@ public class AddUserMetricCommandHandlerIntegrationTests
     {
         // Arrange
         var (context, handler) = await CreateHandlerAsync();
-        var userId = Random.Shared.Next(1000, 9999);
         var user = new User
         {
-            Id = userId,
-            Email = $"test{userId}@example.com",
+            Email = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
@@ -201,7 +191,7 @@ public class AddUserMetricCommandHandlerIntegrationTests
         var command = new AddUserMetricCommand
         {
             UserId = user.Id,
-            Date = DateTime.UtcNow.Date,
+            Date = this.GenerateUniqueDate(),
             Weight = 70.0, // 70 kg
             Height = 175.0, // 175 cm
             Notes = "BMI calculation test"
@@ -230,11 +220,9 @@ public class AddUserMetricCommandHandlerIntegrationTests
     {
         // Arrange
         var (context, handler) = await CreateHandlerAsync();
-        var userId = Random.Shared.Next(1000, 9999);
         var user = new User
         {
-            Id = userId,
-            Email = $"test{userId}@example.com",
+            Email = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
@@ -247,7 +235,7 @@ public class AddUserMetricCommandHandlerIntegrationTests
         var command = new AddUserMetricCommand
         {
             UserId = user.Id,
-            Date = DateTime.UtcNow.Date,
+            Date = this.GenerateUniqueDate(),
             Weight = 70.0,
             Height = null, // No height provided
             Notes = "Weight only"

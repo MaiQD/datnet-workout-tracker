@@ -106,6 +106,8 @@ dotnet add dotFitness.Modules.{ModuleName}.Tests/dotFitness.Modules.{ModuleName}
 ```
 
 #### Tests Project
+
+**Base Testing Packages (Required for all modules):**
 ```xml
 <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
@@ -113,7 +115,40 @@ dotnet add dotFitness.Modules.{ModuleName}.Tests/dotFitness.Modules.{ModuleName}
     <PackageReference Include="xunit.runner.visualstudio" Version="2.5.6" />
     <PackageReference Include="FluentAssertions" Version="6.12.0" />
     <PackageReference Include="Moq" Version="4.20.70" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.0" />
+    <PackageReference Include="MediatR" Version="12.2.0" />
+    <PackageReference Include="FluentValidation" Version="11.8.1" />
+</ItemGroup>
+```
+
+**Database-Specific Packages (Choose based on module's database):**
+
+**For MongoDB-only modules (like Exercises):**
+```xml
+<ItemGroup>
     <PackageReference Include="Testcontainers.MongoDb" Version="3.7.0" />
+    <PackageReference Include="MongoDB.Driver" Version="2.22.0" />
+</ItemGroup>
+```
+
+**For PostgreSQL-only modules:**
+```xml
+<ItemGroup>
+    <PackageReference Include="Testcontainers.PostgreSql" Version="3.7.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.0" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.0" />
+</ItemGroup>
+```
+
+**For hybrid modules (MongoDB + PostgreSQL like Users):**
+```xml
+<ItemGroup>
+    <PackageReference Include="Testcontainers.MongoDb" Version="3.7.0" />
+    <PackageReference Include="Testcontainers.PostgreSql" Version="3.7.0" />
+    <PackageReference Include="MongoDB.Driver" Version="2.22.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.0" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.0" />
 </ItemGroup>
 ```
 
@@ -489,7 +524,242 @@ public static class {ModuleName}InfrastructureModule
 }
 ```
 
-### Step 7: Create Tests
+### Step 7: Create Test Infrastructure
+
+#### 1. Determine Module's Database
+
+**Check your module's Infrastructure project to see which database it uses:**
+
+**MongoDB modules** will have:
+- `IMongoCollection<T>` dependencies
+- MongoDB repository implementations
+- MongoDB index configurations
+
+**PostgreSQL modules** will have:
+- `DbContext` dependencies
+- Entity Framework Core configurations
+- Migration files
+
+**Hybrid modules** will have both MongoDB and PostgreSQL dependencies.
+
+#### 2. Create Test Fixtures
+
+**Choose the appropriate fixture based on your module's database:**
+
+**For MongoDB-only modules:**
+- Use `MongoDbFixture` from SharedKernel
+- No additional fixtures needed
+
+**MongoDB Test Example:**
+```csharp
+// dotFitness.Modules.{ModuleName}.Tests/Infrastructure/Repositories/{EntityName}RepositoryTests.cs
+using FluentAssertions;
+using dotFitness.SharedKernel.Tests.MongoDB;
+using dotFitness.Modules.{ModuleName}.Infrastructure.Repositories;
+
+[Collection("MongoDB.Shared")]
+public class {EntityName}RepositoryTests(MongoDbFixture fixture)
+{
+    [Fact]
+    public async Task CreateAsync_Valid{EntityName}_ShouldSucceed()
+    {
+        // Arrange
+        var collection = fixture.GetCollection<{EntityName}>("{entityNames}");
+        var repository = new {EntityName}Repository(collection);
+        var {entityName} = new {EntityName} { Name = "Test", Description = "Test Description" };
+
+        // Act
+        var result = await repository.CreateAsync({entityName});
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Id.Should().NotBeNullOrEmpty();
+    }
+}
+```
+
+**For PostgreSQL-only modules:**
+- Create `BaseUnitTestFixture` and module-specific fixtures
+- Use schema-aware PostgreSQL fixtures
+
+**For hybrid modules (MongoDB + PostgreSQL):**
+- Create both MongoDB and PostgreSQL fixtures
+- Use appropriate fixture for each test type
+
+## 📊 Database-Specific Testing Summary
+
+| Module Type | Database | Unit Tests | Integration Tests | Test Fixtures |
+|-------------|----------|------------|-------------------|---------------|
+| **MongoDB-only** | MongoDB | N/A (no EF Core) | `MongoDbFixture` | SharedKernel |
+| **PostgreSQL-only** | PostgreSQL | In-memory DB | `{Module}PostgresSqlFixture` | Module-specific |
+| **Hybrid** | MongoDB + PostgreSQL | In-memory (PostgreSQL parts) | Both fixtures | Both types |
+
+**Key Points:**
+- MongoDB modules use `MongoDbFixture` from SharedKernel
+- PostgreSQL modules create module-specific fixtures with schema isolation
+- Hybrid modules use both approaches depending on the functionality being tested
+- Always check your module's Infrastructure project to determine which database(s) it uses
+
+**Create Base Unit Test Fixture (for PostgreSQL modules):**
+```csharp
+// dotFitness.Modules.{ModuleName}.Tests/Infrastructure/Fixtures/BaseUnitTestFixture.cs
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+
+namespace dotFitness.Modules.{ModuleName}.Tests.Infrastructure.Fixtures;
+
+/// <summary>
+/// Base fixture for unit tests that use in-memory databases.
+/// Provides a configurable way to create DbContexts for testing.
+/// </summary>
+public class BaseUnitTestFixture : IAsyncLifetime
+{
+    private readonly Action<DbContextOptionsBuilder>? _configureOptions;
+
+    public BaseUnitTestFixture(Action<DbContextOptionsBuilder>? configureOptions = null)
+    {
+        _configureOptions = configureOptions;
+    }
+
+    public Task InitializeAsync() => Task.CompletedTask;
+    public Task DisposeAsync() => Task.CompletedTask;
+
+    /// <summary>
+    /// Creates a DbContext with an in-memory database for unit tests.
+    /// </summary>
+    public TContext CreateInMemoryDbContext<TContext>() where TContext : DbContext
+    {
+        var optionsBuilder = new DbContextOptionsBuilder<TContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .ConfigureWarnings(warnings => warnings
+                .Ignore(InMemoryEventId.TransactionIgnoredWarning)
+                .Throw(RelationalEventId.QueryPossibleUnintendedUseOfEqualsWarning))
+            .EnableSensitiveDataLogging();
+
+        _configureOptions?.Invoke(optionsBuilder);
+
+        return (TContext)Activator.CreateInstance(typeof(TContext), optionsBuilder.Options)!;
+    }
+}
+```
+
+**Create Module-Specific Unit Test Fixture:**
+```csharp
+// dotFitness.Modules.{ModuleName}.Tests/Infrastructure/Fixtures/{ModuleName}UnitTestFixture.cs
+using Microsoft.EntityFrameworkCore;
+using dotFitness.Modules.{ModuleName}.Infrastructure.Data;
+
+namespace dotFitness.Modules.{ModuleName}.Tests.Infrastructure.Fixtures;
+
+/// <summary>
+/// Fixture for {ModuleName} module unit tests that use in-memory databases
+/// </summary>
+public class {ModuleName}UnitTestFixture : BaseUnitTestFixture
+{
+    public {ModuleName}UnitTestFixture() : base(Configure{ModuleName}Options)
+    {
+    }
+
+    private static void Configure{ModuleName}Options(DbContextOptionsBuilder optionsBuilder)
+    {
+        // Add any {ModuleName}-specific configuration here
+    }
+
+    /// <summary>
+    /// Creates a {ModuleName}DbContext with in-memory database for unit tests
+    /// </summary>
+    public {ModuleName}DbContext Create{ModuleName}DbContext()
+    {
+        return CreateInMemoryDbContext<{ModuleName}DbContext>();
+    }
+}
+
+[CollectionDefinition("{ModuleName}UnitTests")]
+public class {ModuleName}UnitTestCollectionFixture : ICollectionFixture<{ModuleName}UnitTestFixture> { }
+```
+
+**Create Module-Specific PostgreSQL Fixture:**
+```csharp
+// dotFitness.Modules.{ModuleName}.Tests/Infrastructure/Fixtures/{ModuleName}PostgresSqlFixture.cs
+using Microsoft.EntityFrameworkCore;
+using dotFitness.SharedKernel.Tests.PostgreSQL;
+using dotFitness.Modules.{ModuleName}.Infrastructure.Data;
+
+namespace dotFitness.Modules.{ModuleName}.Tests.Infrastructure.Fixtures;
+
+/// <summary>
+/// PostgreSQL fixture for {ModuleName} module integration tests
+/// </summary>
+public class {ModuleName}PostgresSqlFixture : PostgresSqlFixture
+{
+    private const string {ModuleName}Schema = "{moduleName}";
+
+    /// <summary>
+    /// Creates a {ModuleName}DbContext with the test database connection
+    /// </summary>
+    public {ModuleName}DbContext Create{ModuleName}DbContext()
+    {
+        return CreateDbContext<{ModuleName}DbContext>({ModuleName}Schema);
+    }
+
+    /// <summary>
+    /// Creates a fresh {ModuleName}DbContext with a unique database name for test isolation
+    /// </summary>
+    public {ModuleName}DbContext CreateFresh{ModuleName}DbContext()
+    {
+        return CreateFreshDbContext<{ModuleName}DbContext>({ModuleName}Schema);
+    }
+}
+
+[CollectionDefinition("{ModuleName}PostgreSQL.Shared")]
+public class {ModuleName}PostgresSqlSharedCollectionFixture : ICollectionFixture<{ModuleName}PostgresSqlFixture> { }
+```
+
+**Create Test Data Extensions:**
+```csharp
+// dotFitness.Modules.{ModuleName}.Tests/Infrastructure/Extensions/TestDataExtensions.cs
+using System.Collections.Concurrent;
+
+namespace dotFitness.Modules.{ModuleName}.Tests.Infrastructure.Extensions;
+
+public static class TestDataExtensions
+{
+    private static readonly Random _random = new();
+    private static readonly ConcurrentBag<string> _usedNames = new();
+
+    /// <summary>
+    /// Generates a unique name for testing
+    /// </summary>
+    public static string GenerateUniqueName(this object testInstance)
+    {
+        string name;
+        do
+        {
+            name = $"Test{Guid.NewGuid():N}";
+        } while (!_usedNames.TryAdd(name));
+
+        return name;
+    }
+
+    /// <summary>
+    /// Generates a unique ID for testing
+    /// </summary>
+    public static string GenerateUniqueId(this object testInstance)
+    {
+        return Guid.NewGuid().ToString();
+    }
+
+    /// <summary>
+    /// Clears all used test data (useful for test cleanup)
+    /// </summary>
+    public static void ClearTestData(this object testInstance)
+    {
+        while (_usedNames.TryTake(out _)) { }
+    }
+}
+```
+
+### Step 8: Create Tests
 
 #### 1. Domain Tests
 ```csharp
@@ -588,7 +858,220 @@ public class Create{EntityName}CommandValidatorTests
 }
 ```
 
-### Step 8: Register Module in Main Application
+#### 3. Infrastructure Tests (Handlers)
+
+**Choose the appropriate test pattern based on your module's database:**
+
+**For MongoDB-only modules:**
+- Use `MongoDbFixture` for integration tests
+- No unit tests with in-memory database (MongoDB doesn't support EF Core)
+
+**MongoDB Handler Test Example:**
+```csharp
+// dotFitness.Modules.{ModuleName}.Tests/Infrastructure/Handlers/Create{EntityName}CommandHandlerTests.cs
+using FluentAssertions;
+using Microsoft.Extensions.Logging;
+using Moq;
+using dotFitness.Modules.{ModuleName}.Application.Commands;
+using dotFitness.Modules.{ModuleName}.Application.Mappers;
+using dotFitness.Modules.{ModuleName}.Infrastructure.Handlers;
+using dotFitness.Modules.{ModuleName}.Infrastructure.Repositories;
+using dotFitness.SharedKernel.Tests.MongoDB;
+
+[Collection("MongoDB.Shared")]
+public class Create{EntityName}CommandHandlerTests(MongoDbFixture fixture)
+{
+    private readonly {EntityName}Mapper _mapper = new();
+    private readonly ILogger<Create{EntityName}CommandHandler> _logger = new Mock<ILogger<Create{EntityName}CommandHandler>>().Object;
+
+    [Fact]
+    public async Task Handle_ValidCommand_ShouldCreate{EntityName}Successfully()
+    {
+        // Arrange
+        var collection = fixture.GetCollection<{EntityName}>("{entityNames}");
+        var repository = new {EntityName}Repository(collection);
+        var handler = new Create{EntityName}CommandHandler(repository, _mapper, _logger);
+        
+        var command = new Create{EntityName}Command
+        {
+            Name = "Test {EntityName}",
+            Description = "Test Description"
+        };
+
+        // Act
+        var result = await handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.Name.Should().Be(command.Name);
+    }
+}
+```
+
+**For PostgreSQL-only modules:**
+- Use in-memory database for unit tests
+- Use PostgreSQL for integration tests
+
+**For hybrid modules:**
+- Use in-memory database for PostgreSQL-related unit tests
+- Use `MongoDbFixture` for MongoDB integration tests
+- Use PostgreSQL fixtures for PostgreSQL integration tests
+
+**Unit Tests (In-Memory Database - PostgreSQL modules only):**
+```csharp
+// dotFitness.Modules.{ModuleName}.Tests/Infrastructure/Handlers/Create{EntityName}CommandHandlerTests.cs
+using FluentAssertions;
+using Microsoft.Extensions.Logging;
+using Moq;
+using dotFitness.Modules.{ModuleName}.Application.Commands;
+using dotFitness.Modules.{ModuleName}.Application.Mappers;
+using dotFitness.Modules.{ModuleName}.Domain.Entities;
+using dotFitness.Modules.{ModuleName}.Infrastructure.Data;
+using dotFitness.Modules.{ModuleName}.Infrastructure.Handlers;
+using dotFitness.Modules.{ModuleName}.Tests.Infrastructure.Extensions;
+using dotFitness.Modules.{ModuleName}.Tests.Infrastructure.Fixtures;
+
+namespace dotFitness.Modules.{ModuleName}.Tests.Infrastructure.Handlers;
+
+public class Create{EntityName}CommandHandlerTests : IAsyncLifetime
+{
+    private readonly {ModuleName}UnitTestFixture _fixture = new();
+    private readonly {EntityName}Mapper _mapper = new();
+    private readonly ILogger<Create{EntityName}CommandHandler> _logger = new Mock<ILogger<Create{EntityName}CommandHandler>>().Object;
+    private {ModuleName}DbContext _context = null!;
+
+    public async Task InitializeAsync()
+    {
+        _context = _fixture.Create{ModuleName}DbContext();
+        await _context.Database.EnsureCreatedAsync();
+    }
+
+    public async Task DisposeAsync()
+    {
+        await _context.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Handle_ValidCommand_ShouldCreate{EntityName}Successfully()
+    {
+        // Arrange
+        var command = new Create{EntityName}Command
+        {
+            Name = this.GenerateUniqueName(),
+            Description = "Test Description"
+        };
+
+        var handler = new Create{EntityName}CommandHandler(_context, _mapper, _logger);
+
+        // Act
+        var result = await handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.Name.Should().Be(command.Name);
+        result.Value.Description.Should().Be(command.Description);
+
+        var saved{EntityName} = await _context.{EntityNames}.FindAsync(result.Value.Id);
+        saved{EntityName}.Should().NotBeNull();
+        saved{EntityName}.Name.Should().Be(command.Name);
+    }
+
+    [Fact]
+    public async Task Handle_DuplicateName_ShouldReturnError()
+    {
+        // Arrange
+        var existing{EntityName} = new {EntityName}
+        {
+            Id = this.GenerateUniqueId(),
+            Name = "Existing Name",
+            Description = "Existing Description"
+        };
+        _context.{EntityNames}.Add(existing{EntityName});
+        await _context.SaveChangesAsync();
+
+        var command = new Create{EntityName}Command
+        {
+            Name = "Existing Name", // Duplicate name
+            Description = "Test Description"
+        };
+
+        var handler = new Create{EntityName}CommandHandler(_context, _mapper, _logger);
+
+        // Act
+        var result = await handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().Contain("already exists");
+    }
+}
+```
+
+**Integration Tests (PostgreSQL):**
+```csharp
+// dotFitness.Modules.{ModuleName}.Tests/Infrastructure/Intergrations/Handler/Create{EntityName}CommandHandlerIntegrationTests.cs
+using FluentAssertions;
+using Microsoft.Extensions.Logging;
+using Moq;
+using dotFitness.Modules.{ModuleName}.Application.Commands;
+using dotFitness.Modules.{ModuleName}.Application.Mappers;
+using dotFitness.Modules.{ModuleName}.Infrastructure.Data;
+using dotFitness.Modules.{ModuleName}.Infrastructure.Handlers;
+using dotFitness.Modules.{ModuleName}.Tests.Infrastructure.Extensions;
+using dotFitness.Modules.{ModuleName}.Tests.Infrastructure.Fixtures;
+
+namespace dotFitness.Modules.{ModuleName}.Tests.Infrastructure.Intergrations.Handler;
+
+[Collection("{ModuleName}PostgreSQL.Shared")]
+public class Create{EntityName}CommandHandlerIntegrationTests({ModuleName}PostgresSqlFixture fixture)
+{
+    private readonly {EntityName}Mapper _mapper = new();
+    private readonly ILogger<Create{EntityName}CommandHandler> _logger = new Mock<ILogger<Create{EntityName}CommandHandler>>().Object;
+
+    private async Task<({ModuleName}DbContext context, Create{EntityName}CommandHandler handler)> CreateHandlerAsync()
+    {
+        await fixture.InitializeAsync();
+        var context = fixture.CreateFresh{ModuleName}DbContext();
+        await context.Database.EnsureCreatedAsync();
+        
+        // Clear any existing data to ensure test isolation
+        context.{EntityNames}.RemoveRange(context.{EntityNames});
+        await context.SaveChangesAsync();
+        
+        var handler = new Create{EntityName}CommandHandler(context, _mapper, _logger);
+        return (context, handler);
+    }
+
+    [Fact]
+    public async Task Handle_ValidCommand_ShouldCreate{EntityName}Successfully()
+    {
+        // Arrange
+        var (context, handler) = await CreateHandlerAsync();
+        var command = new Create{EntityName}Command
+        {
+            Name = this.GenerateUniqueName(),
+            Description = "Test Description"
+        };
+
+        // Act
+        var result = await handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.Name.Should().Be(command.Name);
+
+        // Verify persistence
+        var saved{EntityName} = await context.{EntityNames}.FindAsync(result.Value.Id);
+        saved{EntityName}.Should().NotBeNull();
+        saved{EntityName}.Name.Should().Be(command.Name);
+    }
+}
+```
+
+### Step 9: Register Module in Main Application
 
 #### 1. Add Module to ModuleRegistry
 ```csharp

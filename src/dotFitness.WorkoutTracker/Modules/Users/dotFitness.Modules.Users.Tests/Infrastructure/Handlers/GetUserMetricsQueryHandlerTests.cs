@@ -1,37 +1,27 @@
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
-using Microsoft.EntityFrameworkCore;
 using Moq;
-using dotFitness.Modules.Users.Application.DTOs;
 using dotFitness.Modules.Users.Application.Mappers;
 using dotFitness.Modules.Users.Application.Queries;
 using dotFitness.Modules.Users.Domain.Entities;
 using dotFitness.Modules.Users.Infrastructure.Data;
 using dotFitness.Modules.Users.Infrastructure.Handlers;
-using dotFitness.SharedKernel.Results;
-using dotFitness.SharedKernel.Tests.PostgreSQL;
+using dotFitness.Modules.Users.Tests.Infrastructure.Extensions;
+using dotFitness.Modules.Users.Tests.Infrastructure.Fixtures;
 
 namespace dotFitness.Modules.Users.Tests.Infrastructure.Handlers;
 
-public class GetUserMetricsQueryHandlerTests : IAsyncLifetime
+public class GetUserMetricsQueryHandlerTests: IAsyncLifetime
 {
-    private readonly PostgreSqlFixture _fixture;
-    private readonly UserMetricMapper _userMetricMapper;
-    private readonly ILogger<GetUserMetricsQueryHandler> _logger;
+    private readonly UsersUnitTestFixture _fixture = new();
+    private readonly UserMetricMapper _userMetricMapper = new();
+    private readonly ILogger<GetUserMetricsQueryHandler> _logger = new Mock<ILogger<GetUserMetricsQueryHandler>>().Object;
     private UsersDbContext _context = null!;
     private GetUserMetricsQueryHandler _handler = null!;
 
-    public GetUserMetricsQueryHandlerTests()
-    {
-        _fixture = PostgreSqlFixture.Instance;
-        _userMetricMapper = new UserMetricMapper();
-        _logger = new Mock<ILogger<GetUserMetricsQueryHandler>>().Object;
-    }
-
     public async Task InitializeAsync()
     {
-        await _fixture.InitializeAsync();
-        _context = _fixture.CreateDbContext<UsersDbContext>();
+        _context = _fixture.CreateInMemoryDbContext<UsersDbContext>();
         await _context.Database.EnsureCreatedAsync();
         
         _handler = new GetUserMetricsQueryHandler(
@@ -53,21 +43,22 @@ public class GetUserMetricsQueryHandlerTests : IAsyncLifetime
         // Arrange
         var user = new User
         {
-            Id = 1,
-            Email = "test@example.com",
+            Email = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+
         var metrics = new List<UserMetric>
         {
             new()
             {
-                Id = 1,
                 UserId = user.Id,
-                Date = new DateTime(2024, 1, 1),
+                Date = this.GenerateUniqueDate(),
                 Weight = 70.0,
                 Bmi = 22.86,
                 CreatedAt = DateTime.UtcNow,
@@ -75,9 +66,8 @@ public class GetUserMetricsQueryHandlerTests : IAsyncLifetime
             },
             new()
             {
-                Id = 2,
                 UserId = user.Id,
-                Date = new DateTime(2024, 1, 15),
+                Date = this.GenerateUniqueDate(),
                 Weight = 72.0,
                 Bmi = 23.51,
                 CreatedAt = DateTime.UtcNow,
@@ -85,7 +75,6 @@ public class GetUserMetricsQueryHandlerTests : IAsyncLifetime
             }
         };
 
-        _context.Users.Add(user);
         _context.UserMetrics.AddRange(metrics);
         await _context.SaveChangesAsync();
 
@@ -106,24 +95,26 @@ public class GetUserMetricsQueryHandlerTests : IAsyncLifetime
         // Arrange
         var user = new User
         {
-            Id = 1,
-            Email = "test@example.com",
+            Email = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
-        var fromDate = new DateTime(2024, 1, 1);
-        var toDate = new DateTime(2024, 1, 31);
+        var fromDate = new DateTime(2024, 1, 1).Date;
+        var toDate = new DateTime(2024, 1, 31).Date;
+        var testDate = new DateTime(2024, 1, 15).Date;
+
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
         
         var metricsInRange = new List<UserMetric>
         {
             new()
             {
-                Id = 1,
-                UserId = user.Id,
-                Date = new DateTime(2024, 1, 15),
+                UserId = user.Id, // Now user.Id has the correct value after SaveChangesAsync
+                Date = testDate,
                 Weight = 70.0,
                 Bmi = 22.86,
                 CreatedAt = DateTime.UtcNow,
@@ -131,7 +122,6 @@ public class GetUserMetricsQueryHandlerTests : IAsyncLifetime
             }
         };
 
-        _context.Users.Add(user);
         _context.UserMetrics.AddRange(metricsInRange);
         await _context.SaveChangesAsync();
 
@@ -143,7 +133,7 @@ public class GetUserMetricsQueryHandlerTests : IAsyncLifetime
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().HaveCount(1);
-        result.Value!.First().Date.Should().Be(new DateTime(2024, 1, 15));
+        result.Value!.First().Date.Should().Be(testDate);
     }
 
     [Fact]
@@ -152,8 +142,7 @@ public class GetUserMetricsQueryHandlerTests : IAsyncLifetime
         // Arrange
         var user = new User
         {
-            Id = 1,
-            Email = "test@example.com",
+            Email = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
@@ -179,8 +168,7 @@ public class GetUserMetricsQueryHandlerTests : IAsyncLifetime
         // Arrange
         var user = new User
         {
-            Id = 1,
-            Email = "test@example.com",
+            Email = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
@@ -200,7 +188,7 @@ public class GetUserMetricsQueryHandlerTests : IAsyncLifetime
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Should().Contain("User management failed");
+        result.Error.Should().Contain("Failed to get user metrics");
     }
 
     [Fact]
@@ -209,31 +197,32 @@ public class GetUserMetricsQueryHandlerTests : IAsyncLifetime
         // Arrange
         var user = new User
         {
-            Id = 1,
-            Email = "test@example.com",
+            Email = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
-        var fromDate = new DateTime(2024, 1, 10);
-        var toDate = new DateTime(2024, 1, 20);
+        var fromDate = new DateTime(2024, 1, 10).Date;
+        var toDate = new DateTime(2024, 1, 20).Date;
+        var testDate = new DateTime(2024, 1, 15).Date;
+
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
         
         var filteredMetrics = new List<UserMetric>
         {
             new()
             {
-                Id = 1,
-                UserId = user.Id,
-                Date = new DateTime(2024, 1, 15),
+                UserId = user.Id, // Now user.Id has the correct value after SaveChangesAsync
+                Date = testDate,
                 Weight = 70.0,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             }
         };
 
-        _context.Users.Add(user);
         _context.UserMetrics.AddRange(filteredMetrics);
         await _context.SaveChangesAsync();
 

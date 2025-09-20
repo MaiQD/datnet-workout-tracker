@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-
 namespace dotFitness.Modules.Users.Tests.Infrastructure.Extensions;
 
 public static class TestDataExtensions

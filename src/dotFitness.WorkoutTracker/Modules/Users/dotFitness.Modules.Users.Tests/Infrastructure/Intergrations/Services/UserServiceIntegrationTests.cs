@@ -1,39 +1,33 @@
-using FluentAssertions;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Microsoft.EntityFrameworkCore;
-using Moq;
 using dotFitness.Modules.Users.Application.Services;
 using dotFitness.Modules.Users.Domain.Entities;
 using dotFitness.Modules.Users.Infrastructure.Data;
 using dotFitness.Modules.Users.Infrastructure.Services;
 using dotFitness.Modules.Users.Infrastructure.Settings;
-using dotFitness.SharedKernel.Tests.PostgreSQL;
+using dotFitness.Modules.Users.Tests.Infrastructure.Extensions;
+using dotFitness.Modules.Users.Tests.Infrastructure.Fixtures;
+using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Moq;
 
-namespace dotFitness.Modules.Users.Tests.Infrastructure.Services;
+namespace dotFitness.Modules.Users.Tests.Infrastructure.Intergrations.Services;
 
-public class UserServiceIntegrationTests : IAsyncLifetime
+[Collection("UsersPostgreSQL.Shared")]
+public class UserServiceIntegrationTests(UsersPostgresSqlFixture fixture) : IAsyncLifetime
 {
-    private readonly PostgreSqlFixture _fixture;
-    private readonly ILogger<UserService> _logger;
-    private readonly AdminSettings _adminSettings;
+    private readonly ILogger<UserService> _logger = new Mock<ILogger<UserService>>().Object;
+    private readonly AdminSettings _adminSettings = new()
+    {
+        AdminEmails = ["admin@dotfitness.com", "superuser@dotfitness.com"]
+    };
     private UsersDbContext _context = null!;
     private UserService _userService = null!;
 
-    public UserServiceIntegrationTests()
-    {
-        _fixture = PostgreSqlFixture.Instance;
-        _logger = new Mock<ILogger<UserService>>().Object;
-        _adminSettings = new AdminSettings
-        {
-            AdminEmails = ["admin@dotfitness.com", "superuser@dotfitness.com"]
-        };
-    }
-
     public async Task InitializeAsync()
     {
-        await _fixture.InitializeAsync();
-        _context = _fixture.CreateDbContext<UsersDbContext>();
+        await fixture.InitializeAsync();
+        _context = fixture.CreateFreshUsersDbContext();
         await _context.Database.EnsureCreatedAsync();
         
         var adminOptions = Options.Create(_adminSettings);
@@ -43,16 +37,17 @@ public class UserServiceIntegrationTests : IAsyncLifetime
     public async Task DisposeAsync()
     {
         await _context.DisposeAsync();
-        await _fixture.DisposeAsync();
+        await fixture.DisposeAsync();
     }
 
     [Fact]
     public async Task Should_Create_New_User_When_User_Does_Not_Exist()
     {
         // Arrange
+        var email = this.GenerateUniqueEmail();
         var googleUserInfo = new GoogleUserInfo(
             "google123",
-            "newuser@example.com",
+            email,
             "New User",
             "https://example.com/profile.jpg"
         );
@@ -64,7 +59,7 @@ public class UserServiceIntegrationTests : IAsyncLifetime
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
         result.Value.GoogleId.Should().Be("google123");
-        result.Value.Email.Should().Be("newuser@example.com");
+        result.Value.Email.Should().Be(email);
         result.Value.DisplayName.Should().Be("New User");
         result.Value.ProfilePicture.Should().Be("https://example.com/profile.jpg");
         result.Value.LoginMethod.Should().Be(LoginMethod.Google);
@@ -73,7 +68,7 @@ public class UserServiceIntegrationTests : IAsyncLifetime
 
         // Verify user was saved to database
         var savedUser = await _context.Users.FirstAsync(u => u.GoogleId == "google123");
-        savedUser.Email.Should().Be("newuser@example.com");
+        savedUser.Email.Should().Be(email);
         savedUser.DisplayName.Should().Be("New User");
     }
 
@@ -108,11 +103,11 @@ public class UserServiceIntegrationTests : IAsyncLifetime
     public async Task Should_Return_Existing_User_When_User_Already_Exists()
     {
         // Arrange
+        var email = this.GenerateUniqueEmail();
         var existingUser = new User
         {
-            Id = 1,
             GoogleId = "google789",
-            Email = "existing@example.com",
+            Email = email,
             DisplayName = "Existing User",
             ProfilePicture = "https://example.com/old.jpg",
             LoginMethod = LoginMethod.Google,
@@ -126,7 +121,7 @@ public class UserServiceIntegrationTests : IAsyncLifetime
 
         var googleUserInfo = new GoogleUserInfo(
             "google789", // Same Google ID as existing user
-            "existing@example.com",
+            email,
             "Existing User Updated", // Different name (should not be updated)
             "https://example.com/new.jpg" // Different profile picture (should be updated)
         );
@@ -153,11 +148,11 @@ public class UserServiceIntegrationTests : IAsyncLifetime
     {
         // Arrange
         var originalUpdateTime = DateTime.UtcNow.AddDays(-1);
+        var email = this.GenerateUniqueEmail();
         var existingUser = new User
         {
-            Id = 1,
             GoogleId = "google999",
-            Email = "unchanged@example.com",
+            Email = email,
             DisplayName = "Unchanged User",
             ProfilePicture = "https://example.com/same.jpg",
             LoginMethod = LoginMethod.Google,
@@ -171,7 +166,7 @@ public class UserServiceIntegrationTests : IAsyncLifetime
 
         var googleUserInfo = new GoogleUserInfo(
             "google999",
-            "unchanged@example.com",
+            email,
             "Unchanged User",
             "https://example.com/same.jpg" // Same profile picture
         );
@@ -196,7 +191,7 @@ public class UserServiceIntegrationTests : IAsyncLifetime
         
         var googleUserInfo = new GoogleUserInfo(
             "google_error",
-            "error@example.com",
+            this.GenerateUniqueEmail(),
             "Error User",
             "https://example.com/error.jpg"
         );
