@@ -20,8 +20,8 @@ public class User : IEntity
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public bool IsOnboarded { get; set; } = false;
     public DateTime? OnboardingCompletedAt { get; set; }
-    public List<int> AvailableEquipmentIds { get; set; } = [];
-    public List<int> FocusMuscleGroupIds { get; set; } = [];
+    public List<string> AvailableEquipmentIds { get; set; } = [];
+    public List<string> FocusMuscleGroupIds { get; set; } = [];
 
     public bool IsAdmin => Roles.Contains("Admin");
 
