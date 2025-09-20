@@ -171,6 +171,11 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-nuget-
 
+    - name: Restore dependencies
+      run: |
+        cd src/dotFitness.WorkoutTracker
+        dotnet restore --verbosity normal
+
     - name: Run security scan
       run: |
         cd src/dotFitness.WorkoutTracker
