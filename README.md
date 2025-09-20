@@ -6,6 +6,8 @@
 [![Architecture](https://img.shields.io/badge/Architecture-Modular%20Monolith-green.svg)](https://github.com/MaiQD/modular-monolith-with-ddd)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
+Status: [![Main Branch Build and Deploy](https://github.com/MaiQD/datnet-workout-tracker/actions/workflows/main-build.yml/badge.svg?branch=main)](https://github.com/MaiQD/datnet-workout-tracker/actions/workflows/main-build.yml)
+
 ## 🎯 Overview
 
 dotFitness is a **modular monolith** workout tracking application that combines the simplicity of a monolith with the scalability and maintainability of microservices. Built with .NET 8, MongoDB, and Clean Architecture principles, it provides a robust foundation for fitness tracking and workout management.
