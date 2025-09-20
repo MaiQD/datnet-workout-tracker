@@ -5,7 +5,7 @@ namespace dotFitness.SharedKernel.Events;
 /// </summary>
 public abstract class BaseDomainEvent : IDomainEvent
 {
-    public string EventId { get; } = Guid.NewGuid().ToString();
+    public Guid EventId { get; } = Guid.NewGuid();
     public string EventType => GetType().Name;
     public DateTime OccurredOn { get; } = DateTime.UtcNow;
     public string? CorrelationId { get; set; }

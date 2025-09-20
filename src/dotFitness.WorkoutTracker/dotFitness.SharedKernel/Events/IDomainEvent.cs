@@ -5,7 +5,7 @@ namespace dotFitness.SharedKernel.Events;
 /// </summary>
 public interface IDomainEvent
 {
-    string EventId { get; }
+    Guid EventId { get; }
     string EventType { get; }
     DateTime OccurredOn { get; }
     string? CorrelationId { get; }

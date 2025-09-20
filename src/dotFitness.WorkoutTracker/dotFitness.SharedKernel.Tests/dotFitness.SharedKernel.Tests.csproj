@@ -16,7 +16,10 @@
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="FluentAssertions" />
     <PackageReference Include="Testcontainers.MongoDb" />
+    <PackageReference Include="Testcontainers.PostgreSql" />
     <PackageReference Include="MongoDB.Driver" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
   </ItemGroup>
 
   <ItemGroup>

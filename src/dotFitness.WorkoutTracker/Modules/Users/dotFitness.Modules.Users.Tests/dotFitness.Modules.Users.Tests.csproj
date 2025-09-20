@@ -18,7 +18,10 @@
     <PackageReference Include="FluentAssertions" />
     <PackageReference Include="Microsoft.Extensions.Options" />
     <PackageReference Include="Testcontainers.MongoDb" />
+    <PackageReference Include="Testcontainers.PostgreSql" />
     <PackageReference Include="MongoDB.Driver" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
     <PackageReference Include="MediatR" />
     <PackageReference Include="FluentValidation" />
   </ItemGroup>

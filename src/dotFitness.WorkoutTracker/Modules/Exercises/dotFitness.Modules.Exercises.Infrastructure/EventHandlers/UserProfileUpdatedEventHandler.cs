@@ -29,12 +29,13 @@ public class UserProfileUpdatedEventHandler : IEventHandler<UserProfileUpdatedEv
     public async Task HandleAsync(UserProfileUpdatedEvent domainEvent, CancellationToken cancellationToken = default)
     {
         const string consumerName = "Exercises.UserProfileUpdatedHandler";
+        var eventIdString = domainEvent.EventId.ToString();
         
         try
         {
             // Check if this event has already been processed (Inbox pattern for idempotency)
             var existingInboxMessage = await _inboxCollection
-                .Find(x => x.EventId == domainEvent.EventId && x.Consumer == consumerName)
+                .Find(x => x.EventId == eventIdString && x.Consumer == consumerName)
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (existingInboxMessage != null)
@@ -47,7 +48,7 @@ public class UserProfileUpdatedEventHandler : IEventHandler<UserProfileUpdatedEv
             // Create inbox message to track processing
             var inboxMessage = new InboxMessage
             {
-                EventId = domainEvent.EventId,
+                EventId = eventIdString,
                 Consumer = consumerName,
                 EventType = domainEvent.EventType,
                 Status = "processing",
@@ -85,7 +86,7 @@ public class UserProfileUpdatedEventHandler : IEventHandler<UserProfileUpdatedEv
             try
             {
                 var failedInboxFilter = Builders<InboxMessage>.Filter.And(
-                    Builders<InboxMessage>.Filter.Eq(x => x.EventId, domainEvent.EventId),
+                    Builders<InboxMessage>.Filter.Eq(x => x.EventId, eventIdString),
                     Builders<InboxMessage>.Filter.Eq(x => x.Consumer, consumerName));
 
                 var failedInboxUpdate = Builders<InboxMessage>.Update

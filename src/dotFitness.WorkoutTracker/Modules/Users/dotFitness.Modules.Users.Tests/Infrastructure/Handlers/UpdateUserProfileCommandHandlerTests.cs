@@ -1,86 +1,84 @@
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 using Moq;
 using dotFitness.Modules.Users.Application.Commands;
 using dotFitness.Modules.Users.Application.DTOs;
 using dotFitness.Modules.Users.Application.Mappers;
 using dotFitness.Modules.Users.Domain.Entities;
-using dotFitness.Modules.Users.Domain.Repositories;
+using dotFitness.Modules.Users.Infrastructure.Data;
 using dotFitness.Modules.Users.Infrastructure.Handlers;
 using dotFitness.SharedKernel.Results;
+using dotFitness.SharedKernel.Tests.PostgreSQL;
 
 namespace dotFitness.Modules.Users.Tests.Infrastructure.Handlers;
 
-public class UpdateUserProfileCommandHandlerTests
+public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
 {
-    private readonly Mock<IUserRepository> _userRepositoryMock;
+    private readonly PostgreSqlFixture _fixture;
     private readonly UserMapper _userMapper;
-    private readonly UpdateUserProfileCommandHandler _handler;
+    private readonly ILogger<UpdateUserProfileCommandHandler> _logger;
+    private UsersDbContext _context = null!;
+    private UpdateUserProfileCommandHandler _handler = null!;
 
     public UpdateUserProfileCommandHandlerTests()
     {
-        _userRepositoryMock = new Mock<IUserRepository>();
+        _fixture = new PostgreSqlFixture();
         _userMapper = new UserMapper();
-        var loggerMock = new Mock<ILogger<UpdateUserProfileCommandHandler>>();
+        _logger = new Mock<ILogger<UpdateUserProfileCommandHandler>>().Object;
+    }
 
+    public async Task InitializeAsync()
+    {
+        await _fixture.InitializeAsync();
+        _context = _fixture.CreateInMemoryDbContext<UsersDbContext>();
+        await _context.Database.EnsureCreatedAsync();
+        
         _handler = new UpdateUserProfileCommandHandler(
-            _userRepositoryMock.Object,
+            _context,
             _userMapper,
-            loggerMock.Object
+            _logger
         );
+    }
+
+    public async Task DisposeAsync()
+    {
+        await _context.DisposeAsync();
+        await _fixture.DisposeAsync();
     }
 
     [Fact]
     public async Task Should_Handle_Valid_Command_Successfully()
     {
         // Arrange
-        var command = new UpdateUserProfileCommand(
-            userId: "user123",
-            displayName: "Updated Name",
-            gender: nameof(Gender.Male),
-            dateOfBirth: new DateTime(1990, 1, 1),
-            unitPreference: nameof(UnitPreference.Imperial)
-        );
-
         var existingUser = new User
         {
-            Id = "user123",
+            Id = "507f1f77bcf86cd799439011", // Valid MongoDB ObjectId format
             Email = "test@example.com",
             DisplayName = "Original Name",
             Gender = Gender.Female,
-            UnitPreference = UnitPreference.Metric
+            DateOfBirth = new DateTime(1985, 5, 5),
+            UnitPreference = UnitPreference.Metric,
+            CreatedAt = DateTime.UtcNow.AddDays(-1),
+            UpdatedAt = DateTime.UtcNow.AddDays(-1)
         };
 
-        var updatedUser = new User
+        _context.Users.Add(existingUser);
+        await _context.SaveChangesAsync();
+
+        var command = new UpdateUserProfileCommand
         {
-            Id = "user123",
-            Email = "test@example.com",
-            DisplayName = "Updated Name",
-            Gender = Gender.Male,
-            DateOfBirth = new DateTime(1990, 1, 1),
-            UnitPreference = UnitPreference.Imperial
+            UserId = existingUser.PostgresId, // Use PostgreSQL ID
+            Request = new UpdateUserProfileRequest
+            {
+                DisplayName = "Updated Name",
+                Gender = nameof(Gender.Male),
+                DateOfBirth = new DateTime(1990, 1, 1),
+                UnitPreference = nameof(UnitPreference.Imperial)
+            },
+            CorrelationId = Guid.NewGuid().ToString(),
+            TraceId = Guid.NewGuid().ToString()
         };
-
-        var expectedDto = new UserDto
-        {
-            Id = "user123",
-            Email = "test@example.com",
-            DisplayName = "Updated Name",
-            Gender = nameof(Gender.Male),
-            DateOfBirth = new DateTime(1990, 1, 1),
-            UnitPreference = nameof(UnitPreference.Imperial),
-            Roles = ["User"],
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
-
-        _userRepositoryMock
-            .Setup(x => x.GetByIdAsync("user123", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Success(existingUser));
-
-        _userRepositoryMock
-            .Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Success(updatedUser));
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
@@ -88,39 +86,54 @@ public class UpdateUserProfileCommandHandlerTests
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value!.DisplayName.Should().Be("Updated Name");
-        result.Value.Gender.Should().Be(nameof(Gender.Male));
-        result.Value.UnitPreference.Should().Be(nameof(UnitPreference.Imperial));
+        result.Value.DisplayName.Should().Be("Updated Name");
+        result.Value.Gender.Should().Be("Male");
+        result.Value.DateOfBirth.Should().Be(new DateTime(1990, 1, 1));
+        result.Value.UnitPreference.Should().Be("Imperial");
 
-        _userRepositoryMock.Verify(x => x.GetByIdAsync("user123", It.IsAny<CancellationToken>()), Times.Once);
-        _userRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Once);
+        // Verify the user was updated in the database
+        var updatedUser = await _context.Users.FirstAsync(u => u.PostgresId == existingUser.PostgresId);
+        updatedUser.DisplayName.Should().Be("Updated Name");
+        updatedUser.Gender.Should().Be(Gender.Male);
+        updatedUser.DateOfBirth.Should().Be(new DateTime(1990, 1, 1));
+        updatedUser.UnitPreference.Should().Be(UnitPreference.Imperial);
+        updatedUser.UpdatedAt.Should().BeAfter(existingUser.UpdatedAt);
+
+        // Verify outbox message was created
+        var outboxMessages = await _context.OutboxMessages.ToListAsync();
+        outboxMessages.Should().HaveCount(1);
+        outboxMessages[0].EventType.Should().Be("UserProfileUpdatedEvent");
+        outboxMessages[0].IsProcessed.Should().BeFalse();
     }
 
     [Fact]
     public async Task Should_Return_NotFound_When_User_Does_Not_Exist()
     {
         // Arrange
-        var command = new UpdateUserProfileCommand(
-            userId: "nonexistent",
-            displayName: "New Name",
-            gender: null,
-            dateOfBirth: null,
-            unitPreference: string.Empty
-        );
-
-        _userRepositoryMock
-            .Setup(x => x.GetByIdAsync("nonexistent", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Failure<User>("User not found"));
+        var command = new UpdateUserProfileCommand
+        {
+            UserId = 999, // Non-existent user ID
+            Request = new UpdateUserProfileRequest
+            {
+                DisplayName = "New Name",
+                Gender = null,
+                DateOfBirth = null,
+                UnitPreference = nameof(UnitPreference.Metric)
+            },
+            CorrelationId = Guid.NewGuid().ToString(),
+            TraceId = Guid.NewGuid().ToString()
+        };
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("User not found");
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be("User not found.");
 
-        _userRepositoryMock.Verify(x => x.GetByIdAsync("nonexistent", It.IsAny<CancellationToken>()), Times.Once);
-        _userRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
+        // Verify no outbox message was created
+        var outboxMessages = await _context.OutboxMessages.ToListAsync();
+        outboxMessages.Should().BeEmpty();
     }
 
     [Fact]
