@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
+using Npgsql;
 
 namespace dotFitness.SharedKernel.Tests.PostgreSQL;
 
@@ -95,7 +96,11 @@ public class PostgresSqlFixture : IAsyncLifetime
     public TContext CreateFreshDbContext<TContext>(string? schema = null) where TContext : DbContext
     {
         var uniqueDbName = $"testdb_{Guid.NewGuid():N}";
-        var uniqueConnectionString = ConnectionString.Replace($"testdb_{ConnectionString.Split('_')[1].Split(';')[0]}", uniqueDbName);
+        var connectionStringBuilder = new NpgsqlConnectionStringBuilder(ConnectionString)
+        {
+            Database = uniqueDbName
+        };
+        var uniqueConnectionString = connectionStringBuilder.ConnectionString;
         
         var options = new DbContextOptionsBuilder<TContext>()
             .UseNpgsql(uniqueConnectionString, options =>
