@@ -129,7 +129,7 @@ jobs:
           DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
 
     - name: Publish test results
-      uses: dorny/test-reporter@v1.11.0
+      uses: dorny/test-reporter@v1.9.1
       if: always()
       with:
         name: Test Results
