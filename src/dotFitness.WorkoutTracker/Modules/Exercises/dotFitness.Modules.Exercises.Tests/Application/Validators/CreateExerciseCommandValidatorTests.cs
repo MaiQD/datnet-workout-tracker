@@ -13,16 +13,16 @@ public class CreateExerciseCommandValidatorTests
     public void Should_Pass_Validation_For_Valid_Command()
     {
         var command = new CreateExerciseCommand(
-            UserId: "user1",
+            UserId: 1,
             Name: "Push Up",
             Description: "desc",
-            MuscleGroups: new List<string>{"Chest"},
-            Equipment: new List<string>{"Bodyweight"},
-            Instructions: new List<string>{"Do it"},
+            MuscleGroups: ["Chest"],
+            Equipment: ["Bodyweight"],
+            Instructions: ["Do it"],
             Difficulty: ExerciseDifficulty.Beginner,
             VideoUrl: "https://example.com/v",
             ImageUrl: "https://example.com/i",
-            Tags: new List<string>{"home"}
+            Tags: ["home"]
         );
 
         var result = _validator.TestValidate(command);
@@ -33,16 +33,16 @@ public class CreateExerciseCommandValidatorTests
     public void Should_Fail_When_UserId_Missing()
     {
         var command = new CreateExerciseCommand(
-            UserId: "",
+            UserId: 0,
             Name: "Push Up",
             Description: null,
-            MuscleGroups: new List<string>{"Chest"},
-            Equipment: new List<string>{"Bodyweight"},
-            Instructions: new List<string>{"Do it"},
+            MuscleGroups: ["Chest"],
+            Equipment: ["Bodyweight"],
+            Instructions: ["Do it"],
             Difficulty: ExerciseDifficulty.Beginner,
             VideoUrl: null,
             ImageUrl: null,
-            Tags: new List<string>()
+            Tags: []
         );
 
         var result = _validator.TestValidate(command);
@@ -54,16 +54,16 @@ public class CreateExerciseCommandValidatorTests
     public void Should_Fail_When_Name_Empty()
     {
         var command = new CreateExerciseCommand(
-            UserId: "user1",
+            UserId: 1,
             Name: "",
             Description: null,
-            MuscleGroups: new List<string>{"Chest"},
-            Equipment: new List<string>{"Bodyweight"},
-            Instructions: new List<string>{"Do it"},
+            MuscleGroups: ["Chest"],
+            Equipment: ["Bodyweight"],
+            Instructions: ["Do it"],
             Difficulty: ExerciseDifficulty.Beginner,
             VideoUrl: null,
             ImageUrl: null,
-            Tags: new List<string>()
+            Tags: []
         );
 
         var result = _validator.TestValidate(command);
@@ -74,16 +74,16 @@ public class CreateExerciseCommandValidatorTests
     public void Should_Fail_When_MuscleGroups_Empty()
     {
         var command = new CreateExerciseCommand(
-            UserId: "user1",
+            UserId: 1,
             Name: "Push Up",
             Description: null,
-            MuscleGroups: new List<string>(),
-            Equipment: new List<string>{"Bodyweight"},
-            Instructions: new List<string>{"Do it"},
+            MuscleGroups: [],
+            Equipment: ["Bodyweight"],
+            Instructions: ["Do it"],
             Difficulty: ExerciseDifficulty.Beginner,
             VideoUrl: null,
             ImageUrl: null,
-            Tags: new List<string>()
+            Tags: []
         );
 
         var result = _validator.TestValidate(command);
@@ -95,16 +95,16 @@ public class CreateExerciseCommandValidatorTests
     public void Should_Fail_When_Instruction_Contains_Empty()
     {
         var command = new CreateExerciseCommand(
-            UserId: "user1",
+            UserId: 1,
             Name: "Push Up",
             Description: null,
-            MuscleGroups: new List<string>{"Chest"},
-            Equipment: new List<string>{"Bodyweight"},
-            Instructions: new List<string>{""},
+            MuscleGroups: ["Chest"],
+            Equipment: ["Bodyweight"],
+            Instructions: [""],
             Difficulty: ExerciseDifficulty.Beginner,
             VideoUrl: null,
             ImageUrl: null,
-            Tags: new List<string>()
+            Tags: []
         );
 
         var result = _validator.TestValidate(command);
@@ -116,16 +116,16 @@ public class CreateExerciseCommandValidatorTests
     public void Should_Fail_When_VideoUrl_Invalid()
     {
         var command = new CreateExerciseCommand(
-            UserId: "user1",
+            UserId: 1,
             Name: "Push Up",
             Description: null,
-            MuscleGroups: new List<string>{"Chest"},
-            Equipment: new List<string>{"Bodyweight"},
-            Instructions: new List<string>{"Do it"},
+            MuscleGroups: ["Chest"],
+            Equipment: ["Bodyweight"],
+            Instructions: ["Do it"],
             Difficulty: ExerciseDifficulty.Beginner,
             VideoUrl: "not-a-url",
             ImageUrl: null,
-            Tags: new List<string>()
+            Tags: []
         );
 
         var result = _validator.TestValidate(command);

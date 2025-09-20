@@ -25,6 +25,12 @@ public class OutboxMessage
     [BsonElement("processedAt")]
     public DateTime? ProcessedAt { get; set; }
 
+    [BsonElement("retryCount")]
+    public int RetryCount { get; set; } = 0;
+
+    [BsonElement("lastError")]
+    public string? LastError { get; set; }
+
     public static OutboxMessage Create<T>(T eventData)
     {
         return new OutboxMessage

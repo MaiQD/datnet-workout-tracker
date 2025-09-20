@@ -8,7 +8,6 @@ using dotFitness.Modules.Users.Application.Services;
 using dotFitness.Modules.Users.Domain.Entities;
 using dotFitness.Modules.Users.Domain.Repositories;
 using dotFitness.Modules.Users.Infrastructure.Handlers;
-using dotFitness.Modules.Users.Infrastructure.Services;
 using dotFitness.Modules.Users.Infrastructure.Settings;
 using dotFitness.SharedKernel.Results;
 
@@ -47,7 +46,7 @@ public class LoginWithGoogleCommandHandlerTests
 
         _adminSettings = new AdminSettings
         {
-            AdminEmails = new List<string> { "admin@dotfitness.com" }
+            AdminEmails = ["admin@dotfitness.com"]
         };
 
         _jwtSettingsMock.Setup(x => x.Value).Returns(_jwtSettings);

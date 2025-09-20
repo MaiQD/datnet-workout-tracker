@@ -31,7 +31,7 @@ public class MuscleGroupTests
         var originalUpdatedAt = mg.UpdatedAt;
         Thread.Sleep(10);
 
-        mg.UpdateMuscleGroup(description: "Pecs", bodyRegion: BodyRegion.Upper, aliases: new List<string>{"Pecs"});
+        mg.UpdateMuscleGroup(description: "Pecs", bodyRegion: BodyRegion.Upper, aliases: ["Pecs"]);
 
         mg.Description.Should().Be("Pecs");
         mg.BodyRegion.Should().Be(BodyRegion.Upper);

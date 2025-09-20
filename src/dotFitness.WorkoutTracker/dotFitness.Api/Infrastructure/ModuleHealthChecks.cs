@@ -16,7 +16,7 @@ public static class ModuleHealthChecks
     public static IServiceCollection AddGlobalHealthChecks(this IServiceCollection services)
     {
         services.AddHealthChecks()
-            .AddCheck<ModuleRegistryHealthCheck>("module-registry", tags: new[] { "global", "registry", "live" });
+            .AddCheck<ModuleRegistryHealthCheck>("module-registry", tags: ["global", "registry", "live"]);
 
         return services;
     }

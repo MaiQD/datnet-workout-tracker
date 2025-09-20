@@ -92,7 +92,7 @@ public class UserService : IUserService
             DisplayName = googleUserInfo.Name,
             ProfilePicture = googleUserInfo.ProfilePicture,
             LoginMethod = LoginMethod.Google,
-            Roles = new List<string> { "User" },
+            Roles = ["User"],
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };

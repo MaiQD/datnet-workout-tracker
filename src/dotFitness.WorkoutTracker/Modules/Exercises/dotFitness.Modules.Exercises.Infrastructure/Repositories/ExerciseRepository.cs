@@ -46,7 +46,7 @@ public class ExerciseRepository : IExerciseRepository
         }
     }
 
-    public async Task<Result<IEnumerable<Exercise>>> GetByUserIdAsync(string userId, CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<Exercise>>> GetByUserIdAsync(int userId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -80,7 +80,7 @@ public class ExerciseRepository : IExerciseRepository
         }
     }
 
-    public async Task<Result<IEnumerable<Exercise>>> GetAllForUserAsync(string userId, CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<Exercise>>> GetAllForUserAsync(int userId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -97,7 +97,7 @@ public class ExerciseRepository : IExerciseRepository
         }
     }
 
-    public async Task<Result<IEnumerable<Exercise>>> SearchAsync(string userId, string? searchTerm = null,
+    public async Task<Result<IEnumerable<Exercise>>> SearchAsync(int userId, string? searchTerm = null,
         List<string>? muscleGroups = null, List<string>? equipment = null,
         ExerciseDifficulty? difficulty = null, CancellationToken cancellationToken = default)
     {
@@ -197,7 +197,8 @@ public class ExerciseRepository : IExerciseRepository
         }
     }
 
-    public async Task<Result<bool>> UserOwnsExerciseAsync(string exerciseId, string userId, CancellationToken cancellationToken = default)
+    public async Task<Result<bool>> UserOwnsExerciseAsync(string exerciseId, int userId,
+        CancellationToken cancellationToken = default)
     {
         try
         {

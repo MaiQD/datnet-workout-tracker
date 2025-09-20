@@ -6,7 +6,7 @@ using MediatR;
 namespace dotFitness.Modules.Exercises.Application.Commands;
 
 public record CreateExerciseCommand(
-    string UserId,
+    int UserId,
     string Name,
     string? Description,
     List<string> MuscleGroups,

@@ -14,16 +14,16 @@ public class UpdateExerciseCommandValidatorTests
     {
         var command = new UpdateExerciseCommand(
             ExerciseId: "ex1",
-            UserId: "user1",
+            UserId: 1,
             Name: "Push Up",
             Description: "desc",
-            MuscleGroups: new List<string>{"Chest"},
-            Equipment: new List<string>{"Bodyweight"},
-            Instructions: new List<string>{"Do it"},
+            MuscleGroups: ["Chest"],
+            Equipment: ["Bodyweight"],
+            Instructions: ["Do it"],
             Difficulty: ExerciseDifficulty.Advanced,
             VideoUrl: "https://example.com/v",
             ImageUrl: "https://example.com/i",
-            Tags: new List<string>{"home"}
+            Tags: ["home"]
         );
 
         var result = _validator.TestValidate(command);
@@ -35,16 +35,16 @@ public class UpdateExerciseCommandValidatorTests
     {
         var command = new UpdateExerciseCommand(
             ExerciseId: "",
-            UserId: "user1",
+            UserId: 1,
             Name: "Push Up",
             Description: null,
-            MuscleGroups: new List<string>{"Chest"},
-            Equipment: new List<string>{"Bodyweight"},
-            Instructions: new List<string>{"Do it"},
+            MuscleGroups: ["Chest"],
+            Equipment: ["Bodyweight"],
+            Instructions: ["Do it"],
             Difficulty: ExerciseDifficulty.Beginner,
             VideoUrl: null,
             ImageUrl: null,
-            Tags: new List<string>()
+            Tags: []
         );
 
         var result = _validator.TestValidate(command);

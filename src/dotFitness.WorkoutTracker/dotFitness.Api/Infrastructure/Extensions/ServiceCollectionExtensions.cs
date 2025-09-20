@@ -1,10 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Models;
 using FluentValidation.AspNetCore;
-using MongoDB.Driver;
-using dotFitness.SharedKernel.Outbox;
 using dotFitness.Api.Infrastructure.Settings;
 using dotFitness.Api.Infrastructure.Swagger;
+using dotFitness.Api.Infrastructure.Services;
 using dotFitness.Bootstrap;
 using Microsoft.Extensions.Options;
 
@@ -36,6 +35,9 @@ public static class ServiceCollectionExtensions
 
         services.AddFluentValidationAutoValidation()
             .AddFluentValidationClientsideAdapters();
+
+        // Register background services
+        services.AddHostedService<OutboxProcessorService>();
 
         return services;
     }
@@ -94,7 +96,7 @@ public static class ServiceCollectionExtensions
                             Id = "Bearer"
                         }
                     },
-                    new string[]{}
+                    []
                 },
                 {
                     new()

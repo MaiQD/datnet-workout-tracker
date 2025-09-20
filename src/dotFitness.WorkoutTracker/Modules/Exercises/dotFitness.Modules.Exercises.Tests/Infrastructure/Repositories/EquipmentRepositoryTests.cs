@@ -32,7 +32,7 @@ public class EquipmentRepositoryTests(MongoDbFixture fixture) : IAsyncLifetime
     [Fact]
     public async Task Should_Create_And_Get_By_Id()
     {
-        var eq = new Equipment { Name = "Dumbbell", UserId = "user1" };
+        var eq = new Equipment { Name = "Dumbbell", UserId = 1 };
         var created = await _repository.CreateAsync(eq);
         var fetched = await _repository.GetByIdAsync(created.Value!.Id);
         fetched.Value!.Name.Should().Be("Dumbbell");
@@ -42,19 +42,19 @@ public class EquipmentRepositoryTests(MongoDbFixture fixture) : IAsyncLifetime
     public async Task Should_Get_All_For_User_Including_Global()
     {
         await _repository.CreateAsync(new Equipment { Name = "Global", IsGlobal = true });
-        await _repository.CreateAsync(new Equipment { Name = "My Eq", UserId = "user1" });
-        await _repository.CreateAsync(new Equipment { Name = "Other", UserId = "user2" });
+        await _repository.CreateAsync(new Equipment { Name = "My Eq", UserId = 1 });
+        await _repository.CreateAsync(new Equipment { Name = "Other", UserId = 2 });
 
-        var all = await _repository.GetAllForUserAsync("user1");
+        var all = await _repository.GetAllForUserAsync(1);
 
-        all.Value!.Select(x => x.Name).Should().Contain(new[]{"Global","My Eq"});
+        all.Value!.Select(x => x.Name).Should().Contain(["Global","My Eq"]);
         all.Value!.Select(x => x.Name).Should().NotContain("Other");
     }
 
     [Fact]
     public async Task Should_Update_And_Delete()
     {
-        var eq = new Equipment { Name = "Dumbbell", UserId = "user1" };
+        var eq = new Equipment { Name = "Dumbbell", UserId = 1 };
         var created = await _repository.CreateAsync(eq);
 
         var toUpdate = created.Value!;
@@ -69,14 +69,14 @@ public class EquipmentRepositoryTests(MongoDbFixture fixture) : IAsyncLifetime
     [Fact]
     public async Task Should_Check_Name_Exists_And_Get_By_Name()
     {
-        await _repository.CreateAsync(new Equipment { Name = "Dumbbell", UserId = "user1" });
+        await _repository.CreateAsync(new Equipment { Name = "Dumbbell", UserId = 1 });
         var exists = await _repository.NameExistsAsync("Dumbbell");
         exists.Value.Should().BeTrue();
 
         var byNameGlobal = await _repository.GetByNameAsync("Dumbbell");
         byNameGlobal.Value.Should().BeNull();
 
-        var byNameUser = await _repository.GetByNameAsync("Dumbbell", userId: "user1");
+        var byNameUser = await _repository.GetByNameAsync("Dumbbell", userId: 1);
         byNameUser.Value.Should().NotBeNull();
     }
 }

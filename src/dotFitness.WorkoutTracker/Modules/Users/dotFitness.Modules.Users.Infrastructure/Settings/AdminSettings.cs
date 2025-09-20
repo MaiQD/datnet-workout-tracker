@@ -8,5 +8,5 @@ public class AdminSettings
     /// <summary>
     /// List of email addresses that should automatically receive Admin role
     /// </summary>
-    public List<string> AdminEmails { get; set; } = new();
+    public List<string> AdminEmails { get; set; } = [];
 }

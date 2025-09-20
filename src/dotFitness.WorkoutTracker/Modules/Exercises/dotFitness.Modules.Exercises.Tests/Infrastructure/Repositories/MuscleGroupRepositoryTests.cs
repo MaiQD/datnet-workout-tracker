@@ -32,7 +32,7 @@ public class MuscleGroupRepositoryTests(MongoDbFixture fixture) : IAsyncLifetime
     [Fact]
     public async Task Should_Create_And_Get_By_Id()
     {
-        var mg = new MuscleGroup { Name = "Chest", UserId = "user1" };
+        var mg = new MuscleGroup { Name = "Chest", UserId = 1 };
         var created = await _repository.CreateAsync(mg);
         var fetched = await _repository.GetByIdAsync(created.Value!.Id);
         fetched.Value!.Name.Should().Be("Chest");
@@ -42,19 +42,19 @@ public class MuscleGroupRepositoryTests(MongoDbFixture fixture) : IAsyncLifetime
     public async Task Should_Get_All_For_User_Including_Global()
     {
         await _repository.CreateAsync(new MuscleGroup { Name = "Global Chest", IsGlobal = true });
-        await _repository.CreateAsync(new MuscleGroup { Name = "My Chest", UserId = "user1" });
-        await _repository.CreateAsync(new MuscleGroup { Name = "Other", UserId = "user2" });
+        await _repository.CreateAsync(new MuscleGroup { Name = "My Chest", UserId = 1 });
+        await _repository.CreateAsync(new MuscleGroup { Name = "Other", UserId = 2 });
 
-        var all = await _repository.GetAllForUserAsync("user1");
+        var all = await _repository.GetAllForUserAsync(1);
 
-        all.Value!.Select(x => x.Name).Should().Contain(new[]{"Global Chest","My Chest"});
+        all.Value!.Select(x => x.Name).Should().Contain(["Global Chest","My Chest"]);
         all.Value!.Select(x => x.Name).Should().NotContain("Other");
     }
 
     [Fact]
     public async Task Should_Update_And_Delete()
     {
-        var mg = new MuscleGroup { Name = "Chest", UserId = "user1" };
+        var mg = new MuscleGroup { Name = "Chest", UserId = 1 };
         var created = await _repository.CreateAsync(mg);
 
         var toUpdate = created.Value!;
@@ -69,14 +69,14 @@ public class MuscleGroupRepositoryTests(MongoDbFixture fixture) : IAsyncLifetime
     [Fact]
     public async Task Should_Check_Name_Exists_And_Get_By_Name()
     {
-        await _repository.CreateAsync(new MuscleGroup { Name = "Chest", UserId = "user1" });
+        await _repository.CreateAsync(new MuscleGroup { Name = "Chest", UserId = 1 });
         var exists = await _repository.NameExistsAsync("Chest");
         exists.Value.Should().BeTrue();
 
         var byNameGlobal = await _repository.GetByNameAsync("Chest");
         byNameGlobal.Value.Should().BeNull();
 
-        var byNameUser = await _repository.GetByNameAsync("Chest", userId: "user1");
+        var byNameUser = await _repository.GetByNameAsync("Chest", userId: 1);
         byNameUser.Value.Should().NotBeNull();
     }
 }

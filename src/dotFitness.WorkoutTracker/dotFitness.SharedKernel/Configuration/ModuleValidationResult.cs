@@ -10,8 +10,8 @@ public class ModuleConfigurationValidationResult
     public ModuleConfigurationValidationResult()
     {
         ModuleValidations = new Dictionary<string, ModuleValidationResult>();
-        GlobalErrors = new List<string>();
-        GlobalWarnings = new List<string>();
+        GlobalErrors = [];
+        GlobalWarnings = [];
     }
 
     public Dictionary<string, ModuleValidationResult> ModuleValidations { get; set; }
@@ -33,8 +33,8 @@ public class ModuleValidationResult
 {
     public ModuleValidationResult()
     {
-        Errors = new List<string>();
-        Warnings = new List<string>();
+        Errors = [];
+        Warnings = [];
     }
 
     public string ModuleName { get; set; } = string.Empty;

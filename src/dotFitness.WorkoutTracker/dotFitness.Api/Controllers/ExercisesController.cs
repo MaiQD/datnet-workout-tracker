@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using MediatR;
-using System.Security.Claims;
 using dotFitness.Api.Infrastructure.Extensions;
 using dotFitness.Modules.Exercises.Application.Commands;
 using dotFitness.Modules.Exercises.Application.Queries;
@@ -47,7 +46,7 @@ public class ExercisesController : ControllerBase
         {
             var userId = User.GetRequiredUserId();
 
-            var query = new GetAllExercisesQuery(userId.ToString(), searchTerm, muscleGroups, equipment, difficulty);
+            var query = new GetAllExercisesQuery(userId, searchTerm, muscleGroups, equipment, difficulty);
             var result = await _mediator.Send(query);
 
             if (result.IsFailure)
@@ -81,7 +80,7 @@ public class ExercisesController : ControllerBase
         {
             var userId = User.GetRequiredUserId();
 
-            var query = new GetExerciseByIdQuery(id, userId.ToString());
+            var query = new GetExerciseByIdQuery(id, userId);
             var result = await _mediator.Send(query);
 
             if (result.IsFailure)
@@ -122,7 +121,7 @@ public class ExercisesController : ControllerBase
             var userId = User.GetRequiredUserId();
 
             var command = new CreateExerciseCommand(
-                userId.ToString(),
+                userId,
                 request.Name,
                 request.Description,
                 request.MuscleGroups,
@@ -131,7 +130,7 @@ public class ExercisesController : ControllerBase
                 request.Difficulty,
                 request.VideoUrl,
                 request.ImageUrl,
-                request.Tags ?? new List<string>()
+                request.Tags ?? []
             );
 
             var result = await _mediator.Send(command);
@@ -173,7 +172,7 @@ public class ExercisesController : ControllerBase
 
             var command = new UpdateExerciseCommand(
                 id,
-                userId.ToString(),
+                userId,
                 request.Name,
                 request.Description,
                 request.MuscleGroups,
@@ -182,7 +181,7 @@ public class ExercisesController : ControllerBase
                 request.Difficulty,
                 request.VideoUrl,
                 request.ImageUrl,
-                request.Tags ?? new List<string>()
+                request.Tags ?? []
             );
 
             var result = await _mediator.Send(command);
@@ -227,7 +226,7 @@ public class ExercisesController : ControllerBase
             var userId = User.GetRequiredUserId();
 
 
-            var command = new DeleteExerciseCommand(id, userId.ToString());
+            var command = new DeleteExerciseCommand(id, userId);
             var result = await _mediator.Send(command);
 
             if (result.IsFailure)
@@ -266,7 +265,7 @@ public class ExercisesController : ControllerBase
         {
             var userId = User.GetRequiredUserId();
 
-            var query = new GetAllMuscleGroupsQuery(userId.ToString());
+            var query = new GetAllMuscleGroupsQuery(userId);
             var result = await _mediator.Send(query);
 
             if (result.IsFailure)
@@ -298,7 +297,7 @@ public class ExercisesController : ControllerBase
         {
             var userId = User.GetRequiredUserId();
 
-            var query = new GetAllEquipmentQuery(userId.ToString());
+            var query = new GetAllEquipmentQuery(userId);
             var result = await _mediator.Send(query);
 
             if (result.IsFailure)

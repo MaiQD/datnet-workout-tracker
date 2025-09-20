@@ -124,7 +124,7 @@ public class UsersModuleInstaller : IModuleInstaller
 
         // Register Users module health check
         services.AddHealthChecks()
-            .AddCheck<UsersModuleHealthCheck>("users-module", tags: new[] { "module", "users", "live" });
+            .AddCheck<UsersModuleHealthCheck>("users-module", tags: ["module", "users", "live"]);
 
         // Register Users module configuration validator
         services.AddScoped<dotFitness.SharedKernel.Configuration.IModuleConfigurationValidator, UsersConfigurationValidator>();

@@ -5,8 +5,8 @@ public class ExerciseCreatedEvent
     public string ExerciseId { get; set; } = string.Empty;
     public string UserId { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
-    public List<string> MuscleGroups { get; set; } = new();
-    public List<string> Equipment { get; set; } = new();
+    public List<string> MuscleGroups { get; set; } = [];
+    public List<string> Equipment { get; set; } = [];
     public bool IsGlobal { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

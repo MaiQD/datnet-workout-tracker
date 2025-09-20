@@ -12,7 +12,7 @@ public class User : IEntity
     public string DisplayName { get; set; } = string.Empty;
     public string? ProfilePicture { get; set; }
     public LoginMethod LoginMethod { get; set; } = LoginMethod.Google;
-    public List<string> Roles { get; set; } = new() { "User" };
+    public List<string> Roles { get; set; } = ["User"];
     public Gender? Gender { get; set; }
     public DateTime? DateOfBirth { get; set; }
     public UnitPreference UnitPreference { get; set; } = UnitPreference.Metric;
@@ -20,8 +20,8 @@ public class User : IEntity
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public bool IsOnboarded { get; set; } = false;
     public DateTime? OnboardingCompletedAt { get; set; }
-    public List<int> AvailableEquipmentIds { get; set; } = new();
-    public List<int> FocusMuscleGroupIds { get; set; } = new();
+    public List<int> AvailableEquipmentIds { get; set; } = [];
+    public List<int> FocusMuscleGroupIds { get; set; } = [];
 
     public bool IsAdmin => Roles.Contains("Admin");
 

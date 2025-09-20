@@ -24,7 +24,7 @@ public class Equipment : IEntity<string>
     public bool IsGlobal { get; set; } = false;
 
     [BsonElement("userId")]
-    public string? UserId { get; set; } // null for global equipment
+    public int? UserId { get; set; } // null for global equipment
 
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

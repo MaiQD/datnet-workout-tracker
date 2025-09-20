@@ -30,7 +30,7 @@ public class UserPreferencesProjectionRepositoryTests(MongoDbFixture fixture) : 
     [Fact]
     public async Task Should_Return_Null_When_Not_Found()
     {
-        var userId = ObjectId.GenerateNewId().ToString();
+        var userId = 1;
         var result = await _repository.GetByUserIdAsync(userId);
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().BeNull();
@@ -39,12 +39,12 @@ public class UserPreferencesProjectionRepositoryTests(MongoDbFixture fixture) : 
     [Fact]
     public async Task Should_Return_Preferences_When_Found()
     {
-        var userId = ObjectId.GenerateNewId().ToString();
+        var userId = 1;
         var pref = new UserPreferencesProjection
         {
             UserId = userId,
-            FocusMuscleGroupIds = new List<string> { ObjectId.GenerateNewId().ToString(), ObjectId.GenerateNewId().ToString() },
-            AvailableEquipmentIds = new List<string> { ObjectId.GenerateNewId().ToString(), ObjectId.GenerateNewId().ToString() },
+            FocusMuscleGroupIds = [ObjectId.GenerateNewId().ToString(), ObjectId.GenerateNewId().ToString()],
+            AvailableEquipmentIds = [ObjectId.GenerateNewId().ToString(), ObjectId.GenerateNewId().ToString()],
             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
         };
 

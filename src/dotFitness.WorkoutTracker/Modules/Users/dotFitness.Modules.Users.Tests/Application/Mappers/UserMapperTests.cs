@@ -28,7 +28,7 @@ public class UserMapperTests
             Gender = Gender.Male,
             DateOfBirth = new DateTime(1990, 1, 1),
             UnitPreference = UnitPreference.Metric,
-            Roles = new List<string> { "User", "Admin" },
+            Roles = ["User", "Admin"],
             CreatedAt = new DateTime(2024, 1, 1, 10, 0, 0, DateTimeKind.Utc),
             UpdatedAt = new DateTime(2024, 1, 2, 11, 0, 0, DateTimeKind.Utc)
         };
@@ -64,7 +64,7 @@ public class UserMapperTests
             Gender = null, // Null optional field
             DateOfBirth = null, // Null optional field
             UnitPreference = UnitPreference.Metric,
-            Roles = new List<string> { "User" },
+            Roles = ["User"],
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -97,7 +97,7 @@ public class UserMapperTests
                 DisplayName = "Test User",
                 LoginMethod = loginMethod,
                 UnitPreference = UnitPreference.Metric,
-                Roles = new List<string> { "User" },
+                Roles = ["User"],
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -124,7 +124,7 @@ public class UserMapperTests
                 DisplayName = "Test User",
                 Gender = gender,
                 UnitPreference = UnitPreference.Metric,
-                Roles = new List<string> { "User" },
+                Roles = ["User"],
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -148,7 +148,7 @@ public class UserMapperTests
                 Email = "test@example.com",
                 DisplayName = "Test User",
                 UnitPreference = unitPreference,
-                Roles = new List<string> { "User" },
+                Roles = ["User"],
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -170,7 +170,7 @@ public class UserMapperTests
             Email = "test@example.com",
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
-            Roles = new List<string>(), // Empty roles
+            Roles = [], // Empty roles
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -222,7 +222,7 @@ public class UserMapperTests
             Email = "test@example.com",
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
-            Roles = new List<string> { "User" },
+            Roles = ["User"],
             CreatedAt = preciseCreatedAt,
             UpdatedAt = preciseUpdatedAt
         };
@@ -246,7 +246,7 @@ public class UserMapperTests
             Email = "test@example.com",
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Imperial,
-            Roles = new List<string> { "User" },
+            Roles = ["User"],
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -269,7 +269,7 @@ public class UserMapperTests
             Email = "test@example.com",
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
-            Roles = new List<string> { "User", "Admin" }, // IsAdmin will be true
+            Roles = ["User", "Admin"], // IsAdmin will be true
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };

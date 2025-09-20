@@ -1,7 +1,7 @@
 using dotFitness.Modules.Users.Application.Commands;
 using dotFitness.Modules.Users.Application.DTOs;
 using dotFitness.Modules.Users.Application.Mappers;
-using dotFitness.Modules.Users.Domain.Events;
+using dotFitness.SharedKernel.Events;
 using dotFitness.Modules.Users.Infrastructure.Data;
 using dotFitness.Modules.Users.Infrastructure.Data.Entities;
 using dotFitness.SharedKernel.Results;

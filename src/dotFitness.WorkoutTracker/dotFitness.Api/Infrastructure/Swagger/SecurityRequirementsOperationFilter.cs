@@ -30,7 +30,7 @@ public class SecurityRequirementsOperationFilter : IOperationFilter
                                 Id = "Bearer"
                             }
                         },
-                        new string[] {}
+                        []
                     }
                 }
             };

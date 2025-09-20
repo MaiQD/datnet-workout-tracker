@@ -20,7 +20,7 @@ public class UserDto
     
     public string LoginMethod { get; set; } = string.Empty;
     
-    public List<string> Roles { get; set; } = new();
+    public List<string> Roles { get; set; } = [];
     
     public string? Gender { get; set; }
     

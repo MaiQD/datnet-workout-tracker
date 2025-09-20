@@ -26,8 +26,8 @@ public class GetSmartExerciseSuggestionsQueryHandler : IRequestHandler<GetSmartE
         if (all.IsFailure) return Result.Failure<IEnumerable<ExerciseDto>>(all.Error!);
 
         var prefResult = await _preferencesRepository.GetByUserIdAsync(request.UserId, cancellationToken);
-        var preferredMuscles = prefResult.Value?.FocusMuscleGroupIds ?? new List<string>();
-        var availableEquipment = prefResult.Value?.AvailableEquipmentIds ?? new List<string>();
+        var preferredMuscles = prefResult.Value?.FocusMuscleGroupIds ?? [];
+        var availableEquipment = prefResult.Value?.AvailableEquipmentIds ?? [];
 
         var scored = all.Value!
             .Select(e => new

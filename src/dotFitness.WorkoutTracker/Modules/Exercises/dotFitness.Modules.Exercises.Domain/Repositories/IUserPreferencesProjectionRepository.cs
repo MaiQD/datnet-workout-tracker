@@ -5,7 +5,7 @@ namespace dotFitness.Modules.Exercises.Domain.Repositories;
 
 public interface IUserPreferencesProjectionRepository
 {
-    Task<Result<UserPreferencesProjection?>> GetByUserIdAsync(string userId, CancellationToken cancellationToken = default);
+    Task<Result<UserPreferencesProjection?>> GetByUserIdAsync(int userId, CancellationToken cancellationToken = default);
 }
 
 

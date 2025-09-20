@@ -10,16 +10,15 @@ public class UserPreferencesProjection
     public string Id { get; set; } = ObjectId.GenerateNewId().ToString();
 
     [BsonElement("userId")]
-    [BsonRepresentation(BsonType.ObjectId)]
-    public string UserId { get; set; } = string.Empty;
+    public int UserId { get; set; }
 
     [BsonElement("focusMuscleGroupIds")]
     [BsonRepresentation(BsonType.ObjectId)]
-    public List<string> FocusMuscleGroupIds { get; set; } = new();
+    public List<string> FocusMuscleGroupIds { get; set; } = [];
 
     [BsonElement("availableEquipmentIds")]
     [BsonRepresentation(BsonType.ObjectId)]
-    public List<string> AvailableEquipmentIds { get; set; } = new();
+    public List<string> AvailableEquipmentIds { get; set; } = [];
 
     [BsonElement("updatedAt")]
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

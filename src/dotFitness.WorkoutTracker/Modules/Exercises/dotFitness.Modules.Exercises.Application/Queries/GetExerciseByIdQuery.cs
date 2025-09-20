@@ -6,5 +6,5 @@ namespace dotFitness.Modules.Exercises.Application.Queries;
 
 public record GetExerciseByIdQuery(
     string ExerciseId,
-    string UserId
+    int UserId
 ) : IRequest<Result<ExerciseDto?>>;

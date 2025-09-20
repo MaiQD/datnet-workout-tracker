@@ -14,15 +14,15 @@ public class ExerciseMapperTests
             Id = "ex1",
             Name = "Push Up",
             Description = "desc",
-            MuscleGroups = new List<string>{"Chest","Triceps"},
-            Equipment = new List<string>{"Bodyweight"},
-            Instructions = new List<string>{"Do it"},
+            MuscleGroups = ["Chest", "Triceps"],
+            Equipment = ["Bodyweight"],
+            Instructions = ["Do it"],
             Difficulty = ExerciseDifficulty.Intermediate,
             VideoUrl = "http://video",
             ImageUrl = "http://image",
             IsGlobal = false,
-            UserId = "user1",
-            Tags = new List<string>{"home"},
+            UserId = 1,
+            Tags = ["home"],
             CreatedAt = new DateTime(2024,1,1,0,0,0,DateTimeKind.Utc),
             UpdatedAt = new DateTime(2024,1,2,0,0,0,DateTimeKind.Utc)
         };
@@ -40,7 +40,7 @@ public class ExerciseMapperTests
         dto.VideoUrl.Should().Be("http://video");
         dto.ImageUrl.Should().Be("http://image");
         dto.IsGlobal.Should().BeFalse();
-        dto.UserId.Should().Be("user1");
+        dto.UserId.Should().Be(1);
         dto.Tags.Should().BeEquivalentTo(new[]{"home"});
         dto.CreatedAt.Should().Be(new DateTime(2024,1,1,0,0,0,DateTimeKind.Utc));
         dto.UpdatedAt.Should().Be(new DateTime(2024,1,2,0,0,0,DateTimeKind.Utc));
@@ -58,7 +58,7 @@ public class MuscleGroupMapperTests
             Name = "Chest",
             Description = "desc",
             BodyRegion = BodyRegion.Upper,
-            Aliases = new List<string>{"Pecs"},
+            Aliases = ["Pecs"],
             IsGlobal = true,
             UserId = null,
             CreatedAt = new DateTime(2024,1,1,0,0,0,DateTimeKind.Utc),

@@ -16,12 +16,12 @@ public class GetExerciseByIdQueryHandlerTests
     [Fact]
     public async Task Should_Return_Dto_When_User_Owns_Or_Global()
     {
-        var exercise = new Exercise { Id = "ex1", UserId = "user1", IsGlobal = false, Name = "Push Up" };
+        var exercise = new Exercise { Id = "ex1", UserId = 1, IsGlobal = false, Name = "Push Up" };
         _repo.Setup(r => r.GetByIdAsync("ex1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(dotFitness.SharedKernel.Results.Result.Success<Exercise?>(exercise));
 
         var handler = new GetExerciseByIdQueryHandler(_repo.Object, _logger.Object);
-        var result = await handler.Handle(new GetExerciseByIdQuery("ex1", "user1"), CancellationToken.None);
+        var result = await handler.Handle(new GetExerciseByIdQuery("ex1", 1), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value!.Name.Should().Be("Push Up");
@@ -30,12 +30,12 @@ public class GetExerciseByIdQueryHandlerTests
     [Fact]
     public async Task Should_Return_Null_When_User_Not_Owner_And_Not_Global()
     {
-        var exercise = new Exercise { Id = "ex1", UserId = "other", IsGlobal = false, Name = "Push Up" };
+        var exercise = new Exercise { Id = "ex1", UserId = -1, IsGlobal = false, Name = "Push Up" };
         _repo.Setup(r => r.GetByIdAsync("ex1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(dotFitness.SharedKernel.Results.Result.Success<Exercise?>(exercise));
 
         var handler = new GetExerciseByIdQueryHandler(_repo.Object, _logger.Object);
-        var result = await handler.Handle(new GetExerciseByIdQuery("ex1", "user1"), CancellationToken.None);
+        var result = await handler.Handle(new GetExerciseByIdQuery("ex1", 1), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().BeNull();
@@ -48,7 +48,7 @@ public class GetExerciseByIdQueryHandlerTests
             .ReturnsAsync(dotFitness.SharedKernel.Results.Result.Success<Exercise?>(null));
 
         var handler = new GetExerciseByIdQueryHandler(_repo.Object, _logger.Object);
-        var result = await handler.Handle(new GetExerciseByIdQuery("ex1", "user1"), CancellationToken.None);
+        var result = await handler.Handle(new GetExerciseByIdQuery("ex1", 1), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().BeNull();

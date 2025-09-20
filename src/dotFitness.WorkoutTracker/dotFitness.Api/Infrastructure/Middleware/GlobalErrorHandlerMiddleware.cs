@@ -158,7 +158,7 @@ public class GlobalErrorHandlerMiddleware
             }
             else
             {
-                problemDetails.Errors.Add(error.PropertyName, new[] { error.ErrorMessage });
+                problemDetails.Errors.Add(error.PropertyName, [error.ErrorMessage]);
             }
         }
 

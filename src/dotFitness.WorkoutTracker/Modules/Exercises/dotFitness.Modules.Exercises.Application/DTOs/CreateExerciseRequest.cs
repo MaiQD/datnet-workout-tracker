@@ -25,5 +25,5 @@ public record CreateExerciseRequest(
     List<string> Tags = default!
 )
 {
-    public List<string> Tags { get; init; } = Tags ?? new List<string>();
+    public List<string> Tags { get; init; } = Tags ?? [];
 };

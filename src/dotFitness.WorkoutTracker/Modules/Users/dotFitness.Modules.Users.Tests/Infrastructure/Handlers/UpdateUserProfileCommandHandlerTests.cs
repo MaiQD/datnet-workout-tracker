@@ -69,7 +69,7 @@ public class UpdateUserProfileCommandHandlerTests
             Gender = nameof(Gender.Male),
             DateOfBirth = new DateTime(1990, 1, 1),
             UnitPreference = nameof(UnitPreference.Imperial),
-            Roles = new List<string> { "User" },
+            Roles = ["User"],
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -199,7 +199,7 @@ public class UpdateUserProfileCommandHandlerTests
             Gender = nameof(Gender.Male),
             DateOfBirth = new DateTime(1985, 5, 15),
             UnitPreference = nameof(UnitPreference.Imperial),
-            Roles = new List<string> { "User" },
+            Roles = ["User"],
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };

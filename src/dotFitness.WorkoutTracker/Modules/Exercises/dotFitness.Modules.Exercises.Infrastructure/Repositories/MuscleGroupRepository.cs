@@ -46,7 +46,7 @@ public class MuscleGroupRepository : IMuscleGroupRepository
         }
     }
 
-    public async Task<Result<IEnumerable<MuscleGroup>>> GetByUserIdAsync(string userId, CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<MuscleGroup>>> GetByUserIdAsync(int userId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -80,7 +80,8 @@ public class MuscleGroupRepository : IMuscleGroupRepository
         }
     }
 
-    public async Task<Result<IEnumerable<MuscleGroup>>> GetAllForUserAsync(string userId, CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<MuscleGroup>>> GetAllForUserAsync(int userId,
+        CancellationToken cancellationToken = default)
     {
         try
         {
@@ -166,12 +167,13 @@ public class MuscleGroupRepository : IMuscleGroupRepository
         }
     }
 
-    public async Task<Result<MuscleGroup?>> GetByNameAsync(string name, string? userId = null, CancellationToken cancellationToken = default)
+    public async Task<Result<MuscleGroup?>> GetByNameAsync(string name, int? userId = null,
+        CancellationToken cancellationToken = default)
     {
         try
         {
             FilterDefinition<MuscleGroup> filter;
-            if (string.IsNullOrEmpty(userId))
+            if (!userId.HasValue)
             {
                 // Search only global muscle groups
                 filter = Builders<MuscleGroup>.Filter.And(
@@ -201,7 +203,8 @@ public class MuscleGroupRepository : IMuscleGroupRepository
         }
     }
 
-    public async Task<Result<bool>> UserOwnsMuscleGroupAsync(string muscleGroupId, string userId, CancellationToken cancellationToken = default)
+    public async Task<Result<bool>> UserOwnsMuscleGroupAsync(string muscleGroupId, int userId,
+        CancellationToken cancellationToken = default)
     {
         try
         {
