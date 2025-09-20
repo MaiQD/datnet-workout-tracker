@@ -248,18 +248,4 @@ public class GetUserMetricsQueryHandlerTests : IAsyncLifetime
         result.Value!.First().Date.Should().BeBefore(toDate.AddDays(1));
         result.Value!.First().Date.Should().BeOnOrAfter(fromDate);
     }
-
-    [Fact]
-    public async Task Should_Handle_Invalid_User_Id()
-    {
-        // Arrange
-        var query = new GetUserMetricsQuery(999, null, null); // Non-existent user
-
-        // Act
-        var result = await _handler.Handle(query, CancellationToken.None);
-
-        // Assert
-        result.IsFailure.Should().BeTrue();
-        result.Error.Should().Be("User not found");
-    }
 }

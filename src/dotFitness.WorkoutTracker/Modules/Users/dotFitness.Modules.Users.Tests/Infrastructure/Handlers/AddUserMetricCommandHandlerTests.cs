@@ -8,6 +8,7 @@ using dotFitness.Modules.Users.Application.Mappers;
 using dotFitness.Modules.Users.Domain.Entities;
 using dotFitness.Modules.Users.Infrastructure.Data;
 using dotFitness.Modules.Users.Infrastructure.Handlers;
+using dotFitness.Modules.Users.Tests.Infrastructure.Extensions;
 using dotFitness.SharedKernel.Results;
 using dotFitness.SharedKernel.Tests.PostgreSQL;
 
@@ -43,18 +44,14 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
-        await _context.DisposeAsync();
-        await _fixture.DisposeAsync();
     }
 
     [Fact]
     public async Task Should_Handle_Valid_Command_Successfully()
     {
-        // Arrange
         var user = new User
         {
-            Id = 1,
-            Email = "test@example.com",
+            Email = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
@@ -62,12 +59,12 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
         };
 
         _context.Users.Add(user);
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync(); 
 
         var command = new AddUserMetricCommand
         {
             UserId = user.Id,
-            Date = new DateTime(2024, 1, 1),
+            Date = this.GenerateUniqueDate(),
             Weight = 70.5,
             Height = 175.0,
             Notes = "Morning measurement"
@@ -99,8 +96,7 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
         // Arrange
         var user = new User
         {
-            Id = 1,
-            Email = "test@example.com",
+            Email = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
@@ -113,7 +109,7 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
         var command = new AddUserMetricCommand
         {
             UserId = user.Id,
-            Date = new DateTime(2024, 1, 1),
+            Date = this.GenerateUniqueDate(),
             Weight = 70.5,
             Height = null,
             Notes = "Weight only"
@@ -141,8 +137,7 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
         // Arrange
         var user = new User
         {
-            Id = 1,
-            Email = "test@example.com",
+            Email = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
@@ -155,7 +150,7 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
         var command = new AddUserMetricCommand
         {
             UserId = user.Id,
-            Date = new DateTime(2024, 1, 1),
+            Date = this.GenerateUniqueDate(),
             Weight = null,
             Height = 175.0,
             Notes = "Height only"
@@ -183,8 +178,7 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
         // Arrange
         var user = new User
         {
-            Id = 1,
-            Email = "test@example.com",
+            Email = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
@@ -194,12 +188,8 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
-        // Dispose context to simulate database error
-        await _context.DisposeAsync();
-
-        // Create a new context and handler with the disposed context to simulate error
         var errorContext = _fixture.CreateDbContext<UsersDbContext>();
-        await errorContext.DisposeAsync(); // Dispose immediately to simulate error
+        await errorContext.DisposeAsync();
         
         var errorHandler = new AddUserMetricCommandHandler(
             errorContext,
@@ -210,7 +200,7 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
         var command = new AddUserMetricCommand
         {
             UserId = user.Id,
-            Date = new DateTime(2024, 1, 1),
+            Date = this.GenerateUniqueDate(),
             Weight = 70.5,
             Height = 175.0,
             Notes = "Test measurement"
@@ -230,8 +220,7 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
         // Arrange
         var user = new User
         {
-            Id = 1,
-            Email = "test@example.com",
+            Email = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
@@ -244,7 +233,7 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
         var command = new AddUserMetricCommand
         {
             UserId = user.Id,
-            Date = new DateTime(2024, 1, 1),
+            Date = this.GenerateUniqueDate(),
             Weight = 70.0,
             Height = 175.0,
             Notes = "Complete measurement"
@@ -268,8 +257,7 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
         // Arrange
         var user = new User
         {
-            Id = 1,
-            Email = "test@example.com",
+            Email = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
@@ -307,8 +295,8 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
         // Arrange
         var command = new AddUserMetricCommand
         {
-            UserId = 999, // Non-existent user
-            Date = new DateTime(2024, 1, 1),
+            UserId = this.GenerateUniqueUserId(),
+            Date = this.GenerateUniqueDate(),
             Weight = 70.0,
             Height = 175.0,
             Notes = "Test measurement"
@@ -321,8 +309,8 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Be("User not found");
 
-        // Verify no metric was saved
-        var metrics = await _context.UserMetrics.ToListAsync();
+        // Verify no metric was saved for the non-existent user
+        var metrics = await _context.UserMetrics.Where(um => um.UserId == command.UserId).ToListAsync();
         metrics.Should().BeEmpty();
     }
 
@@ -332,32 +320,35 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
         // Arrange
         var user = new User
         {
-            Id = 1,
-            Email = "test@example.com",
+            Email = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
+        var testDate = this.GenerateUniqueDate();
+        
         var existingMetric = new UserMetric
         {
-            Id = 1,
-            UserId = user.Id,
-            Date = new DateTime(2024, 1, 1),
+            UserId = 0,
+            Date = testDate,
             Weight = 80.0,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
         _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+        
+        existingMetric.UserId = user.Id;
         _context.UserMetrics.Add(existingMetric);
         await _context.SaveChangesAsync();
 
         var command = new AddUserMetricCommand
         {
             UserId = user.Id,
-            Date = new DateTime(2024, 1, 1), // Same date as existing metric
+            Date = testDate, // Same date as existing metric
             Weight = 70.0,
             Height = 175.0,
             Notes = "Duplicate metric"
@@ -371,8 +362,8 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
         result.Error.Should().Be("A metric already exists for this date. Please update the existing metric instead.");
 
         // Verify only the original metric exists
-        var metrics = await _context.UserMetrics.ToListAsync();
+        var metrics = await _context.UserMetrics.Where(um => um.UserId == user.Id).ToListAsync();
         metrics.Should().HaveCount(1);
-        metrics[0].Weight.Should().Be(80.0); // Original weight unchanged
+        metrics[0].Weight.Should().Be(80.0);
     }
 }
