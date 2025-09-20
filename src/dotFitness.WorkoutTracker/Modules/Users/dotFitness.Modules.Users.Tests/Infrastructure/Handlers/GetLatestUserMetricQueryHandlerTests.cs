@@ -1,68 +1,83 @@
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 using Moq;
 using dotFitness.Modules.Users.Application.DTOs;
 using dotFitness.Modules.Users.Application.Mappers;
 using dotFitness.Modules.Users.Application.Queries;
 using dotFitness.Modules.Users.Domain.Entities;
-using dotFitness.Modules.Users.Domain.Repositories;
+using dotFitness.Modules.Users.Infrastructure.Data;
 using dotFitness.Modules.Users.Infrastructure.Handlers;
 using dotFitness.SharedKernel.Results;
+using dotFitness.SharedKernel.Tests.PostgreSQL;
 
 namespace dotFitness.Modules.Users.Tests.Infrastructure.Handlers;
 
-public class GetLatestUserMetricQueryHandlerTests
+public class GetLatestUserMetricQueryHandlerTests : IAsyncLifetime
 {
-    private readonly Mock<IUserMetricsRepository> _userMetricsRepositoryMock;
+    private readonly PostgreSqlFixture _fixture;
     private readonly UserMetricMapper _userMetricMapper;
-    private readonly Mock<ILogger<GetLatestUserMetricQueryHandler>> _loggerMock;
-    private readonly GetLatestUserMetricQueryHandler _handler;
+    private readonly ILogger<GetLatestUserMetricQueryHandler> _logger;
+    private UsersDbContext _context = null!;
+    private GetLatestUserMetricQueryHandler _handler = null!;
 
     public GetLatestUserMetricQueryHandlerTests()
     {
-        _userMetricsRepositoryMock = new Mock<IUserMetricsRepository>();
+        _fixture = PostgreSqlFixture.Instance;
         _userMetricMapper = new UserMetricMapper();
-        _loggerMock = new Mock<ILogger<GetLatestUserMetricQueryHandler>>();
+        _logger = new Mock<ILogger<GetLatestUserMetricQueryHandler>>().Object;
+    }
 
+    public async Task InitializeAsync()
+    {
+        await _fixture.InitializeAsync();
+        _context = _fixture.CreateDbContext<UsersDbContext>();
+        await _context.Database.EnsureCreatedAsync();
+        
         _handler = new GetLatestUserMetricQueryHandler(
-            _userMetricsRepositoryMock.Object,
+            _context,
             _userMetricMapper,
-            _loggerMock.Object
+            _logger
         );
+    }
+
+    public async Task DisposeAsync()
+    {
+        await _context.DisposeAsync();
+        await _fixture.DisposeAsync();
     }
 
     [Fact]
     public async Task Should_Return_Latest_Metric_When_Found()
     {
         // Arrange
-        var query = new GetLatestUserMetricQuery(1);
-        var latestMetric = new UserMetric
+        var user = new User
         {
-            Id = "metric123",
-            UserId = 1,
-            Date = new DateTime(2024, 1, 15),
-            Weight = 72.0,
-            Height = 175.0,
-            Bmi = 23.51
-        };
-
-        var expectedDto = new UserMetricDto
-        {
-            Id = "metric123",
-            UserId = 1,
-            Date = new DateTime(2024, 1, 15),
-            Weight = 72.0,
-            Height = 175.0,
-            Bmi = 23.51,
-            BmiCategory = "Normal weight",
-            Notes = null,
+            Id = 1,
+            Email = "test@example.com",
+            DisplayName = "Test User",
+            UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
-        _userMetricsRepositoryMock
-            .Setup(x => x.GetLatestByUserIdAsync(1, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Success(latestMetric));
+        var latestMetric = new UserMetric
+        {
+            Id = 1,
+            UserId = user.Id,
+            Date = new DateTime(2024, 1, 15),
+            Weight = 72.0,
+            Height = 175.0,
+            Bmi = 23.51,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        _context.Users.Add(user);
+        _context.UserMetrics.Add(latestMetric);
+        await _context.SaveChangesAsync();
+
+        var query = new GetLatestUserMetricQuery(user.Id);
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
@@ -70,72 +85,80 @@ public class GetLatestUserMetricQueryHandlerTests
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value!.UserId.Should().Be(1);
+        result.Value!.UserId.Should().Be(user.Id);
         result.Value.Weight.Should().Be(72.0);
         result.Value.Height.Should().Be(175.0);
         result.Value.Bmi.Should().Be(23.51);
-
-        _userMetricsRepositoryMock.Verify(x => x.GetLatestByUserIdAsync(1, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task Should_Return_NotFound_When_No_Metrics_Exist()
     {
         // Arrange
-        var query = new GetLatestUserMetricQuery(1);
+        var user = new User
+        {
+            Id = 1,
+            Email = "test@example.com",
+            DisplayName = "Test User",
+            UnitPreference = UnitPreference.Metric,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
 
-        _userMetricsRepositoryMock
-            .Setup(x => x.GetLatestByUserIdAsync(1, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Failure<UserMetric>("No metrics found for user"));
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+
+        var query = new GetLatestUserMetricQuery(user.Id);
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
 
         // Assert
-        result.IsSuccess.Should().BeFalse();
+        result.IsFailure.Should().BeTrue();
         result.Error.Should().Be("No metrics found for user");
-
-        _userMetricsRepositoryMock.Verify(x => x.GetLatestByUserIdAsync(1, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task Should_Handle_Repository_Errors_Gracefully()
     {
         // Arrange
-        var query = new GetLatestUserMetricQuery(1);
+        var user = new User
+        {
+            Id = 1,
+            Email = "test@example.com",
+            DisplayName = "Test User",
+            UnitPreference = UnitPreference.Metric,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
 
-        _userMetricsRepositoryMock
-            .Setup(x => x.GetLatestByUserIdAsync(1, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Failure<UserMetric>("Database connection failed"));
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+
+        // Dispose context to simulate database error
+        await _context.DisposeAsync();
+
+        var query = new GetLatestUserMetricQuery(user.Id);
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
 
         // Assert
-        result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("No metrics found for user");
-
-        _userMetricsRepositoryMock.Verify(x => x.GetLatestByUserIdAsync(1, It.IsAny<CancellationToken>()), Times.Once);
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Contain("User management failed");
     }
 
-    [Theory]
-    [InlineData("")]
-    [InlineData("   ")]
-    [InlineData(null)]
-    public async Task Should_Handle_Invalid_User_Id(string? invalidUserId)
+    [Fact]
+    public async Task Should_Handle_Invalid_User_Id()
     {
         // Arrange
-        var query = new GetLatestUserMetricQuery(invalidUserId!);
-
-        _userMetricsRepositoryMock
-            .Setup(x => x.GetLatestByUserIdAsync(invalidUserId!, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Failure<UserMetric>("Invalid user ID"));
+        var query = new GetLatestUserMetricQuery(999); // Non-existent user
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
 
         // Assert
-        result.IsSuccess.Should().BeFalse();
-        result.Error.Should().NotBeNullOrEmpty();
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be("User not found");
     }
 }

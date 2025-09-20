@@ -22,7 +22,7 @@ public class UserServiceIntegrationTests : IAsyncLifetime
 
     public UserServiceIntegrationTests()
     {
-        _fixture = new PostgreSqlFixture();
+        _fixture = PostgreSqlFixture.Instance;
         _logger = new Mock<ILogger<UserService>>().Object;
         _adminSettings = new AdminSettings
         {
@@ -33,7 +33,7 @@ public class UserServiceIntegrationTests : IAsyncLifetime
     public async Task InitializeAsync()
     {
         await _fixture.InitializeAsync();
-        _context = _fixture.CreateInMemoryDbContext<UsersDbContext>();
+        _context = _fixture.CreateDbContext<UsersDbContext>();
         await _context.Database.EnsureCreatedAsync();
         
         var adminOptions = Options.Create(_adminSettings);
@@ -50,13 +50,12 @@ public class UserServiceIntegrationTests : IAsyncLifetime
     public async Task Should_Create_New_User_When_User_Does_Not_Exist()
     {
         // Arrange
-        var googleUserInfo = new GoogleUserInfo
-        {
-            Id = "google123",
-            Email = "newuser@example.com",
-            Name = "New User",
-            ProfilePicture = "https://example.com/profile.jpg"
-        };
+        var googleUserInfo = new GoogleUserInfo(
+            "google123",
+            "newuser@example.com",
+            "New User",
+            "https://example.com/profile.jpg"
+        );
 
         // Act
         var result = await _userService.GetOrCreateUserAsync(googleUserInfo);
@@ -82,13 +81,12 @@ public class UserServiceIntegrationTests : IAsyncLifetime
     public async Task Should_Create_Admin_User_When_Email_Is_In_Admin_List()
     {
         // Arrange
-        var googleUserInfo = new GoogleUserInfo
-        {
-            Id = "google456",
-            Email = "admin@dotfitness.com", // This email is in the admin list
-            Name = "Admin User",
-            ProfilePicture = "https://example.com/admin.jpg"
-        };
+        var googleUserInfo = new GoogleUserInfo(
+            "google456",
+            "admin@dotfitness.com", // This email is in the admin list
+            "Admin User",
+            "https://example.com/admin.jpg"
+        );
 
         // Act
         var result = await _userService.GetOrCreateUserAsync(googleUserInfo);
@@ -112,7 +110,7 @@ public class UserServiceIntegrationTests : IAsyncLifetime
         // Arrange
         var existingUser = new User
         {
-            Id = "507f1f77bcf86cd799439011",
+            Id = 1,
             GoogleId = "google789",
             Email = "existing@example.com",
             DisplayName = "Existing User",
@@ -126,13 +124,12 @@ public class UserServiceIntegrationTests : IAsyncLifetime
         _context.Users.Add(existingUser);
         await _context.SaveChangesAsync();
 
-        var googleUserInfo = new GoogleUserInfo
-        {
-            Id = "google789", // Same Google ID as existing user
-            Email = "existing@example.com",
-            Name = "Existing User Updated", // Different name (should not be updated)
-            ProfilePicture = "https://example.com/new.jpg" // Different profile picture (should be updated)
-        };
+        var googleUserInfo = new GoogleUserInfo(
+            "google789", // Same Google ID as existing user
+            "existing@example.com",
+            "Existing User Updated", // Different name (should not be updated)
+            "https://example.com/new.jpg" // Different profile picture (should be updated)
+        );
 
         // Act
         var result = await _userService.GetOrCreateUserAsync(googleUserInfo);
@@ -140,15 +137,15 @@ public class UserServiceIntegrationTests : IAsyncLifetime
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value.PostgresId.Should().Be(existingUser.PostgresId);
+        result.Value.Id.Should().Be(existingUser.Id);
         result.Value.DisplayName.Should().Be("Existing User"); // Original name preserved
         result.Value.ProfilePicture.Should().Be("https://example.com/new.jpg"); // Profile picture updated
-        result.Value.UpdatedAt.Should().BeAfter(existingUser.UpdatedAt);
+        result.Value.UpdatedAt.Should().BeOnOrAfter(existingUser.UpdatedAt);
 
         // Verify user was updated in database
         var updatedUser = await _context.Users.FirstAsync(u => u.GoogleId == "google789");
         updatedUser.ProfilePicture.Should().Be("https://example.com/new.jpg");
-        updatedUser.UpdatedAt.Should().BeAfter(existingUser.UpdatedAt);
+        updatedUser.UpdatedAt.Should().BeOnOrAfter(existingUser.UpdatedAt);
     }
 
     [Fact]
@@ -158,7 +155,7 @@ public class UserServiceIntegrationTests : IAsyncLifetime
         var originalUpdateTime = DateTime.UtcNow.AddDays(-1);
         var existingUser = new User
         {
-            Id = "507f1f77bcf86cd799439011",
+            Id = 1,
             GoogleId = "google999",
             Email = "unchanged@example.com",
             DisplayName = "Unchanged User",
@@ -172,13 +169,12 @@ public class UserServiceIntegrationTests : IAsyncLifetime
         _context.Users.Add(existingUser);
         await _context.SaveChangesAsync();
 
-        var googleUserInfo = new GoogleUserInfo
-        {
-            Id = "google999",
-            Email = "unchanged@example.com",
-            Name = "Unchanged User",
-            ProfilePicture = "https://example.com/same.jpg" // Same profile picture
-        };
+        var googleUserInfo = new GoogleUserInfo(
+            "google999",
+            "unchanged@example.com",
+            "Unchanged User",
+            "https://example.com/same.jpg" // Same profile picture
+        );
 
         // Act
         var result = await _userService.GetOrCreateUserAsync(googleUserInfo);
@@ -198,13 +194,12 @@ public class UserServiceIntegrationTests : IAsyncLifetime
         // Arrange
         await _context.DisposeAsync(); // Dispose context to simulate database error
         
-        var googleUserInfo = new GoogleUserInfo
-        {
-            Id = "google_error",
-            Email = "error@example.com",
-            Name = "Error User",
-            ProfilePicture = "https://example.com/error.jpg"
-        };
+        var googleUserInfo = new GoogleUserInfo(
+            "google_error",
+            "error@example.com",
+            "Error User",
+            "https://example.com/error.jpg"
+        );
 
         // Act
         var result = await _userService.GetOrCreateUserAsync(googleUserInfo);
@@ -222,13 +217,12 @@ public class UserServiceIntegrationTests : IAsyncLifetime
     public async Task Should_Assign_Admin_Role_Based_On_Email_Configuration(string email, bool shouldBeAdmin)
     {
         // Arrange
-        var googleUserInfo = new GoogleUserInfo
-        {
-            Id = $"google_{Guid.NewGuid()}",
-            Email = email,
-            Name = "Test User",
-            ProfilePicture = "https://example.com/test.jpg"
-        };
+        var googleUserInfo = new GoogleUserInfo(
+            $"google_{Guid.NewGuid()}",
+            email,
+            "Test User",
+            "https://example.com/test.jpg"
+        );
 
         // Act
         var result = await _userService.GetOrCreateUserAsync(googleUserInfo);

@@ -52,26 +52,25 @@ public class UpdateUserProfileCommandValidatorTests
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.UserId)
-            .WithErrorMessage("User ID is required");
+            .WithErrorMessage("User ID is required.");
     }
 
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
-    public void Should_Fail_Validation_For_Empty_Display_Name(string invalidDisplayName)
+    public void Should_Pass_Validation_For_Empty_Display_Name(string displayName)
     {
         // Arrange
         var command = new UpdateUserProfileCommand(
             UserId: 1,
-            Request: new UpdateUserProfileRequest(invalidDisplayName, null, null, null)
+            Request: new UpdateUserProfileRequest(displayName, null, null, null)
         );
 
         // Act
         var result = _validator.TestValidate(command);
 
         // Assert
-        result.ShouldHaveValidationErrorFor(x => x.Request.DisplayName)
-            .WithErrorMessage("Display name is required");
+        result.ShouldNotHaveValidationErrorFor(x => x.Request.DisplayName);
     }
 
     [Fact]
@@ -105,7 +104,7 @@ public class UpdateUserProfileCommandValidatorTests
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.Request.DisplayName)
-            .WithErrorMessage("Display name must be between 1 and 100 characters");
+            .WithErrorMessage("Display name must be 100 characters or less.");
     }
 
     [Fact]

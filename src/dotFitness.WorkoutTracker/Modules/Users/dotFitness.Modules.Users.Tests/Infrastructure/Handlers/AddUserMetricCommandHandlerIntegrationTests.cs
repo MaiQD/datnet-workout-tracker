@@ -11,119 +11,129 @@ using dotFitness.SharedKernel.Tests.PostgreSQL;
 
 namespace dotFitness.Modules.Users.Tests.Infrastructure.Handlers;
 
-public class AddUserMetricCommandHandlerIntegrationTests : IAsyncLifetime
+public class AddUserMetricCommandHandlerIntegrationTests
 {
     private readonly PostgreSqlFixture _fixture;
     private readonly UserMetricMapper _userMetricMapper;
     private readonly ILogger<AddUserMetricCommandHandler> _logger;
-    private UsersDbContext _context = null!;
-    private AddUserMetricCommandHandler _handler = null!;
 
     public AddUserMetricCommandHandlerIntegrationTests()
     {
-        _fixture = new PostgreSqlFixture();
+        _fixture = PostgreSqlFixture.Instance;
         _userMetricMapper = new UserMetricMapper();
         _logger = new Mock<ILogger<AddUserMetricCommandHandler>>().Object;
     }
 
-    public async Task InitializeAsync()
+    private async Task<(UsersDbContext context, AddUserMetricCommandHandler handler)> CreateHandlerAsync()
     {
         await _fixture.InitializeAsync();
-        _context = _fixture.CreateInMemoryDbContext<UsersDbContext>();
-        await _context.Database.EnsureCreatedAsync();
+        var context = _fixture.CreateDbContext<UsersDbContext>();
+        await context.Database.EnsureCreatedAsync();
         
-        _handler = new AddUserMetricCommandHandler(
-            _context,
+        // Clear any existing data to ensure test isolation
+        context.Users.RemoveRange(context.Users);
+        context.UserMetrics.RemoveRange(context.UserMetrics);
+        await context.SaveChangesAsync();
+        
+        var handler = new AddUserMetricCommandHandler(
+            context,
             _userMetricMapper,
             _logger
         );
-    }
 
-    public async Task DisposeAsync()
-    {
-        await _context.DisposeAsync();
-        await _fixture.DisposeAsync();
+        return (context, handler);
     }
 
     [Fact]
     public async Task Should_Add_User_Metric_Successfully()
     {
         // Arrange
+        var (context, handler) = await CreateHandlerAsync();
+        var userId = Random.Shared.Next(1000, 9999);
         var user = new User
         {
-            Id = "507f1f77bcf86cd799439011",
-            Email = "test@example.com",
+            Id = userId,
+            Email = $"test{userId}@example.com",
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
 
         var command = new AddUserMetricCommand
         {
-            UserId = user.PostgresId,
+            UserId = user.Id,
             Date = DateTime.UtcNow.Date,
-            Weight = 75.5m,
-            Height = 180.0m,
+            Weight = 75.5,
+            Height = 180.0,
             Notes = "Weekly weigh-in"
         };
 
         // Act
-        var result = await _handler.Handle(command, CancellationToken.None);
+        var result = await handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value.UserId.Should().Be(user.PostgresId);
-        result.Value.Weight.Should().Be(75.5m);
-        result.Value.Height.Should().Be(180.0m);
+        result.Value.UserId.Should().Be(user.Id);
+        result.Value.Weight.Should().Be(75.5);
+        result.Value.Height.Should().Be(180.0);
         result.Value.Notes.Should().Be("Weekly weigh-in");
         result.Value.Bmi.Should().BeGreaterThan(0); // BMI should be calculated
 
         // Verify metric was saved to database
-        var savedMetric = await _context.UserMetrics.FirstAsync(um => um.UserId == user.Id);
-        savedMetric.Weight.Should().Be(75.5m);
-        savedMetric.Height.Should().Be(180.0m);
+        var savedMetric = await context.UserMetrics.FirstAsync(um => um.UserId == user.Id);
+        savedMetric.Weight.Should().Be(75.5);
+        savedMetric.Height.Should().Be(180.0);
         savedMetric.Notes.Should().Be("Weekly weigh-in");
         savedMetric.Bmi.Should().BeGreaterThan(0);
+
+        // Cleanup
+        await context.DisposeAsync();
     }
 
     [Fact]
     public async Task Should_Return_Error_When_User_Does_Not_Exist()
     {
         // Arrange
+        var (context, handler) = await CreateHandlerAsync();
         var command = new AddUserMetricCommand
         {
             UserId = 999, // Non-existent user
             Date = DateTime.UtcNow.Date,
-            Weight = 75.5m,
-            Height = 180.0m,
+            Weight = 75.5,
+            Height = 180.0,
             Notes = "Test metric"
         };
 
         // Act
-        var result = await _handler.Handle(command, CancellationToken.None);
+        var result = await handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Be("User not found");
 
         // Verify no metric was saved
-        var metrics = await _context.UserMetrics.ToListAsync();
+        var metrics = await context.UserMetrics.ToListAsync();
         metrics.Should().BeEmpty();
+
+        // Cleanup
+        await context.DisposeAsync();
     }
 
     [Fact]
     public async Task Should_Return_Error_When_Metric_Already_Exists_For_Date()
     {
         // Arrange
+        var (context, handler) = await CreateHandlerAsync();
+        var userId = Random.Shared.Next(1000, 9999);
         var user = new User
         {
-            Id = "507f1f77bcf86cd799439011",
-            Email = "test@example.com",
+            Id = userId,
+            Email = $"test{userId}@example.com",
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
@@ -132,116 +142,129 @@ public class AddUserMetricCommandHandlerIntegrationTests : IAsyncLifetime
 
         var existingMetric = new UserMetric
         {
-            Id = "507f1f77bcf86cd799439012",
+            Id = Random.Shared.Next(1000, 9999),
             UserId = user.Id,
             Date = DateTime.UtcNow.Date,
-            Weight = 80.0m,
+            Weight = 80.0,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
-        _context.Users.Add(user);
-        _context.UserMetrics.Add(existingMetric);
-        await _context.SaveChangesAsync();
+        context.Users.Add(user);
+        context.UserMetrics.Add(existingMetric);
+        await context.SaveChangesAsync();
 
         var command = new AddUserMetricCommand
         {
-            UserId = user.PostgresId,
+            UserId = user.Id,
             Date = DateTime.UtcNow.Date, // Same date as existing metric
-            Weight = 75.5m,
-            Height = 180.0m,
+            Weight = 75.5,
+            Height = 180.0,
             Notes = "Duplicate metric"
         };
 
         // Act
-        var result = await _handler.Handle(command, CancellationToken.None);
+        var result = await handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Be("A metric already exists for this date. Please update the existing metric instead.");
 
         // Verify only the original metric exists
-        var metrics = await _context.UserMetrics.ToListAsync();
+        var metrics = await context.UserMetrics.ToListAsync();
         metrics.Should().HaveCount(1);
-        metrics[0].Weight.Should().Be(80.0m); // Original weight unchanged
+        metrics[0].Weight.Should().Be(80.0); // Original weight unchanged
+
+        // Cleanup
+        await context.DisposeAsync();
     }
 
     [Fact]
     public async Task Should_Calculate_BMI_When_Both_Weight_And_Height_Provided()
     {
         // Arrange
+        var (context, handler) = await CreateHandlerAsync();
+        var userId = Random.Shared.Next(1000, 9999);
         var user = new User
         {
-            Id = "507f1f77bcf86cd799439011",
-            Email = "test@example.com",
+            Id = userId,
+            Email = $"test{userId}@example.com",
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
 
         var command = new AddUserMetricCommand
         {
-            UserId = user.PostgresId,
+            UserId = user.Id,
             Date = DateTime.UtcNow.Date,
-            Weight = 70.0m, // 70 kg
-            Height = 175.0m, // 175 cm
+            Weight = 70.0, // 70 kg
+            Height = 175.0, // 175 cm
             Notes = "BMI calculation test"
         };
 
         // Act
-        var result = await _handler.Handle(command, CancellationToken.None);
+        var result = await handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
         
         // Expected BMI = 70 / (1.75^2) = 22.86 (approximately)
-        var expectedBmi = 70.0m / (1.75m * 1.75m);
-        result.Value.Bmi.Should().BeApproximately((double)expectedBmi, 0.1);
+        var expectedBmi = 70.0 / (1.75 * 1.75);
+        result.Value.Bmi.Should().BeApproximately(expectedBmi, 0.1);
 
         // Verify BMI is saved correctly
-        var savedMetric = await _context.UserMetrics.FirstAsync();
-        savedMetric.Bmi.Should().BeApproximately((double)expectedBmi, 0.1);
+        var savedMetric = await context.UserMetrics.FirstAsync();
+        savedMetric.Bmi.Should().BeApproximately(expectedBmi, 0.1);
+
+        // Cleanup
+        await context.DisposeAsync();
     }
 
     [Fact]
     public async Task Should_Not_Calculate_BMI_When_Height_Is_Missing()
     {
         // Arrange
+        var (context, handler) = await CreateHandlerAsync();
+        var userId = Random.Shared.Next(1000, 9999);
         var user = new User
         {
-            Id = "507f1f77bcf86cd799439011",
-            Email = "test@example.com",
+            Id = userId,
+            Email = $"test{userId}@example.com",
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
 
         var command = new AddUserMetricCommand
         {
-            UserId = user.PostgresId,
+            UserId = user.Id,
             Date = DateTime.UtcNow.Date,
-            Weight = 70.0m,
+            Weight = 70.0,
             Height = null, // No height provided
             Notes = "Weight only"
         };
 
         // Act
-        var result = await _handler.Handle(command, CancellationToken.None);
+        var result = await handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Bmi.Should().BeNull();
 
         // Verify BMI is null in database
-        var savedMetric = await _context.UserMetrics.FirstAsync();
+        var savedMetric = await context.UserMetrics.FirstAsync();
         savedMetric.Bmi.Should().BeNull();
+
+        // Cleanup
+        await context.DisposeAsync();
     }
 }

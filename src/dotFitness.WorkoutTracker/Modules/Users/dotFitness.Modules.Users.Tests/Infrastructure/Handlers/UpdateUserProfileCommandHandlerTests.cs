@@ -23,7 +23,7 @@ public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
 
     public UpdateUserProfileCommandHandlerTests()
     {
-        _fixture = new PostgreSqlFixture();
+        _fixture = PostgreSqlFixture.Instance;
         _userMapper = new UserMapper();
         _logger = new Mock<ILogger<UpdateUserProfileCommandHandler>>().Object;
     }
@@ -53,7 +53,7 @@ public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
         // Arrange
         var existingUser = new User
         {
-            Id = "507f1f77bcf86cd799439011", // Valid MongoDB ObjectId format
+            Id = 1,
             Email = "test@example.com",
             DisplayName = "Original Name",
             Gender = Gender.Female,
@@ -66,19 +66,16 @@ public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
         _context.Users.Add(existingUser);
         await _context.SaveChangesAsync();
 
-        var command = new UpdateUserProfileCommand
-        {
-            UserId = existingUser.PostgresId, // Use PostgreSQL ID
-            Request = new UpdateUserProfileRequest
+        var command = new UpdateUserProfileCommand(
+            existingUser.Id,
+            new UpdateUserProfileRequest
             {
                 DisplayName = "Updated Name",
-                Gender = nameof(Gender.Male),
+                Gender = Gender.Male,
                 DateOfBirth = new DateTime(1990, 1, 1),
-                UnitPreference = nameof(UnitPreference.Imperial)
-            },
-            CorrelationId = Guid.NewGuid().ToString(),
-            TraceId = Guid.NewGuid().ToString()
-        };
+                UnitPreference = UnitPreference.Imperial
+            }
+        );
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
@@ -92,7 +89,7 @@ public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
         result.Value.UnitPreference.Should().Be("Imperial");
 
         // Verify the user was updated in the database
-        var updatedUser = await _context.Users.FirstAsync(u => u.PostgresId == existingUser.PostgresId);
+        var updatedUser = await _context.Users.FirstAsync(u => u.Id == existingUser.Id);
         updatedUser.DisplayName.Should().Be("Updated Name");
         updatedUser.Gender.Should().Be(Gender.Male);
         updatedUser.DateOfBirth.Should().Be(new DateTime(1990, 1, 1));
@@ -110,19 +107,16 @@ public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
     public async Task Should_Return_NotFound_When_User_Does_Not_Exist()
     {
         // Arrange
-        var command = new UpdateUserProfileCommand
-        {
-            UserId = 999, // Non-existent user ID
-            Request = new UpdateUserProfileRequest
+        var command = new UpdateUserProfileCommand(
+            999, // Non-existent user ID
+            new UpdateUserProfileRequest
             {
                 DisplayName = "New Name",
                 Gender = null,
                 DateOfBirth = null,
-                UnitPreference = nameof(UnitPreference.Metric)
-            },
-            CorrelationId = Guid.NewGuid().ToString(),
-            TraceId = Guid.NewGuid().ToString()
-        };
+                UnitPreference = UnitPreference.Metric
+            }
+        );
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
@@ -140,50 +134,44 @@ public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
     public async Task Should_Handle_Repository_Update_Errors_Gracefully()
     {
         // Arrange
-        var command = new UpdateUserProfileCommand(
-            userId: 1,
-            displayName: "Updated Name",
-            gender: null,
-            dateOfBirth: null);
-
         var existingUser = new User
         {
             Id = 1,
             Email = "test@example.com",
-            DisplayName = "Original Name"
+            DisplayName = "Original Name",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
         };
 
-        _userRepositoryMock
-            .Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Success(existingUser));
+        _context.Users.Add(existingUser);
+        await _context.SaveChangesAsync();
 
-        _userRepositoryMock
-            .Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Failure<User>("Database update failed"));
+        // Dispose context to simulate database error
+        await _context.DisposeAsync();
+
+        var command = new UpdateUserProfileCommand(
+            existingUser.Id,
+            new UpdateUserProfileRequest
+            {
+                DisplayName = "Updated Name",
+                Gender = null,
+                DateOfBirth = null,
+                UnitPreference = UnitPreference.Metric
+            }
+        );
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Database update failed");
-
-        _userRepositoryMock.Verify(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>()), Times.Once);
-        _userRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Once);
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Contain("User management failed");
     }
 
     [Fact]
     public async Task Should_Update_Only_Provided_Fields()
     {
         // Arrange
-        var command = new UpdateUserProfileCommand(
-            userId: 1,
-            displayName: "New Name",
-            gender: null, // Not updating gender
-            dateOfBirth: null, // Not updating date of birth
-            unitPreference: nameof(UnitPreference.Imperial) // Updating unit preference
-        );
-
         var existingUser = new User
         {
             Id = 1,
@@ -191,39 +179,24 @@ public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
             DisplayName = "Original Name",
             Gender = Gender.Male, // Should remain unchanged
             DateOfBirth = new DateTime(1985, 5, 15), // Should remain unchanged
-            UnitPreference = UnitPreference.Metric
-        };
-
-        var updatedUser = new User
-        {
-            Id = 1,
-            Email = "test@example.com",
-            DisplayName = "New Name",
-            Gender = Gender.Male, // Unchanged
-            DateOfBirth = new DateTime(1985, 5, 15), // Unchanged
-            UnitPreference = UnitPreference.Imperial // Updated
-        };
-
-        var expectedDto = new UserDto
-        {
-            Id = 1,
-            Email = "test@example.com",
-            DisplayName = "New Name",
-            Gender = nameof(Gender.Male),
-            DateOfBirth = new DateTime(1985, 5, 15),
-            UnitPreference = nameof(UnitPreference.Imperial),
-            Roles = ["User"],
+            UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
-        _userRepositoryMock
-            .Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Success(existingUser));
+        _context.Users.Add(existingUser);
+        await _context.SaveChangesAsync();
 
-        _userRepositoryMock
-            .Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Success(updatedUser));
+        var command = new UpdateUserProfileCommand(
+            existingUser.Id,
+            new UpdateUserProfileRequest
+            {
+                DisplayName = "New Name",
+                Gender = null, // Not updating gender
+                DateOfBirth = null, // Not updating date of birth
+                UnitPreference = UnitPreference.Imperial // Updating unit preference
+            }
+        );
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
@@ -234,6 +207,13 @@ public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
         result.Value.Gender.Should().Be(nameof(Gender.Male)); // Should remain unchanged
         result.Value.DateOfBirth.Should().Be(new DateTime(1985, 5, 15)); // Should remain unchanged
         result.Value.UnitPreference.Should().Be(nameof(UnitPreference.Imperial)); // Should be updated
+
+        // Verify the user was updated in the database
+        var updatedUser = await _context.Users.FirstAsync(u => u.Id == existingUser.Id);
+        updatedUser.DisplayName.Should().Be("New Name");
+        updatedUser.Gender.Should().Be(Gender.Male); // Unchanged
+        updatedUser.DateOfBirth.Should().Be(new DateTime(1985, 5, 15)); // Unchanged
+        updatedUser.UnitPreference.Should().Be(UnitPreference.Imperial); // Updated
     }
 
     [Theory]
@@ -243,46 +223,38 @@ public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
     public async Task Should_Not_Update_Display_Name_When_Invalid(string? invalidDisplayName)
     {
         // Arrange
-        var command = new UpdateUserProfileCommand(
-            userId: 1,
-            displayName: invalidDisplayName!,
-            gender: null,
-            dateOfBirth: null
-        );
-
         var existingUser = new User
         {
             Id = 1,
             Email = "test@example.com",
-            DisplayName = "Original Name"
-        };
-
-        var expectedDto = new UserDto
-        {
-            Id = 1,
-            Email = "test@example.com",
-            DisplayName = "Original Name", // Should remain unchanged
-            Gender = null,
-            DateOfBirth = null,
-            UnitPreference = nameof(UnitPreference.Metric),
-            Roles = ["User"],
+            DisplayName = "Original Name",
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
-        _userRepositoryMock
-            .Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Success(existingUser));
+        _context.Users.Add(existingUser);
+        await _context.SaveChangesAsync();
 
-        _userRepositoryMock
-            .Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Success(existingUser));
+        var command = new UpdateUserProfileCommand(
+            existingUser.Id,
+            new UpdateUserProfileRequest
+            {
+                DisplayName = invalidDisplayName!,
+                Gender = null,
+                DateOfBirth = null,
+                UnitPreference = UnitPreference.Metric
+            }
+        );
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.DisplayName.Should().Be("Original Name");
+        result.Value!.DisplayName.Should().Be("Original Name"); // Should remain unchanged
+
+        // Verify the user was not updated in the database
+        var userInDb = await _context.Users.FirstAsync(u => u.Id == existingUser.Id);
+        userInDb.DisplayName.Should().Be("Original Name");
     }
 }
