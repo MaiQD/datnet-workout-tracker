@@ -1,0 +1,215 @@
+name: PR Build and Test
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - '.github/workflows/**'
+      - '*.sln'
+      - '*.csproj'
+      - 'Directory.Packages.props'
+      - 'global.json'
+
+env:
+  DOTNET_VERSION: '9.0.305'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_NOLOGO: true
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    
+    services:
+      mongodb:
+        image: mongo:7.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand(\"ping\")'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      
+      postgresql:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: dotfitness_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+
+    - name: Cache .NET build outputs
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.dotnet/tools
+          src/**/bin
+          src/**/obj
+        key: ${{ runner.os }}-dotnet-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
+        restore-keys: |
+          ${{ runner.os }}-dotnet-
+
+    - name: Restore dependencies
+      run: |
+        cd src/dotFitness.WorkoutTracker
+        dotnet restore --verbosity normal
+
+    - name: Build solution
+      run: |
+        cd src/dotFitness.WorkoutTracker
+        dotnet build --no-restore --configuration Release --verbosity normal
+
+    - name: Run unit tests
+      run: |
+        cd src/dotFitness.WorkoutTracker
+        dotnet test --no-build --configuration Release --verbosity normal \
+          --collect:"XPlat Code Coverage" \
+          --results-directory ./TestResults \
+          --logger trx \
+          --settings coverlet.runsettings \
+          --filter "Category!=Integration&Category!=Database" \
+          -- \
+          DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+
+    - name: Run integration tests
+      run: |
+        cd src/dotFitness.WorkoutTracker
+        dotnet test --no-build --configuration Release --verbosity normal \
+          --collect:"XPlat Code Coverage" \
+          --results-directory ./TestResults \
+          --logger trx \
+          --settings coverlet.runsettings \
+          --filter "Category=Integration|Category=Database" \
+          -- \
+          DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+
+    - name: Run all tests (fallback)
+      if: failure()
+      run: |
+        cd src/dotFitness.WorkoutTracker
+        dotnet test --no-build --configuration Release --verbosity normal \
+          --collect:"XPlat Code Coverage" \
+          --results-directory ./TestResults \
+          --logger trx \
+          --settings coverlet.runsettings \
+          -- \
+          DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+
+    - name: Publish test results
+      uses: dorny/test-reporter@v1
+      if: always()
+      with:
+        name: Test Results
+        path: src/dotFitness.WorkoutTracker/TestResults/*.trx
+        reporter: dotnet-trx
+
+    - name: Generate coverage report
+      if: always()
+      run: |
+        cd src/dotFitness.WorkoutTracker
+        dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.2.0 || true
+        reportgenerator \
+          -reports:"TestResults/**/coverage.cobertura.xml" \
+          -targetdir:"TestResults/CoverageReport" \
+          -reporttypes:"Html;Cobertura" \
+          -assemblyfilters:"-*.Tests*"
+
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v4
+      if: always()
+      with:
+        file: src/dotFitness.WorkoutTracker/TestResults/CoverageReport/Cobertura.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: src/dotFitness.WorkoutTracker/TestResults/
+        retention-days: 30
+
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: coverage-report
+        path: src/dotFitness.WorkoutTracker/TestResults/CoverageReport/
+        retention-days: 30
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+
+    - name: Run security scan
+      run: |
+        cd src/dotFitness.WorkoutTracker
+        dotnet list package --vulnerable --include-transitive
+
+  build-status:
+    name: Build Status
+    runs-on: ubuntu-latest
+    needs: [build-and-test, security-scan]
+    if: always()
+    
+    steps:
+    - name: Check build status
+      run: |
+        if [[ "${{ needs.build-and-test.result }}" == "success" && "${{ needs.security-scan.result }}" == "success" ]]; then
+          echo "✅ All checks passed!"
+          exit 0
+        else
+          echo "❌ Some checks failed!"
+          echo "Build and Test: ${{ needs.build-and-test.result }}"
+          echo "Security Scan: ${{ needs.security-scan.result }}"
+          exit 1
+        fi

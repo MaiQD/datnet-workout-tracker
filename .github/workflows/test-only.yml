@@ -1,0 +1,172 @@
+name: Test Only
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_category:
+        description: 'Test category to run'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+        - all
+        - unit
+        - integration
+        - database
+      configuration:
+        description: 'Build configuration'
+        required: true
+        default: 'Release'
+        type: choice
+        options:
+        - Debug
+        - Release
+
+env:
+  DOTNET_VERSION: '9.0.305'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_NOLOGO: true
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      mongodb:
+        image: mongo:7.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand(\"ping\")'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      
+      postgresql:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: dotfitness_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+
+    - name: Restore dependencies
+      run: |
+        cd src/dotFitness.WorkoutTracker
+        dotnet restore --verbosity normal
+
+    - name: Build solution
+      run: |
+        cd src/dotFitness.WorkoutTracker
+        dotnet build --no-restore --configuration ${{ github.event.inputs.configuration || 'Release' }} --verbosity normal
+
+    - name: Run unit tests
+      if: ${{ github.event.inputs.test_category == 'unit' || github.event.inputs.test_category == 'all' }}
+      run: |
+        cd src/dotFitness.WorkoutTracker
+        dotnet test --no-build --configuration ${{ github.event.inputs.configuration || 'Release' }} --verbosity normal \
+          --collect:"XPlat Code Coverage" \
+          --results-directory ./TestResults \
+          --logger trx \
+          --settings coverlet.runsettings \
+          --filter "Category!=Integration&Category!=Database" \
+          -- \
+          DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+
+    - name: Run integration tests
+      if: ${{ github.event.inputs.test_category == 'integration' || github.event.inputs.test_category == 'all' }}
+      run: |
+        cd src/dotFitness.WorkoutTracker
+        dotnet test --no-build --configuration ${{ github.event.inputs.configuration || 'Release' }} --verbosity normal \
+          --collect:"XPlat Code Coverage" \
+          --results-directory ./TestResults \
+          --logger trx \
+          --settings coverlet.runsettings \
+          --filter "Category=Integration" \
+          -- \
+          DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+
+    - name: Run database tests
+      if: ${{ github.event.inputs.test_category == 'database' || github.event.inputs.test_category == 'all' }}
+      run: |
+        cd src/dotFitness.WorkoutTracker
+        dotnet test --no-build --configuration ${{ github.event.inputs.configuration || 'Release' }} --verbosity normal \
+          --collect:"XPlat Code Coverage" \
+          --results-directory ./TestResults \
+          --logger trx \
+          --settings coverlet.runsettings \
+          --filter "Category=Database" \
+          -- \
+          DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+
+    - name: Run all tests
+      if: ${{ github.event.inputs.test_category == 'all' }}
+      run: |
+        cd src/dotFitness.WorkoutTracker
+        dotnet test --no-build --configuration ${{ github.event.inputs.configuration || 'Release' }} --verbosity normal \
+          --collect:"XPlat Code Coverage" \
+          --results-directory ./TestResults \
+          --logger trx \
+          --settings coverlet.runsettings \
+          -- \
+          DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+
+    - name: Publish test results
+      uses: dorny/test-reporter@v1
+      if: always()
+      with:
+        name: Test Results
+        path: src/dotFitness.WorkoutTracker/TestResults/*.trx
+        reporter: dotnet-trx
+
+    - name: Generate coverage report
+      if: always()
+      run: |
+        cd src/dotFitness.WorkoutTracker
+        dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.2.0 || true
+        reportgenerator \
+          -reports:"TestResults/**/coverage.cobertura.xml" \
+          -targetdir:"TestResults/CoverageReport" \
+          -reporttypes:"Html;Cobertura" \
+          -assemblyfilters:"-*.Tests*"
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-${{ github.event.inputs.test_category || 'all' }}
+        path: src/dotFitness.WorkoutTracker/TestResults/
+        retention-days: 7
+
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: coverage-report-${{ github.event.inputs.test_category || 'all' }}
+        path: src/dotFitness.WorkoutTracker/TestResults/CoverageReport/
+        retention-days: 7
