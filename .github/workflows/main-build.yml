@@ -22,6 +22,10 @@ jobs:
   build-and-test:
     name: Build and Test
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      checks: write
     
     services:
       mongodb:
@@ -100,12 +104,14 @@ jobs:
           DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
 
     - name: Publish test results
-      uses: dorny/test-reporter@v1
+      uses: dorny/test-reporter@v1.11.0
       if: always()
       with:
         name: Test Results
         path: src/dotFitness.WorkoutTracker/TestResults/*.trx
         reporter: dotnet-trx
+        token: ${{ secrets.GITHUB_TOKEN }}
+        fail-on-error: false
 
     - name: Generate coverage report
       if: always()
