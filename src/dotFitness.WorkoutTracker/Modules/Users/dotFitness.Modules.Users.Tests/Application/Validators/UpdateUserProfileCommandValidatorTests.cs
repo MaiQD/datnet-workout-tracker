@@ -1,6 +1,7 @@
 using FluentAssertions;
 using FluentValidation.TestHelper;
 using dotFitness.Modules.Users.Application.Commands;
+using dotFitness.Modules.Users.Application.DTOs;
 using dotFitness.Modules.Users.Application.Validators;
 using dotFitness.Modules.Users.Domain.Entities;
 
@@ -19,12 +20,11 @@ public class UpdateUserProfileCommandValidatorTests
     public void Should_Pass_Validation_For_Valid_Command()
     {
         // Arrange
+        var request =
+            new UpdateUserProfileRequest("Valid Name", Gender.Male, new DateTime(1990, 1, 1), UnitPreference.Metric);
         var command = new UpdateUserProfileCommand(
-            userId: "user123",
-            displayName: "Valid Name",
-            gender: nameof(Gender.Male),
-            dateOfBirth: new DateTime(1990, 1, 1),
-            unitPreference: nameof(UnitPreference.Metric)
+            UserId: 1,
+            Request: request
         );
 
         // Act
@@ -35,18 +35,16 @@ public class UpdateUserProfileCommandValidatorTests
     }
 
     [Theory]
-    [InlineData("")]
-    [InlineData("   ")]
+    [InlineData(0)]
+    [InlineData(-1)]
     [InlineData(null)]
-    public void Should_Fail_Validation_For_Missing_User_Id(string? invalidUserId)
+    public void Should_Fail_Validation_For_Missing_User_Id(int? invalidUserId)
     {
         // Arrange
         var command = new UpdateUserProfileCommand(
-            userId: invalidUserId!,
-            displayName: "Valid Name",
-            gender: null,
-            dateOfBirth: null,
-            unitPreference: string.Empty
+            UserId: invalidUserId ?? 0,
+            Request: new UpdateUserProfileRequest("Valid Name", Gender.Male, new DateTime(1990, 1, 1),
+                UnitPreference.Metric)
         );
 
         // Act
@@ -64,18 +62,15 @@ public class UpdateUserProfileCommandValidatorTests
     {
         // Arrange
         var command = new UpdateUserProfileCommand(
-            userId: "user123",
-            displayName: invalidDisplayName,
-            gender: null,
-            dateOfBirth: null,
-            unitPreference: string.Empty
+            UserId: 1,
+            Request: new UpdateUserProfileRequest(invalidDisplayName, null, null, null)
         );
 
         // Act
         var result = _validator.TestValidate(command);
 
         // Assert
-        result.ShouldHaveValidationErrorFor(x => x.DisplayName)
+        result.ShouldHaveValidationErrorFor(x => x.Request.DisplayName)
             .WithErrorMessage("Display name is required");
     }
 
@@ -84,18 +79,15 @@ public class UpdateUserProfileCommandValidatorTests
     {
         // Arrange
         var command = new UpdateUserProfileCommand(
-            userId: "user123",
-            displayName: "Valid Name",
-            gender: nameof(Gender.Male),
-            dateOfBirth: null,
-            unitPreference: string.Empty
+            UserId: 1,
+            Request: new UpdateUserProfileRequest("Valid Name", Gender.Male, null, null)
         );
 
         // Act
         var result = _validator.TestValidate(command);
 
         // Assert
-        result.ShouldNotHaveValidationErrorFor(x => x.DisplayName);
+        result.ShouldNotHaveValidationErrorFor(x => x.Request.DisplayName);
     }
 
     [Fact]
@@ -104,18 +96,15 @@ public class UpdateUserProfileCommandValidatorTests
         // Arrange
         var longName = new string('A', 101); // 101 characters
         var command = new UpdateUserProfileCommand(
-            userId: "user123",
-            displayName: longName,
-            gender: null,
-            dateOfBirth: null,
-            unitPreference: string.Empty
+            UserId: 1,
+            Request: new UpdateUserProfileRequest(longName, null, null, null)
         );
 
         // Act
         var result = _validator.TestValidate(command);
 
         // Assert
-        result.ShouldHaveValidationErrorFor(x => x.DisplayName)
+        result.ShouldHaveValidationErrorFor(x => x.Request.DisplayName)
             .WithErrorMessage("Display name must be between 1 and 100 characters");
     }
 
@@ -125,18 +114,15 @@ public class UpdateUserProfileCommandValidatorTests
         // Arrange
         var futureDate = DateTime.UtcNow.AddDays(1);
         var command = new UpdateUserProfileCommand(
-            userId: "user123",
-            displayName: "Valid Name",
-            gender: null,
-            dateOfBirth: futureDate,
-            unitPreference: string.Empty
+            UserId: 1,
+            Request: new UpdateUserProfileRequest("Valid Name", null, futureDate, null)
         );
 
         // Act
         var result = _validator.TestValidate(command);
 
         // Assert
-        result.ShouldHaveValidationErrorFor(x => x.DateOfBirth)
+        result.ShouldHaveValidationErrorFor(x => x.Request.DateOfBirth)
             .WithErrorMessage("Date of birth cannot be in the future");
     }
 
@@ -146,18 +132,15 @@ public class UpdateUserProfileCommandValidatorTests
         // Arrange
         var veryOldDate = DateTime.UtcNow.AddYears(-151); // 151 years ago
         var command = new UpdateUserProfileCommand(
-            userId: "user123",
-            displayName: "Valid Name",
-            gender: null,
-            dateOfBirth: veryOldDate,
-            unitPreference: string.Empty
+            UserId: 1,
+            Request: new UpdateUserProfileRequest("Valid Name", null, veryOldDate, null)
         );
 
         // Act
         var result = _validator.TestValidate(command);
 
         // Assert
-        result.ShouldHaveValidationErrorFor(x => x.DateOfBirth)
+        result.ShouldHaveValidationErrorFor(x => x.Request.DateOfBirth)
             .WithErrorMessage("Date of birth cannot be more than 150 years ago");
     }
 
@@ -169,7 +152,7 @@ public class UpdateUserProfileCommandValidatorTests
         // This test simulates validation when unit preference comes as string
         // and tests the custom validation logic for string values
         var isValid = new[] { "Metric", "Imperial" }.Contains(unitPreferenceString);
-        
+
         // Assert
         isValid.Should().BeTrue();
     }
@@ -184,7 +167,7 @@ public class UpdateUserProfileCommandValidatorTests
         // This test simulates validation when unit preference comes as string
         // and tests the custom validation logic for string values
         var isValid = new[] { "Metric", "Imperial" }.Contains(invalidUnit);
-        
+
         // Assert
         isValid.Should().BeFalse();
     }
@@ -194,11 +177,8 @@ public class UpdateUserProfileCommandValidatorTests
     {
         // Arrange
         var command = new UpdateUserProfileCommand(
-            userId: "user123",
-            displayName: "Valid Name",
-            gender: null,
-            dateOfBirth: null,
-            unitPreference: string.Empty
+            UserId: 1,
+            Request: new UpdateUserProfileRequest("Valid Name", null, null, null)
         );
 
         // Act
@@ -214,18 +194,15 @@ public class UpdateUserProfileCommandValidatorTests
         // Arrange
         var validDate = new DateTime(1990, 5, 15);
         var command = new UpdateUserProfileCommand(
-            userId: "user123",
-            displayName: "Valid Name",
-            gender: null,
-            dateOfBirth: validDate,
-            unitPreference: string.Empty
+            UserId: 1,
+            Request: new UpdateUserProfileRequest("Valid Name", null, validDate, null)
         );
 
         // Act
         var result = _validator.TestValidate(command);
 
         // Assert
-        result.ShouldNotHaveValidationErrorFor(x => x.DateOfBirth);
+        result.ShouldNotHaveValidationErrorFor(x => x.Request.DateOfBirth);
     }
 
     [Theory]
@@ -237,18 +214,15 @@ public class UpdateUserProfileCommandValidatorTests
     {
         // Arrange
         var command = new UpdateUserProfileCommand(
-            userId: "user123",
-            displayName: "Valid Name",
-            gender: gender.ToString(),
-            dateOfBirth: null,
-            unitPreference: string.Empty
+            UserId: 1,
+            Request: new UpdateUserProfileRequest("Valid Name", gender, null, null)
         );
 
         // Act
         var result = _validator.TestValidate(command);
 
         // Assert
-        result.ShouldNotHaveValidationErrorFor(x => x.Gender);
+        result.ShouldNotHaveValidationErrorFor(x => x.Request.Gender);
     }
 
     [Theory]
@@ -258,17 +232,14 @@ public class UpdateUserProfileCommandValidatorTests
     {
         // Arrange
         var command = new UpdateUserProfileCommand(
-            userId: "user123",
-            displayName: "Valid Name",
-            gender: null,
-            dateOfBirth: null,
-            unitPreference: unitPreference.ToString()
+            UserId: 1,
+            Request: new UpdateUserProfileRequest("Valid Name", null, null, unitPreference)
         );
 
         // Act
         var result = _validator.TestValidate(command);
 
         // Assert
-        result.ShouldNotHaveValidationErrorFor(x => x.UnitPreference);
+        result.ShouldNotHaveValidationErrorFor(x => x.Request.UnitPreference);
     }
 }

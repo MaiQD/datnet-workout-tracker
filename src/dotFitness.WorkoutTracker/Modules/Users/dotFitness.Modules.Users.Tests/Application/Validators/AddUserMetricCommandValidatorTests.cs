@@ -18,7 +18,7 @@ public class AddUserMetricCommandValidatorTests
     {
         // Arrange
         var command = new AddUserMetricCommand(
-            UserId: "user123",
+            UserId: 1,
             Date: new DateTime(2024, 1, 1),
             Weight: 70.5,
             Height: 175.0,
@@ -37,7 +37,7 @@ public class AddUserMetricCommandValidatorTests
     {
         // Arrange
         var command = new AddUserMetricCommand(
-            UserId: "user123",
+            UserId: 1,
             Date: new DateTime(2024, 1, 1),
             Weight: 70.5,
             Height: null,
@@ -56,7 +56,7 @@ public class AddUserMetricCommandValidatorTests
     {
         // Arrange
         var command = new AddUserMetricCommand(
-            UserId: "user123",
+            UserId: 1,
             Date: new DateTime(2024, 1, 1),
             Weight: null,
             Height: 175.0,
@@ -71,14 +71,14 @@ public class AddUserMetricCommandValidatorTests
     }
 
     [Theory]
-    [InlineData("")]
-    [InlineData("   ")]
+    [InlineData(0)]
+    [InlineData(-1)]
     [InlineData(null)]
-    public void Should_Fail_Validation_For_Missing_User_Id(string? invalidUserId)
+    public void Should_Fail_Validation_For_Missing_User_Id(int? invalidUserId)
     {
         // Arrange
         var command = new AddUserMetricCommand(
-            UserId: invalidUserId!,
+            UserId: invalidUserId ?? 0,
             Date: new DateTime(2024, 1, 1),
             Weight: 70.0,
             Height: null,
@@ -98,7 +98,7 @@ public class AddUserMetricCommandValidatorTests
     {
         // Arrange
         var command = new AddUserMetricCommand(
-            UserId: "user123",
+            UserId: 1,
             Date: default(DateTime),
             Weight: 70.0,
             Height: null,
@@ -119,7 +119,7 @@ public class AddUserMetricCommandValidatorTests
         // Arrange
         var futureDate = DateTime.UtcNow.AddDays(2);
         var command = new AddUserMetricCommand(
-            UserId: "user123",
+            UserId: 1,
             Date: futureDate,
             Weight: 70.0,
             Height: null,
@@ -141,7 +141,7 @@ public class AddUserMetricCommandValidatorTests
     {
         // Arrange
         var command = new AddUserMetricCommand(
-            UserId: "user123",
+            UserId: 1,
             Date: new DateTime(2024, 1, 1),
             Weight: invalidWeight,
             Height: null,
@@ -161,7 +161,7 @@ public class AddUserMetricCommandValidatorTests
     {
         // Arrange
         var command = new AddUserMetricCommand(
-            UserId: "user123",
+            UserId: 1,
             Date: new DateTime(2024, 1, 1),
             Weight: 1001, // Over 1000
             Height: null,
@@ -183,7 +183,7 @@ public class AddUserMetricCommandValidatorTests
     {
         // Arrange
         var command = new AddUserMetricCommand(
-            UserId: "user123",
+            UserId: 1,
             Date: new DateTime(2024, 1, 1),
             Weight: null,
             Height: invalidHeight,
@@ -203,7 +203,7 @@ public class AddUserMetricCommandValidatorTests
     {
         // Arrange
         var command = new AddUserMetricCommand(
-            UserId: "user123",
+            UserId: 1,
             Date: new DateTime(2024, 1, 1),
             Weight: null,
             Height: 301, // Over 300
@@ -224,7 +224,7 @@ public class AddUserMetricCommandValidatorTests
         // Arrange
         var longNotes = new string('A', 501); // 501 characters
         var command = new AddUserMetricCommand(
-            UserId: "user123",
+            UserId: 1,
             Date: new DateTime(2024, 1, 1),
             Weight: 70.0,
             Height: null,
@@ -244,7 +244,7 @@ public class AddUserMetricCommandValidatorTests
     {
         // Arrange
         var command = new AddUserMetricCommand(
-            UserId: "user123",
+            UserId: 1,
             Date: new DateTime(2024, 1, 1),
             Weight: null,
             Height: null,
@@ -264,7 +264,7 @@ public class AddUserMetricCommandValidatorTests
     {
         // Arrange
         var command = new AddUserMetricCommand(
-            UserId: "user123",
+            UserId: 1,
             Date: new DateTime(2024, 1, 1),
             Weight: 65.5, // Valid weight
             Height: null,
@@ -283,7 +283,7 @@ public class AddUserMetricCommandValidatorTests
     {
         // Arrange
         var command = new AddUserMetricCommand(
-            UserId: "user123",
+            UserId: 1,
             Date: new DateTime(2024, 1, 1),
             Weight: null,
             Height: 175.5, // Valid height
@@ -303,7 +303,7 @@ public class AddUserMetricCommandValidatorTests
         // Arrange
         var validNotes = new string('A', 500); // Exactly 500 characters
         var command = new AddUserMetricCommand(
-            UserId: "user123",
+            UserId: 1,
             Date: new DateTime(2024, 1, 1),
             Weight: 70.0,
             Height: null,
@@ -322,7 +322,7 @@ public class AddUserMetricCommandValidatorTests
     {
         // Arrange
         var command = new AddUserMetricCommand(
-            UserId: "user123",
+            UserId: 1,
             Date: DateTime.UtcNow.Date, // Today
             Weight: 70.0,
             Height: null,

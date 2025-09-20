@@ -141,20 +141,20 @@ public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
     {
         // Arrange
         var command = new UpdateUserProfileCommand(
-            userId: "user123",
+            userId: 1,
             displayName: "Updated Name",
             gender: null,
             dateOfBirth: null);
 
         var existingUser = new User
         {
-            Id = "user123",
+            Id = 1,
             Email = "test@example.com",
             DisplayName = "Original Name"
         };
 
         _userRepositoryMock
-            .Setup(x => x.GetByIdAsync("user123", It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(existingUser));
 
         _userRepositoryMock
@@ -168,7 +168,7 @@ public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
         result.IsSuccess.Should().BeFalse();
         result.Error.Should().Be("Database update failed");
 
-        _userRepositoryMock.Verify(x => x.GetByIdAsync("user123", It.IsAny<CancellationToken>()), Times.Once);
+        _userRepositoryMock.Verify(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>()), Times.Once);
         _userRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -177,7 +177,7 @@ public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
     {
         // Arrange
         var command = new UpdateUserProfileCommand(
-            userId: "user123",
+            userId: 1,
             displayName: "New Name",
             gender: null, // Not updating gender
             dateOfBirth: null, // Not updating date of birth
@@ -186,7 +186,7 @@ public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
 
         var existingUser = new User
         {
-            Id = "user123",
+            Id = 1,
             Email = "test@example.com",
             DisplayName = "Original Name",
             Gender = Gender.Male, // Should remain unchanged
@@ -196,7 +196,7 @@ public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
 
         var updatedUser = new User
         {
-            Id = "user123",
+            Id = 1,
             Email = "test@example.com",
             DisplayName = "New Name",
             Gender = Gender.Male, // Unchanged
@@ -206,7 +206,7 @@ public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
 
         var expectedDto = new UserDto
         {
-            Id = "user123",
+            Id = 1,
             Email = "test@example.com",
             DisplayName = "New Name",
             Gender = nameof(Gender.Male),
@@ -218,7 +218,7 @@ public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
         };
 
         _userRepositoryMock
-            .Setup(x => x.GetByIdAsync("user123", It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(existingUser));
 
         _userRepositoryMock
@@ -244,7 +244,7 @@ public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
     {
         // Arrange
         var command = new UpdateUserProfileCommand(
-            userId: "user123",
+            userId: 1,
             displayName: invalidDisplayName!,
             gender: null,
             dateOfBirth: null
@@ -252,14 +252,14 @@ public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
 
         var existingUser = new User
         {
-            Id = "user123",
+            Id = 1,
             Email = "test@example.com",
             DisplayName = "Original Name"
         };
 
         var expectedDto = new UserDto
         {
-            Id = "user123",
+            Id = 1,
             Email = "test@example.com",
             DisplayName = "Original Name", // Should remain unchanged
             Gender = null,
@@ -271,7 +271,7 @@ public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
         };
 
         _userRepositoryMock
-            .Setup(x => x.GetByIdAsync("user123", It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(existingUser));
 
         _userRepositoryMock

@@ -40,27 +40,27 @@ public class AddUserMetricCommandHandlerTests
         // Arrange
         var command = new AddUserMetricCommand
         (
-            UserId: "user123",
+            UserId: 1,
             Date: new DateTime(2024, 1, 1),
             Weight: 70.5,
             Height: 175.0,
             Notes: "Morning measurement");
 
         // Setup user repository
-        var user = new User { Id = "user123", UnitPreference = UnitPreference.Metric };
+        var user = new User { Id = 1, UnitPreference = UnitPreference.Metric };
         _userRepositoryMock
-            .Setup(x => x.GetByIdAsync("user123", It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(user));
 
         // Setup metric repository to check if metric exists
         _userMetricsRepositoryMock
-            .Setup(x => x.ExistsForUserAndDateAsync("user123", new DateTime(2024, 1, 1), It.IsAny<CancellationToken>()))
+            .Setup(x => x.ExistsForUserAndDateAsync(1, new DateTime(2024, 1, 1), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(false));
 
         var createdMetric = new UserMetric
         {
             Id = "metric123",
-            UserId = "user123",
+            UserId = 1,
             Date = new DateTime(2024, 1, 1),
             Weight = 70.5,
             Height = 175.0,
@@ -71,7 +71,7 @@ public class AddUserMetricCommandHandlerTests
         var expectedDto = new UserMetricDto
         {
             Id = "metric123",
-            UserId = "user123",
+            UserId = 1,
             Date = new DateTime(2024, 1, 1),
             Weight = 70.5,
             Height = 175.0,
@@ -92,7 +92,7 @@ public class AddUserMetricCommandHandlerTests
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value!.UserId.Should().Be("user123");
+        result.Value!.UserId.Should().Be(1);
         result.Value.Weight.Should().Be(70.5);
         result.Value.Height.Should().Be(175.0);
         result.Value.Notes.Should().Be("Morning measurement");
@@ -106,7 +106,7 @@ public class AddUserMetricCommandHandlerTests
     {
         // Arrange
         var command = new AddUserMetricCommand(
-            UserId: "user123",
+            UserId: 1,
             Date: new DateTime(2024, 1, 1),
             Weight: 70.5,
             Height: null,
@@ -114,20 +114,20 @@ public class AddUserMetricCommandHandlerTests
         );
 
         // Setup user repository
-        var user = new User { Id = "user123", UnitPreference = UnitPreference.Metric };
+        var user = new User { Id = 1, UnitPreference = UnitPreference.Metric };
         _userRepositoryMock
-            .Setup(x => x.GetByIdAsync("user123", It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(user));
 
         // Setup metric repository to check if metric exists
         _userMetricsRepositoryMock
-            .Setup(x => x.ExistsForUserAndDateAsync("user123", new DateTime(2024, 1, 1), It.IsAny<CancellationToken>()))
+            .Setup(x => x.ExistsForUserAndDateAsync(1, new DateTime(2024, 1, 1), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(false));
 
         var createdMetric = new UserMetric
         {
             Id = "metric123",
-            UserId = "user123",
+            UserId = 1,
             Date = new DateTime(2024, 1, 1),
             Weight = 70.5,
             Height = null,
@@ -138,7 +138,7 @@ public class AddUserMetricCommandHandlerTests
         var expectedDto = new UserMetricDto
         {
             Id = "metric123",
-            UserId = "user123",
+            UserId = 1,
             Date = new DateTime(2024, 1, 1),
             Weight = 70.5,
             Height = null,
@@ -168,7 +168,7 @@ public class AddUserMetricCommandHandlerTests
     {
         // Arrange
         var command = new AddUserMetricCommand(
-            UserId: "user123",
+            UserId: 1,
             Date: new DateTime(2024, 1, 1),
             Weight: null,
             Height: 175.0,
@@ -176,20 +176,20 @@ public class AddUserMetricCommandHandlerTests
         );
 
         // Setup user repository
-        var user = new User { Id = "user123", UnitPreference = UnitPreference.Metric };
+        var user = new User { Id = 1, UnitPreference = UnitPreference.Metric };
         _userRepositoryMock
-            .Setup(x => x.GetByIdAsync("user123", It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(user));
 
         // Setup metric repository to check if metric exists
         _userMetricsRepositoryMock
-            .Setup(x => x.ExistsForUserAndDateAsync("user123", new DateTime(2024, 1, 1), It.IsAny<CancellationToken>()))
+            .Setup(x => x.ExistsForUserAndDateAsync(1, new DateTime(2024, 1, 1), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(false));
 
         var createdMetric = new UserMetric
         {
             Id = "metric123",
-            UserId = "user123",
+            UserId = 1,
             Date = new DateTime(2024, 1, 1),
             Weight = null,
             Height = 175.0,
@@ -200,7 +200,7 @@ public class AddUserMetricCommandHandlerTests
         var expectedDto = new UserMetricDto
         {
             Id = "metric123",
-            UserId = "user123",
+            UserId = 1,
             Date = new DateTime(2024, 1, 1),
             Weight = null,
             Height = 175.0,
@@ -230,7 +230,7 @@ public class AddUserMetricCommandHandlerTests
     {
         // Arrange
         var command = new AddUserMetricCommand(
-            UserId: "user123",
+            UserId: 1,
             Date: new DateTime(2024, 1, 1),
             Weight: 70.5,
             Height: 175.0,
@@ -238,14 +238,14 @@ public class AddUserMetricCommandHandlerTests
         );
 
         // Setup user repository
-        var user = new User { Id = "user123", UnitPreference = UnitPreference.Metric };
+        var user = new User { Id = 1, UnitPreference = UnitPreference.Metric };
         _userRepositoryMock
-            .Setup(x => x.GetByIdAsync("user123", It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(user));
 
         // Setup metric repository to check if metric exists
         _userMetricsRepositoryMock
-            .Setup(x => x.ExistsForUserAndDateAsync("user123", new DateTime(2024, 1, 1), It.IsAny<CancellationToken>()))
+            .Setup(x => x.ExistsForUserAndDateAsync(1, new DateTime(2024, 1, 1), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(false));
 
         _userMetricsRepositoryMock
@@ -268,7 +268,7 @@ public class AddUserMetricCommandHandlerTests
     {
         // Arrange
         var command = new AddUserMetricCommand(
-            UserId: "user123",
+            UserId: 1,
             Date: new DateTime(2024, 1, 1),
             Weight: 70.0,
             Height: 175.0,
@@ -276,14 +276,14 @@ public class AddUserMetricCommandHandlerTests
         );
 
         // Setup user repository
-        var user = new User { Id = "user123", UnitPreference = UnitPreference.Metric };
+        var user = new User { Id = 1, UnitPreference = UnitPreference.Metric };
         _userRepositoryMock
-            .Setup(x => x.GetByIdAsync("user123", It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(user));
 
         // Setup metric repository to check if metric exists
         _userMetricsRepositoryMock
-            .Setup(x => x.ExistsForUserAndDateAsync("user123", new DateTime(2024, 1, 1), It.IsAny<CancellationToken>()))
+            .Setup(x => x.ExistsForUserAndDateAsync(1, new DateTime(2024, 1, 1), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(false));
 
         UserMetric? capturedMetric = null;
@@ -307,7 +307,7 @@ public class AddUserMetricCommandHandlerTests
         // Arrange
         var today = DateTime.UtcNow.Date;
         var command = new AddUserMetricCommand(
-            UserId: "user123",
+            UserId: 1,
             Date: today, // Today's date
             Weight: 70.0,
             Height: null,
@@ -315,14 +315,14 @@ public class AddUserMetricCommandHandlerTests
         );
 
         // Setup user repository
-        var user = new User { Id = "user123", UnitPreference = UnitPreference.Metric };
+        var user = new User { Id = 1, UnitPreference = UnitPreference.Metric };
         _userRepositoryMock
-            .Setup(x => x.GetByIdAsync("user123", It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(user));
 
         // Setup metric repository to check if metric exists
         _userMetricsRepositoryMock
-            .Setup(x => x.ExistsForUserAndDateAsync("user123", today, It.IsAny<CancellationToken>()))
+            .Setup(x => x.ExistsForUserAndDateAsync(1, today, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(false));
 
         UserMetric? capturedMetric = null;
@@ -334,7 +334,7 @@ public class AddUserMetricCommandHandlerTests
         var expectedDto = new UserMetricDto
         {
             Id = "metric123",
-            UserId = "user123",
+            UserId = 1,
             Date = DateTime.UtcNow.Date,
             Weight = 70.0,
             Height = null,
@@ -388,7 +388,7 @@ public class AddUserMetricCommandHandlerTests
     {
         // Arrange
         var command = new AddUserMetricCommand(
-            UserId: "user123",
+            UserId: 1,
             Date: new DateTime(2024, 1, 1),
             Weight: 70.0,
             Height: 175.0,
@@ -396,14 +396,14 @@ public class AddUserMetricCommandHandlerTests
         );
 
         // Setup user repository
-        var user = new User { Id = "user123", UnitPreference = UnitPreference.Metric };
+        var user = new User { Id = 1, UnitPreference = UnitPreference.Metric };
         _userRepositoryMock
-            .Setup(x => x.GetByIdAsync("user123", It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(user));
 
         // Setup metric repository to indicate metric already exists
         _userMetricsRepositoryMock
-            .Setup(x => x.ExistsForUserAndDateAsync("user123", new DateTime(2024, 1, 1), It.IsAny<CancellationToken>()))
+            .Setup(x => x.ExistsForUserAndDateAsync(1, new DateTime(2024, 1, 1), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(true));
 
         // Act

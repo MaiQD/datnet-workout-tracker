@@ -6,7 +6,7 @@ public class UserDto
 {
     
     [Required]
-    public string Id { get; set; } = string.Empty;
+    public int Id { get; set; }
     
     [Required]
     public string Email { get; set; } = string.Empty;

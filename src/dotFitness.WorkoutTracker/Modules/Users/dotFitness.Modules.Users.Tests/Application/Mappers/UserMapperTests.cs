@@ -19,7 +19,7 @@ public class UserMapperTests
         // Arrange
         var user = new User
         {
-            Id = "user123",
+            Id = 1,
             Email = "test@example.com",
             DisplayName = "Test User",
             GoogleId = "google123",
@@ -38,7 +38,7 @@ public class UserMapperTests
 
         // Assert
         dto.Should().NotBeNull();
-        dto.Id.Should().Be("user123");
+        dto.Id.Should().Be(1);
         dto.Email.Should().Be("test@example.com");
         dto.DisplayName.Should().Be("Test User");
         dto.ProfilePicture.Should().Be("https://lh3.googleusercontent.com/a/test-photo");
@@ -56,7 +56,7 @@ public class UserMapperTests
         // Arrange
         var user = new User
         {
-            Id = "user123",
+            Id = 1,
             Email = "test@example.com",
             DisplayName = "Test User",
             GoogleId = null, // Null optional field
@@ -74,7 +74,7 @@ public class UserMapperTests
 
         // Assert
         dto.Should().NotBeNull();
-        dto.Id.Should().Be("user123");
+        dto.Id.Should().Be(1);
         dto.Email.Should().Be("test@example.com");
         dto.DisplayName.Should().Be("Test User");
         dto.ProfilePicture.Should().BeNull();
@@ -92,7 +92,7 @@ public class UserMapperTests
         {
             var user = new User
             {
-                Id = "user123",
+                Id = 1,
                 Email = "test@example.com",
                 DisplayName = "Test User",
                 LoginMethod = loginMethod,
@@ -119,7 +119,7 @@ public class UserMapperTests
         {
             var user = new User
             {
-                Id = "user123",
+                Id = 1,
                 Email = "test@example.com",
                 DisplayName = "Test User",
                 Gender = gender,
@@ -144,7 +144,7 @@ public class UserMapperTests
         {
             var user = new User
             {
-                Id = "user123",
+                Id = 1,
                 Email = "test@example.com",
                 DisplayName = "Test User",
                 UnitPreference = unitPreference,
@@ -166,7 +166,7 @@ public class UserMapperTests
         // Arrange
         var user = new User
         {
-            Id = "user123",
+            Id = 1,
             Email = "test@example.com",
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
@@ -191,7 +191,7 @@ public class UserMapperTests
         var roles = new List<string> { "User", "Admin", "Moderator" };
         var user = new User
         {
-            Id = "user123",
+            Id = 1,
             Email = "test@example.com",
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
@@ -218,7 +218,7 @@ public class UserMapperTests
         
         var user = new User
         {
-            Id = "user123",
+            Id = 1,
             Email = "test@example.com",
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
@@ -242,7 +242,7 @@ public class UserMapperTests
         // Arrange
         var user = new User
         {
-            Id = "user123",
+            Id = 1,
             Email = "test@example.com",
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Imperial,
@@ -265,7 +265,7 @@ public class UserMapperTests
         // Arrange
         var user = new User
         {
-            Id = "user123",
+            Id = 1,
             Email = "test@example.com",
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,

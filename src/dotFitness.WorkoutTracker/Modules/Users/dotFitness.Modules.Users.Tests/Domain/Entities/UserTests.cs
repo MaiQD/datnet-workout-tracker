@@ -16,7 +16,6 @@ public class UserTests
         };
 
         // Assert
-        user.Id.Should().NotBeNullOrEmpty();
         user.Email.Should().Be("test@example.com");
         user.DisplayName.Should().Be("Test User");
         user.LoginMethod.Should().Be(LoginMethod.Google);

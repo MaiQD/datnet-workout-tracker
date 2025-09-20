@@ -34,13 +34,13 @@ public class GetUserMetricsQueryHandlerTests
     public async Task Should_Return_All_Metrics_When_No_Date_Range_Specified()
     {
         // Arrange
-        var query = new GetUserMetricsQuery("user123", null, null);
+        var query = new GetUserMetricsQuery(1, null, null);
         var metrics = new List<UserMetric>
         {
             new()
             {
                 Id = "metric1",
-                UserId = "user123",
+                UserId = 1,
                 Date = new DateTime(2024, 1, 1),
                 Weight = 70.0,
                 Bmi = 22.86
@@ -48,7 +48,7 @@ public class GetUserMetricsQueryHandlerTests
             new()
             {
                 Id = "metric2",
-                UserId = "user123",
+                UserId = 1,
                 Date = new DateTime(2024, 1, 15),
                 Weight = 72.0,
                 Bmi = 23.51
@@ -60,7 +60,7 @@ public class GetUserMetricsQueryHandlerTests
             new()
             {
                 Id = "metric1",
-                UserId = "user123",
+                UserId = 1,
                 Date = new DateTime(2024, 1, 1),
                 Weight = 70.0,
                 Height = null,
@@ -73,7 +73,7 @@ public class GetUserMetricsQueryHandlerTests
             new()
             {
                 Id = "metric2",
-                UserId = "user123",
+                UserId = 1,
                 Date = new DateTime(2024, 1, 15),
                 Weight = 72.0,
                 Height = null,
@@ -86,7 +86,7 @@ public class GetUserMetricsQueryHandlerTests
         };
 
         _userMetricsRepositoryMock
-            .Setup(x => x.GetByUserIdAsync("user123", 0, 50, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByUserIdAsync(1, 0, 50, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success<IEnumerable<UserMetric>>(metrics));
 
         // Act
@@ -95,9 +95,9 @@ public class GetUserMetricsQueryHandlerTests
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().HaveCount(2);
-        result.Value.Should().OnlyContain(dto => dto.UserId == "user123");
+        result.Value.Should().OnlyContain(dto => dto.UserId == 1);
 
-        _userMetricsRepositoryMock.Verify(x => x.GetByUserIdAsync("user123", 0, 50, It.IsAny<CancellationToken>()),
+        _userMetricsRepositoryMock.Verify(x => x.GetByUserIdAsync(1, 0, 50, It.IsAny<CancellationToken>()),
             Times.Once);
         _userMetricsRepositoryMock.Verify(
             x => x.GetByUserIdAndDateRangeAsync(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(),
@@ -113,7 +113,7 @@ public class GetUserMetricsQueryHandlerTests
         var toDate = new DateTime(2024, 1, 31);
         var query = new GetUserMetricsQuery
         {
-            UserId = "user123", StartDate = fromDate, EndDate = toDate
+            UserId = 1, StartDate = fromDate, EndDate = toDate
         };
 
         var metricsInRange = new List<UserMetric>
@@ -121,7 +121,7 @@ public class GetUserMetricsQueryHandlerTests
             new()
             {
                 Id = "metric1",
-                UserId = "user123",
+                UserId = 1,
                 Date = new DateTime(2024, 1, 15),
                 Weight = 70.0,
                 Bmi = 22.86
@@ -131,7 +131,7 @@ public class GetUserMetricsQueryHandlerTests
         var expectedDto = new UserMetricDto
         {
             Id = "metric1",
-            UserId = "user123",
+            UserId = 1,
             Date = new DateTime(2024, 1, 15),
             Weight = 70.0,
             Height = null,
@@ -143,7 +143,7 @@ public class GetUserMetricsQueryHandlerTests
         };
 
         _userMetricsRepositoryMock
-            .Setup(x => x.GetByUserIdAndDateRangeAsync("user123", fromDate, toDate, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByUserIdAndDateRangeAsync(1, fromDate, toDate, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success<IEnumerable<UserMetric>>(metricsInRange));
 
         // Act
@@ -154,7 +154,7 @@ public class GetUserMetricsQueryHandlerTests
         result.Value.Should().HaveCount(1);
         result.Value!.First().Date.Should().Be(new DateTime(2024, 1, 15));
 
-        _userMetricsRepositoryMock.Verify(x => x.GetByUserIdAndDateRangeAsync("user123", fromDate, toDate, It.IsAny<CancellationToken>()), Times.Once);
+        _userMetricsRepositoryMock.Verify(x => x.GetByUserIdAndDateRangeAsync(1, fromDate, toDate, It.IsAny<CancellationToken>()), Times.Once);
         _userMetricsRepositoryMock.Verify(x => x.GetByUserIdAsync(It.IsAny<string>(), 0, 50, It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -162,10 +162,10 @@ public class GetUserMetricsQueryHandlerTests
     public async Task Should_Return_Empty_List_When_No_Metrics_Found()
     {
         // Arrange
-        var query = new GetUserMetricsQuery("user123", null, null);
+        var query = new GetUserMetricsQuery(1, null, null);
 
         _userMetricsRepositoryMock
-            .Setup(x => x.GetByUserIdAsync("user123",0, 50, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByUserIdAsync(1,0, 50, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success<IEnumerable<UserMetric>>(new List<UserMetric>()));
 
         // Act
@@ -175,17 +175,17 @@ public class GetUserMetricsQueryHandlerTests
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().BeEmpty();
 
-        _userMetricsRepositoryMock.Verify(x => x.GetByUserIdAsync("user123", 0, 50, It.IsAny<CancellationToken>()), Times.Once);
+        _userMetricsRepositoryMock.Verify(x => x.GetByUserIdAsync(1, 0, 50, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task Should_Handle_Repository_Errors_Gracefully()
     {
         // Arrange
-        var query = new GetUserMetricsQuery("user123", null, null);
+        var query = new GetUserMetricsQuery(1, null, null);
 
         _userMetricsRepositoryMock
-            .Setup(x => x.GetByUserIdAsync("user123", 0, 50, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByUserIdAsync(1, 0, 50, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Failure<IEnumerable<UserMetric>>("Database connection failed"));
 
         // Act
@@ -195,7 +195,7 @@ public class GetUserMetricsQueryHandlerTests
         result.IsSuccess.Should().BeFalse();
         result.Error.Should().Be("Database connection failed");
 
-        _userMetricsRepositoryMock.Verify(x => x.GetByUserIdAsync("user123", 0, 50, It.IsAny<CancellationToken>()), Times.Once);
+        _userMetricsRepositoryMock.Verify(x => x.GetByUserIdAsync(1, 0, 50, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -204,27 +204,27 @@ public class GetUserMetricsQueryHandlerTests
         // Arrange
         var fromDate = new DateTime(2024, 1, 10);
         var toDate = new DateTime(2024, 1, 20);
-        var query = new GetUserMetricsQuery("user123", fromDate, toDate);
+        var query = new GetUserMetricsQuery(1, fromDate, toDate);
 
         var filteredMetrics = new List<UserMetric>
         {
             new()
             {
                 Id = "metric1",
-                UserId = "user123",
+                UserId = 1,
                 Date = new DateTime(2024, 1, 15),
                 Weight = 70.0
             }
         };
 
         _userMetricsRepositoryMock
-            .Setup(x => x.GetByUserIdAndDateRangeAsync("user123", fromDate, toDate, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByUserIdAndDateRangeAsync(1, fromDate, toDate, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success<IEnumerable<UserMetric>>(filteredMetrics));
 
         var expectedDto = new UserMetricDto
         {
             Id = "metric1",
-            UserId = "user123",
+            UserId = 1,
             Date = new DateTime(2024, 1, 15),
             Weight = 70.0,
             Height = null,
@@ -245,7 +245,7 @@ public class GetUserMetricsQueryHandlerTests
         result.Value!.First().Date.Should().BeOnOrAfter(fromDate);
 
         _userMetricsRepositoryMock.Verify(
-            x => x.GetByUserIdAndDateRangeAsync("user123", fromDate, toDate, It.IsAny<CancellationToken>()),
+            x => x.GetByUserIdAndDateRangeAsync(1, fromDate, toDate, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 

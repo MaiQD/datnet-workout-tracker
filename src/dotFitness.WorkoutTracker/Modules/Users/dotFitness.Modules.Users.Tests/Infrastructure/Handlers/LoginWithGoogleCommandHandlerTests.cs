@@ -71,7 +71,7 @@ public class LoginWithGoogleCommandHandlerTests
         var command = new LoginWithGoogleCommand(request);
         var existingUser = new User
         {
-            Id = "user123",
+            Id = 1,
             Email = "test@example.com",
             DisplayName = "Test User",
             GoogleId = "google123"

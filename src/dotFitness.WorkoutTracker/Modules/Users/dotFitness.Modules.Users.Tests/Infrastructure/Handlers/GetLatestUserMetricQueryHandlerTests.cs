@@ -35,11 +35,11 @@ public class GetLatestUserMetricQueryHandlerTests
     public async Task Should_Return_Latest_Metric_When_Found()
     {
         // Arrange
-        var query = new GetLatestUserMetricQuery("user123");
+        var query = new GetLatestUserMetricQuery(1);
         var latestMetric = new UserMetric
         {
             Id = "metric123",
-            UserId = "user123",
+            UserId = 1,
             Date = new DateTime(2024, 1, 15),
             Weight = 72.0,
             Height = 175.0,
@@ -49,7 +49,7 @@ public class GetLatestUserMetricQueryHandlerTests
         var expectedDto = new UserMetricDto
         {
             Id = "metric123",
-            UserId = "user123",
+            UserId = 1,
             Date = new DateTime(2024, 1, 15),
             Weight = 72.0,
             Height = 175.0,
@@ -61,7 +61,7 @@ public class GetLatestUserMetricQueryHandlerTests
         };
 
         _userMetricsRepositoryMock
-            .Setup(x => x.GetLatestByUserIdAsync("user123", It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetLatestByUserIdAsync(1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(latestMetric));
 
         // Act
@@ -70,22 +70,22 @@ public class GetLatestUserMetricQueryHandlerTests
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value!.UserId.Should().Be("user123");
+        result.Value!.UserId.Should().Be(1);
         result.Value.Weight.Should().Be(72.0);
         result.Value.Height.Should().Be(175.0);
         result.Value.Bmi.Should().Be(23.51);
 
-        _userMetricsRepositoryMock.Verify(x => x.GetLatestByUserIdAsync("user123", It.IsAny<CancellationToken>()), Times.Once);
+        _userMetricsRepositoryMock.Verify(x => x.GetLatestByUserIdAsync(1, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task Should_Return_NotFound_When_No_Metrics_Exist()
     {
         // Arrange
-        var query = new GetLatestUserMetricQuery("user123");
+        var query = new GetLatestUserMetricQuery(1);
 
         _userMetricsRepositoryMock
-            .Setup(x => x.GetLatestByUserIdAsync("user123", It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetLatestByUserIdAsync(1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Failure<UserMetric>("No metrics found for user"));
 
         // Act
@@ -95,17 +95,17 @@ public class GetLatestUserMetricQueryHandlerTests
         result.IsSuccess.Should().BeFalse();
         result.Error.Should().Be("No metrics found for user");
 
-        _userMetricsRepositoryMock.Verify(x => x.GetLatestByUserIdAsync("user123", It.IsAny<CancellationToken>()), Times.Once);
+        _userMetricsRepositoryMock.Verify(x => x.GetLatestByUserIdAsync(1, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task Should_Handle_Repository_Errors_Gracefully()
     {
         // Arrange
-        var query = new GetLatestUserMetricQuery("user123");
+        var query = new GetLatestUserMetricQuery(1);
 
         _userMetricsRepositoryMock
-            .Setup(x => x.GetLatestByUserIdAsync("user123", It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetLatestByUserIdAsync(1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Failure<UserMetric>("Database connection failed"));
 
         // Act
@@ -115,7 +115,7 @@ public class GetLatestUserMetricQueryHandlerTests
         result.IsSuccess.Should().BeFalse();
         result.Error.Should().Be("No metrics found for user");
 
-        _userMetricsRepositoryMock.Verify(x => x.GetLatestByUserIdAsync("user123", It.IsAny<CancellationToken>()), Times.Once);
+        _userMetricsRepositoryMock.Verify(x => x.GetLatestByUserIdAsync(1, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Theory]

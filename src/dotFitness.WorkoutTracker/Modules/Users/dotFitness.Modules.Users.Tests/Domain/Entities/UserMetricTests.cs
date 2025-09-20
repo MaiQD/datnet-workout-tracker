@@ -11,15 +11,14 @@ public class UserMetricTests
         // Arrange & Act
         var userMetric = new UserMetric
         {
-            UserId = "user123",
+            UserId = 1,
             Date = new DateTime(2024, 1, 1),
             Weight = 70.5,
             Height = 175.0
         };
 
         // Assert
-        userMetric.Id.Should().NotBeNullOrEmpty();
-        userMetric.UserId.Should().Be("user123");
+        userMetric.UserId.Should().Be(1);
         userMetric.Date.Should().Be(new DateTime(2024, 1, 1));
         userMetric.Weight.Should().Be(70.5);
         userMetric.Height.Should().Be(175.0);
@@ -35,7 +34,7 @@ public class UserMetricTests
         // Arrange
         var userMetric = new UserMetric
         {
-            UserId = "user123",
+            UserId = 1,
             Weight = weight,
             Height = height
         };
@@ -53,7 +52,7 @@ public class UserMetricTests
         // Arrange
         var userMetric = new UserMetric
         {
-            UserId = "user123",
+            UserId = 1,
             Height = 175.0
         };
 
@@ -70,7 +69,7 @@ public class UserMetricTests
         // Arrange
         var userMetric = new UserMetric
         {
-            UserId = "user123",
+            UserId = 1,
             Weight = 70.0
         };
 
@@ -89,7 +88,7 @@ public class UserMetricTests
         // Arrange
         var userMetric = new UserMetric
         {
-            UserId = "user123",
+            UserId = 1,
             Weight = invalidWeight,
             Height = 175.0
         };
@@ -109,7 +108,7 @@ public class UserMetricTests
         // Arrange
         var userMetric = new UserMetric
         {
-            UserId = "user123",
+            UserId = 1,
             Weight = 70.0,
             Height = invalidHeight
         };
@@ -132,7 +131,7 @@ public class UserMetricTests
         // Arrange
         var userMetric = new UserMetric
         {
-            UserId = "user123",
+            UserId = 1,
             Bmi = bmi
         };
 
@@ -149,7 +148,7 @@ public class UserMetricTests
         // Arrange
         var userMetric = new UserMetric
         {
-            UserId = "user123",
+            UserId = 1,
             Weight = 70.0
         };
         var originalUpdatedAt = userMetric.UpdatedAt;
@@ -170,7 +169,7 @@ public class UserMetricTests
         // Arrange
         var userMetric = new UserMetric
         {
-            UserId = "user123",
+            UserId = 1,
             Height = 175.0
         };
         var originalUpdatedAt = userMetric.UpdatedAt;
@@ -191,7 +190,7 @@ public class UserMetricTests
         // Arrange
         var userMetric = new UserMetric
         {
-            UserId = "user123",
+            UserId = 1,
             Notes = "Old notes"
         };
         var originalUpdatedAt = userMetric.UpdatedAt;
@@ -214,7 +213,7 @@ public class UserMetricTests
         // Arrange
         var userMetric = new UserMetric
         {
-            UserId = "user123",
+            UserId = 1,
             Weight = 70.0
         };
         var originalWeight = userMetric.Weight;
@@ -238,7 +237,7 @@ public class UserMetricTests
         // Arrange
         var userMetric = new UserMetric
         {
-            UserId = "user123",
+            UserId = 1,
             Height = 175.0
         };
         var originalHeight = userMetric.Height;
@@ -260,7 +259,7 @@ public class UserMetricTests
         // Arrange
         var userMetric = new UserMetric
         {
-            UserId = "user123",
+            UserId = 1,
             Weight = 70.0
         };
 
@@ -277,7 +276,7 @@ public class UserMetricTests
         // Arrange
         var userMetric = new UserMetric
         {
-            UserId = "user123"
+            UserId = 1
         };
 
         // Act
@@ -293,7 +292,7 @@ public class UserMetricTests
         // Arrange
         var userMetric = new UserMetric
         {
-            UserId = "user123",
+            UserId = 1,
             Height = 175.0
         };
 
@@ -310,7 +309,7 @@ public class UserMetricTests
         // Arrange
         var userMetric = new UserMetric
         {
-            UserId = "user123"
+            UserId = 1
         };
 
         // Act

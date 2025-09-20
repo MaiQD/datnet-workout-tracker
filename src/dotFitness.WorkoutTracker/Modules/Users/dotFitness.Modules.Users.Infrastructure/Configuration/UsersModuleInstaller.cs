@@ -7,8 +7,6 @@ using MongoDB.Driver;
 using System.Text;
 using dotFitness.ModuleContracts;
 using dotFitness.Modules.Users.Domain.Entities;
-using dotFitness.Modules.Users.Domain.Repositories;
-using dotFitness.Modules.Users.Infrastructure.Repositories;
 using dotFitness.Modules.Users.Infrastructure.Services;
 using dotFitness.Modules.Users.Application.Mappers;
 using dotFitness.Modules.Users.Application.Services;
@@ -103,9 +101,6 @@ public class UsersModuleInstaller : IModuleInstaller
             return database.GetCollection<InboxMessage>("inboxMessages");
         });
 
-        // Register repositories
-        services.AddScoped<IUserRepository, UserRepository>();
-        services.AddScoped<IUserMetricsRepository, UserMetricsRepository>();
 
         // Register services
         services.AddScoped<IGoogleAuthService, GoogleAuthService>();

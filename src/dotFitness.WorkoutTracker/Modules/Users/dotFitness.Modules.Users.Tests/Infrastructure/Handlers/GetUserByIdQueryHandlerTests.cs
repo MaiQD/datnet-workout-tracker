@@ -34,10 +34,10 @@ public class GetUserByIdQueryHandlerTests
     public async Task Should_Return_User_When_Found()
     {
         // Arrange
-        var query = new GetUserByIdQuery("user123");
+        var query = new GetUserByIdQuery(1);
         var user = new User
         {
-            Id = "user123",
+            Id = 1,
             Email = "test@example.com",
             DisplayName = "Test User",
             Gender = Gender.Male,
@@ -46,7 +46,7 @@ public class GetUserByIdQueryHandlerTests
 
         var expectedDto = new UserDto
         {
-            Id = "user123",
+            Id = 1,
             Email = "test@example.com",
             DisplayName = "Test User",
             Gender = nameof(Gender.Male),
@@ -58,7 +58,7 @@ public class GetUserByIdQueryHandlerTests
         };
 
         _userRepositoryMock
-            .Setup(x => x.GetByIdAsync("user123", It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(user));
 
         // Act
@@ -67,11 +67,11 @@ public class GetUserByIdQueryHandlerTests
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value!.Id.Should().Be("user123");
+        result.Value!.Id.Should().Be(1);
         result.Value.Email.Should().Be("test@example.com");
         result.Value.DisplayName.Should().Be("Test User");
 
-        _userRepositoryMock.Verify(x => x.GetByIdAsync("user123", It.IsAny<CancellationToken>()), Times.Once);
+        _userRepositoryMock.Verify(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -98,10 +98,10 @@ public class GetUserByIdQueryHandlerTests
     public async Task Should_Handle_Repository_Errors_Gracefully()
     {
         // Arrange
-        var query = new GetUserByIdQuery("user123");
+        var query = new GetUserByIdQuery(1);
 
         _userRepositoryMock
-            .Setup(x => x.GetByIdAsync("user123", It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Failure<User>("Database connection failed"));
 
         // Act
@@ -111,7 +111,7 @@ public class GetUserByIdQueryHandlerTests
         result.IsSuccess.Should().BeFalse();
         result.Error.Should().Be("User not found");
 
-        _userRepositoryMock.Verify(x => x.GetByIdAsync("user123", It.IsAny<CancellationToken>()), Times.Once);
+        _userRepositoryMock.Verify(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Theory]
