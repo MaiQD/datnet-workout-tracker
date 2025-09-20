@@ -37,6 +37,7 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Handle_Valid_Command_Successfully()
     {
         var user = new User
@@ -81,6 +82,7 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Handle_Weight_Only_Measurement()
     {
         // Arrange
@@ -122,6 +124,7 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Handle_Height_Only_Measurement()
     {
         // Arrange
@@ -163,6 +166,7 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Handle_Repository_Errors_Gracefully()
     {
         // Arrange
@@ -205,6 +209,7 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Calculate_BMI_When_Both_Weight_And_Height_Provided()
     {
         // Arrange
@@ -242,6 +247,7 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Set_Date_To_Today_When_Not_Provided()
     {
         // Arrange
@@ -280,6 +286,7 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Return_Failure_When_User_Not_Found()
     {
         // Arrange
@@ -305,6 +312,7 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Return_Failure_When_Metric_Already_Exists_For_Date()
     {
         // Arrange

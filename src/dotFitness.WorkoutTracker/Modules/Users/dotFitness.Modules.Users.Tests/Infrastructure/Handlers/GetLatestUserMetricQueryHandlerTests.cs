@@ -38,6 +38,7 @@ public class GetLatestUserMetricQueryHandlerTests : IAsyncLifetime
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Return_Latest_Metric_When_Found()
     {
         // Arrange
@@ -82,6 +83,7 @@ public class GetLatestUserMetricQueryHandlerTests : IAsyncLifetime
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Return_NotFound_When_No_Metrics_Exist()
     {
         // Arrange
@@ -108,6 +110,7 @@ public class GetLatestUserMetricQueryHandlerTests : IAsyncLifetime
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Handle_Repository_Errors_Gracefully()
     {
         // Arrange
@@ -137,6 +140,7 @@ public class GetLatestUserMetricQueryHandlerTests : IAsyncLifetime
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Handle_Invalid_User_Id()
     {
         // Arrange

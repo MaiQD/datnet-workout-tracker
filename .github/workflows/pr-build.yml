@@ -96,7 +96,7 @@ jobs:
           --results-directory ./TestResults \
           --logger trx \
           --settings coverlet.runsettings \
-          --filter "Category!=Integration&Category!=Database" \
+              --filter "Category=Unit" \
           -- \
           DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
 
@@ -108,7 +108,7 @@ jobs:
           --results-directory ./TestResults \
           --logger trx \
           --settings coverlet.runsettings \
-          --filter "Category=Integration|Category=Database" \
+              --filter "Category=Integration" \
           -- \
           DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
 

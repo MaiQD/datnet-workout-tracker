@@ -62,6 +62,7 @@ public class LoginWithGoogleCommandHandlerTests : IAsyncLifetime
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Handle_Valid_Command_Successfully_For_Existing_User()
     {
         // Arrange
@@ -114,6 +115,7 @@ public class LoginWithGoogleCommandHandlerTests : IAsyncLifetime
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Return_ValidationError_For_Invalid_Command()
     {
         // Arrange
@@ -132,6 +134,7 @@ public class LoginWithGoogleCommandHandlerTests : IAsyncLifetime
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Handle_Repository_Errors_Gracefully()
     {
         // Arrange
@@ -169,6 +172,7 @@ public class LoginWithGoogleCommandHandlerTests : IAsyncLifetime
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Create_New_User_For_First_Time_Google_Login()
     {
         // Arrange
@@ -218,6 +222,7 @@ public class LoginWithGoogleCommandHandlerTests : IAsyncLifetime
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Add_Admin_Role_For_Admin_Email()
     {
         // Arrange

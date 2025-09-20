@@ -14,6 +14,7 @@ public class UserMapperTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Map_Entity_To_Dto_Correctly()
     {
         // Arrange
@@ -51,6 +52,7 @@ public class UserMapperTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Handle_Null_Optional_Values_In_Mapping()
     {
         // Arrange
@@ -85,6 +87,7 @@ public class UserMapperTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Map_All_LoginMethod_Values_Correctly()
     {
         // Arrange & Act & Assert
@@ -112,6 +115,7 @@ public class UserMapperTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Map_All_Gender_Values_Correctly()
     {
         // Arrange & Act & Assert
@@ -137,6 +141,7 @@ public class UserMapperTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Map_All_UnitPreference_Values_Correctly()
     {
         // Arrange & Act & Assert
@@ -161,6 +166,7 @@ public class UserMapperTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Map_Empty_Roles_List()
     {
         // Arrange
@@ -185,6 +191,7 @@ public class UserMapperTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Map_Multiple_Roles()
     {
         // Arrange
@@ -210,6 +217,7 @@ public class UserMapperTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Preserve_DateTime_Precision()
     {
         // Arrange
@@ -237,6 +245,7 @@ public class UserMapperTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Map_User_With_Imperial_Unit_Preference()
     {
         // Arrange
@@ -260,6 +269,7 @@ public class UserMapperTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Not_Include_Calculated_Properties()
     {
         // Arrange

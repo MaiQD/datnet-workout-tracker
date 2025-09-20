@@ -38,6 +38,7 @@ public class GetUserMetricsQueryHandlerTests: IAsyncLifetime
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Return_All_Metrics_When_No_Date_Range_Specified()
     {
         // Arrange
@@ -90,6 +91,7 @@ public class GetUserMetricsQueryHandlerTests: IAsyncLifetime
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Return_Metrics_Within_Date_Range_When_Specified()
     {
         // Arrange
@@ -137,6 +139,7 @@ public class GetUserMetricsQueryHandlerTests: IAsyncLifetime
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Return_Empty_List_When_No_Metrics_Found()
     {
         // Arrange
@@ -163,6 +166,7 @@ public class GetUserMetricsQueryHandlerTests: IAsyncLifetime
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Handle_Repository_Errors_Gracefully()
     {
         // Arrange
@@ -192,6 +196,7 @@ public class GetUserMetricsQueryHandlerTests: IAsyncLifetime
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Apply_Date_Range_Filters_Correctly()
     {
         // Arrange

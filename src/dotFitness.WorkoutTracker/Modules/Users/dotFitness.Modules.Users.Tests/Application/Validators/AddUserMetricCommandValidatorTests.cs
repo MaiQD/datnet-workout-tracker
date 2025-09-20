@@ -14,6 +14,7 @@ public class AddUserMetricCommandValidatorTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Pass_Validation_For_Valid_Command_With_Weight_And_Height()
     {
         // Arrange
@@ -33,6 +34,7 @@ public class AddUserMetricCommandValidatorTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Pass_Validation_For_Valid_Command_With_Weight_Only()
     {
         // Arrange
@@ -52,6 +54,7 @@ public class AddUserMetricCommandValidatorTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Pass_Validation_For_Valid_Command_With_Height_Only()
     {
         // Arrange
@@ -71,6 +74,7 @@ public class AddUserMetricCommandValidatorTests
     }
 
     [Theory]
+    [Trait("Category", "Unit")]
     [InlineData(0)]
     [InlineData(-1)]
     [InlineData(null)]
@@ -94,6 +98,7 @@ public class AddUserMetricCommandValidatorTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Fail_Validation_For_Missing_Date()
     {
         // Arrange
@@ -114,6 +119,7 @@ public class AddUserMetricCommandValidatorTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Fail_Validation_For_Future_Date()
     {
         // Arrange
@@ -135,6 +141,7 @@ public class AddUserMetricCommandValidatorTests
     }
 
     [Theory]
+    [Trait("Category", "Unit")]
     [InlineData(0)]
     [InlineData(-5)]
     public void Should_Fail_Validation_For_Invalid_Weight(double invalidWeight)
@@ -157,6 +164,7 @@ public class AddUserMetricCommandValidatorTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Fail_Validation_For_Weight_Too_High()
     {
         // Arrange
@@ -177,6 +185,7 @@ public class AddUserMetricCommandValidatorTests
     }
 
     [Theory]
+    [Trait("Category", "Unit")]
     [InlineData(0)]
     [InlineData(-5)]
     public void Should_Fail_Validation_For_Invalid_Height(double invalidHeight)
@@ -199,6 +208,7 @@ public class AddUserMetricCommandValidatorTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Fail_Validation_For_Height_Too_High()
     {
         // Arrange
@@ -219,6 +229,7 @@ public class AddUserMetricCommandValidatorTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Fail_Validation_For_Notes_Too_Long()
     {
         // Arrange
@@ -240,6 +251,7 @@ public class AddUserMetricCommandValidatorTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Fail_Validation_When_No_Metrics_Provided()
     {
         // Arrange
@@ -260,6 +272,7 @@ public class AddUserMetricCommandValidatorTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Pass_Validation_For_Valid_Weight_Range()
     {
         // Arrange
@@ -279,6 +292,7 @@ public class AddUserMetricCommandValidatorTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Pass_Validation_For_Valid_Height_Range()
     {
         // Arrange
@@ -298,6 +312,7 @@ public class AddUserMetricCommandValidatorTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Pass_Validation_For_Valid_Notes_Length()
     {
         // Arrange
@@ -318,6 +333,7 @@ public class AddUserMetricCommandValidatorTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Pass_Validation_For_Today_Date()
     {
         // Arrange

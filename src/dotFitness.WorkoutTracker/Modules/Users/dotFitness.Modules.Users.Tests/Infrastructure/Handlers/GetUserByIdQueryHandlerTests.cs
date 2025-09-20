@@ -38,6 +38,7 @@ public class GetUserByIdQueryHandlerTests : IAsyncLifetime
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Return_User_When_Found()
     {
         // Arrange
@@ -68,6 +69,7 @@ public class GetUserByIdQueryHandlerTests : IAsyncLifetime
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Return_NotFound_When_User_DoesNot_Exist()
     {
         // Arrange
@@ -82,6 +84,7 @@ public class GetUserByIdQueryHandlerTests : IAsyncLifetime
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Handle_Repository_Errors_Gracefully()
     {
         // Arrange
@@ -111,6 +114,7 @@ public class GetUserByIdQueryHandlerTests : IAsyncLifetime
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Handle_Invalid_User_Id()
     {
         // Arrange

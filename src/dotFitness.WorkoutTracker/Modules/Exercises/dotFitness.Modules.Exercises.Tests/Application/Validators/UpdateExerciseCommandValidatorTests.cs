@@ -10,6 +10,7 @@ public class UpdateExerciseCommandValidatorTests
     private readonly UpdateExerciseCommandValidator _validator = new();
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Pass_Validation_For_Valid_Command()
     {
         var command = new UpdateExerciseCommand(
@@ -31,6 +32,7 @@ public class UpdateExerciseCommandValidatorTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Fail_When_ExerciseId_Missing()
     {
         var command = new UpdateExerciseCommand(

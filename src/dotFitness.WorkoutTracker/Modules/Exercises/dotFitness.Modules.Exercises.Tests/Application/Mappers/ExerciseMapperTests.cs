@@ -7,6 +7,7 @@ namespace dotFitness.Modules.Exercises.Tests.Application.Mappers;
 public class ExerciseMapperTests
 {
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Map_Exercise_Entity_To_Dto_Correctly()
     {
         var e = new Exercise
@@ -50,6 +51,7 @@ public class ExerciseMapperTests
 public class MuscleGroupMapperTests
 {
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Map_MuscleGroup_Entity_To_Dto_Correctly()
     {
         var mg = new MuscleGroup
@@ -77,6 +79,7 @@ public class MuscleGroupMapperTests
 public class EquipmentMapperTests
 {
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Map_Equipment_Entity_To_Dto_Correctly()
     {
         var eq = new Equipment

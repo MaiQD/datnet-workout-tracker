@@ -14,6 +14,7 @@ public class GetAllExercisesQueryHandlerTests
     private readonly Mock<ILogger<GetAllExercisesQueryHandler>> _logger = new();
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Return_All_For_User_When_No_Criteria()
     {
         _repo.Setup(r => r.GetAllForUserAsync(1, It.IsAny<CancellationToken>()))
@@ -29,6 +30,7 @@ public class GetAllExercisesQueryHandlerTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Use_Search_When_Criteria_Provided()
     {
         _repo.Setup(r => r.SearchAsync(1, "push", It.IsAny<List<string>?>(), It.IsAny<List<string>?>(), null, It.IsAny<CancellationToken>()))

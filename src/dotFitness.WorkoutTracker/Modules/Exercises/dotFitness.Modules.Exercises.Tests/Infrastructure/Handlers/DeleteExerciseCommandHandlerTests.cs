@@ -14,6 +14,7 @@ public class DeleteExerciseCommandHandlerTests
     private readonly Mock<ILogger<DeleteExerciseCommandHandler>> _logger = new();
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Delete_When_User_Owns_Exercise()
     {
         var existing = new Exercise { Id = "ex1", UserId = 1 };
@@ -29,6 +30,7 @@ public class DeleteExerciseCommandHandlerTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Return_Failure_When_Not_Found()
     {
         _repo.Setup(r => r.GetByIdAsync("ex1", It.IsAny<CancellationToken>()))
@@ -42,6 +44,7 @@ public class DeleteExerciseCommandHandlerTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Return_Failure_When_User_Not_Owner()
     {
         var existing = new Exercise { Id = "ex1", UserId = -1, IsGlobal = false };

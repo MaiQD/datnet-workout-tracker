@@ -17,6 +17,7 @@ public class UpdateUserProfileCommandValidatorTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Pass_Validation_For_Valid_Command()
     {
         // Arrange
@@ -35,6 +36,7 @@ public class UpdateUserProfileCommandValidatorTests
     }
 
     [Theory]
+    [Trait("Category", "Unit")]
     [InlineData(0)]
     [InlineData(-1)]
     [InlineData(null)]
@@ -56,6 +58,7 @@ public class UpdateUserProfileCommandValidatorTests
     }
 
     [Theory]
+    [Trait("Category", "Unit")]
     [InlineData("")]
     [InlineData("   ")]
     public void Should_Pass_Validation_For_Empty_Display_Name(string displayName)
@@ -74,6 +77,7 @@ public class UpdateUserProfileCommandValidatorTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Pass_Validation_For_Valid_Display_Name()
     {
         // Arrange
@@ -90,6 +94,7 @@ public class UpdateUserProfileCommandValidatorTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Fail_Validation_For_Display_Name_Too_Long()
     {
         // Arrange
@@ -108,6 +113,7 @@ public class UpdateUserProfileCommandValidatorTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Fail_Validation_For_Future_Date_Of_Birth()
     {
         // Arrange
@@ -126,6 +132,7 @@ public class UpdateUserProfileCommandValidatorTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Fail_Validation_For_Date_Of_Birth_Too_Old()
     {
         // Arrange
@@ -144,6 +151,7 @@ public class UpdateUserProfileCommandValidatorTests
     }
 
     [Theory]
+    [Trait("Category", "Unit")]
     [InlineData("Metric")]
     [InlineData("Imperial")]
     public void Should_Pass_Validation_For_Valid_Unit_Preference_String(string unitPreferenceString)
@@ -157,6 +165,7 @@ public class UpdateUserProfileCommandValidatorTests
     }
 
     [Theory]
+    [Trait("Category", "Unit")]
     [InlineData("metric")] // lowercase
     [InlineData("IMPERIAL")] // uppercase
     [InlineData("InvalidUnit")]
@@ -172,6 +181,7 @@ public class UpdateUserProfileCommandValidatorTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Pass_Validation_With_Required_Fields_And_Optional_Fields_Null()
     {
         // Arrange
@@ -188,6 +198,7 @@ public class UpdateUserProfileCommandValidatorTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Pass_Validation_For_Valid_Date_Of_Birth()
     {
         // Arrange
@@ -205,6 +216,7 @@ public class UpdateUserProfileCommandValidatorTests
     }
 
     [Theory]
+    [Trait("Category", "Unit")]
     [InlineData(Gender.Male)]
     [InlineData(Gender.Female)]
     [InlineData(Gender.Other)]
@@ -225,6 +237,7 @@ public class UpdateUserProfileCommandValidatorTests
     }
 
     [Theory]
+    [Trait("Category", "Unit")]
     [InlineData(UnitPreference.Metric)]
     [InlineData(UnitPreference.Imperial)]
     public void Should_Pass_Validation_For_All_Valid_Unit_Preference_Values(UnitPreference unitPreference)

@@ -9,6 +9,7 @@ public class DeleteExerciseCommandValidatorTests
     private readonly DeleteExerciseCommandValidator _validator = new();
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Pass_For_Valid_Command()
     {
         var command = new DeleteExerciseCommand(ExerciseId: "ex1", UserId: 1);
@@ -17,6 +18,7 @@ public class DeleteExerciseCommandValidatorTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Fail_When_ExerciseId_Missing()
     {
         var command = new DeleteExerciseCommand(ExerciseId: "", UserId: 1);
@@ -26,6 +28,7 @@ public class DeleteExerciseCommandValidatorTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Fail_When_UserId_Missing()
     {
         var command = new DeleteExerciseCommand(ExerciseId: "ex1", UserId: 0);

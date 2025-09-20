@@ -47,7 +47,7 @@ case $TEST_CATEGORY in
             --results-directory ./TestResults \
             --logger trx \
             --settings coverlet.runsettings \
-            --filter "Category!=Integration&Category!=Database" \
+                --filter "Category=Unit" \
             -- \
             DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
         ;;
@@ -58,7 +58,7 @@ case $TEST_CATEGORY in
             --results-directory ./TestResults \
             --logger trx \
             --settings coverlet.runsettings \
-            --filter "Category=Integration" \
+                --filter "Category=Integration" \
             -- \
             DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
         ;;
@@ -69,7 +69,7 @@ case $TEST_CATEGORY in
             --results-directory ./TestResults \
             --logger trx \
             --settings coverlet.runsettings \
-            --filter "Category=Database" \
+                --filter "Category=Database" \
             -- \
             DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
         ;;

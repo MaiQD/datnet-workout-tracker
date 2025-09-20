@@ -6,6 +6,7 @@ namespace dotFitness.Modules.Exercises.Tests.Domain.Entities;
 public class MuscleGroupTests
 {
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Create_Valid_MuscleGroup_With_Required_Properties()
     {
         var mg = new MuscleGroup
@@ -25,6 +26,7 @@ public class MuscleGroupTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Update_MuscleGroup_And_Refresh_UpdatedAt()
     {
         var mg = new MuscleGroup { Name = "Chest" };

@@ -6,6 +6,7 @@ namespace dotFitness.Modules.Users.Tests.Domain.Entities;
 public class UserSimpleTests
 {
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Create_Valid_User_With_Required_Properties()
     {
         // Arrange & Act
@@ -25,6 +26,7 @@ public class UserSimpleTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Add_Role_Successfully()
     {
         // Arrange
@@ -39,6 +41,7 @@ public class UserSimpleTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Update_Profile_Successfully()
     {
         // Arrange

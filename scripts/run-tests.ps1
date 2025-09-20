@@ -59,7 +59,7 @@ try {
     switch ($TestCategory) {
         "unit" {
             Write-Host "${Blue}🧪 Running unit tests...${Reset}"
-            $testCommand += "--filter", "Category!=Integration&Category!=Database"
+            $testCommand += "--filter", "Category=Unit"
         }
         "integration" {
             Write-Host "${Blue}🔗 Running integration tests...${Reset}"

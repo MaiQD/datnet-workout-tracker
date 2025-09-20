@@ -14,6 +14,7 @@ public class UserMetricMapperTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Map_Entity_To_Dto_Correctly()
     {
         // Arrange
@@ -48,6 +49,7 @@ public class UserMetricMapperTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Handle_Null_Optional_Values_In_Mapping()
     {
         // Arrange
@@ -80,6 +82,7 @@ public class UserMetricMapperTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Map_Weight_Only_Measurement()
     {
         // Arrange
@@ -109,6 +112,7 @@ public class UserMetricMapperTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Map_Height_Only_Measurement()
     {
         // Arrange
@@ -138,6 +142,7 @@ public class UserMetricMapperTests
     }
 
     [Theory]
+    [Trait("Category", "Unit")]
     [InlineData(17.0, "Underweight")]
     [InlineData(22.0, "Normal weight")]
     [InlineData(27.0, "Overweight")]
@@ -167,6 +172,7 @@ public class UserMetricMapperTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Preserve_DateTime_Precision()
     {
         // Arrange
@@ -196,6 +202,7 @@ public class UserMetricMapperTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Map_Complete_Measurement_With_All_Fields()
     {
         // Arrange
@@ -230,6 +237,7 @@ public class UserMetricMapperTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Handle_Edge_Case_BMI_Values()
     {
         // Test boundary BMI values
@@ -265,6 +273,7 @@ public class UserMetricMapperTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Map_Empty_Notes_String()
     {
         // Arrange
@@ -288,6 +297,7 @@ public class UserMetricMapperTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Map_Large_Weight_And_Height_Values()
     {
         // Arrange

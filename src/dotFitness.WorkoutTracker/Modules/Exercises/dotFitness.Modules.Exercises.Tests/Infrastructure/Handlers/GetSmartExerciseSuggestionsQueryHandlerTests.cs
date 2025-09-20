@@ -13,6 +13,7 @@ public class GetSmartExerciseSuggestionsQueryHandlerTests
     private readonly Mock<IUserPreferencesProjectionRepository> _prefsRepo = new();
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Boost_Score_With_User_Preferences()
     {
         // Arrange repository returning two exercises

@@ -6,6 +6,7 @@ namespace dotFitness.Modules.Users.Tests.Domain.Entities;
 public class UserMetricTests
 {
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Create_Valid_UserMetric_With_Required_Properties()
     {
         // Arrange & Act
@@ -27,6 +28,7 @@ public class UserMetricTests
     }
 
     [Theory]
+    [Trait("Category", "Unit")]
     [InlineData(70.0, 175.0, UnitPreference.Metric, 22.86)] // kg, cm
     [InlineData(154.0, 69.0, UnitPreference.Imperial, 22.73)] // lbs, inches
     public void Should_Calculate_BMI_Correctly(double weight, double height, UnitPreference unitPreference, double expectedBmi)
@@ -47,6 +49,7 @@ public class UserMetricTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Set_BMI_To_Null_When_Weight_Is_Missing()
     {
         // Arrange
@@ -64,6 +67,7 @@ public class UserMetricTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Set_BMI_To_Null_When_Height_Is_Missing()
     {
         // Arrange
@@ -81,6 +85,7 @@ public class UserMetricTests
     }
 
     [Theory]
+    [Trait("Category", "Unit")]
     [InlineData(0)]
     [InlineData(-10)]
     public void Should_Set_BMI_To_Null_When_Weight_Is_Invalid(double invalidWeight)
@@ -101,6 +106,7 @@ public class UserMetricTests
     }
 
     [Theory]
+    [Trait("Category", "Unit")]
     [InlineData(0)]
     [InlineData(-10)]
     public void Should_Set_BMI_To_Null_When_Height_Is_Invalid(double invalidHeight)
@@ -121,6 +127,7 @@ public class UserMetricTests
     }
 
     [Theory]
+    [Trait("Category", "Unit")]
     [InlineData(17.0, "Underweight")]
     [InlineData(22.0, "Normal weight")]
     [InlineData(27.0, "Overweight")]
@@ -143,6 +150,7 @@ public class UserMetricTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Update_Weight_Successfully()
     {
         // Arrange
@@ -164,6 +172,7 @@ public class UserMetricTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Update_Height_Successfully()
     {
         // Arrange
@@ -185,6 +194,7 @@ public class UserMetricTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Update_Notes_Successfully()
     {
         // Arrange
@@ -206,6 +216,7 @@ public class UserMetricTests
     }
 
     [Theory]
+    [Trait("Category", "Unit")]
     [InlineData(0)]
     [InlineData(-5)]
     public void Should_Not_Update_Invalid_Weight(double invalidWeight)
@@ -230,6 +241,7 @@ public class UserMetricTests
     }
 
     [Theory]
+    [Trait("Category", "Unit")]
     [InlineData(0)]
     [InlineData(-5)]
     public void Should_Not_Update_Invalid_Height(double invalidHeight)
@@ -254,6 +266,7 @@ public class UserMetricTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Return_Weight_In_Unit()
     {
         // Arrange
@@ -271,6 +284,7 @@ public class UserMetricTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Return_Null_Weight_When_Not_Set()
     {
         // Arrange
@@ -287,6 +301,7 @@ public class UserMetricTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Return_Height_In_Unit()
     {
         // Arrange
@@ -304,6 +319,7 @@ public class UserMetricTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Return_Null_Height_When_Not_Set()
     {
         // Arrange
@@ -320,6 +336,7 @@ public class UserMetricTests
     }
 
     [Theory]
+    [Trait("Category", "Unit")]
     [InlineData(70.0, UnitPreference.Metric, UnitPreference.Imperial, 154.32)] // kg to lbs
     [InlineData(154.32, UnitPreference.Imperial, UnitPreference.Metric, 70.0)] // lbs to kg
     [InlineData(70.0, UnitPreference.Metric, UnitPreference.Metric, 70.0)] // same unit
@@ -333,6 +350,7 @@ public class UserMetricTests
     }
 
     [Theory]
+    [Trait("Category", "Unit")]
     [InlineData(175.0, UnitPreference.Metric, UnitPreference.Imperial, 68.9)] // cm to inches
     [InlineData(68.9, UnitPreference.Imperial, UnitPreference.Metric, 175.0)] // inches to cm
     [InlineData(175.0, UnitPreference.Metric, UnitPreference.Metric, 175.0)] // same unit

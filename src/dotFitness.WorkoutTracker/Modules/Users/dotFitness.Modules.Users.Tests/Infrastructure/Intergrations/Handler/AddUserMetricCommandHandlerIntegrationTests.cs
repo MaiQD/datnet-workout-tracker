@@ -39,6 +39,7 @@ public class AddUserMetricCommandHandlerIntegrationTests(UsersPostgresSqlFixture
     }
 
     [Fact]
+    [Trait("Category", "Integration")]
     public async Task Should_Add_User_Metric_Successfully()
     {
         // Arrange
@@ -88,6 +89,7 @@ public class AddUserMetricCommandHandlerIntegrationTests(UsersPostgresSqlFixture
     }
 
     [Fact]
+    [Trait("Category", "Integration")]
     public async Task Should_Return_Error_When_User_Does_Not_Exist()
     {
         // Arrange
@@ -117,6 +119,7 @@ public class AddUserMetricCommandHandlerIntegrationTests(UsersPostgresSqlFixture
     }
 
     [Fact]
+    [Trait("Category", "Integration")]
     public async Task Should_Return_Error_When_Metric_Already_Exists_For_Date()
     {
         // Arrange
@@ -172,6 +175,7 @@ public class AddUserMetricCommandHandlerIntegrationTests(UsersPostgresSqlFixture
     }
 
     [Fact]
+    [Trait("Category", "Integration")]
     public async Task Should_Calculate_BMI_When_Both_Weight_And_Height_Provided()
     {
         // Arrange
@@ -216,6 +220,7 @@ public class AddUserMetricCommandHandlerIntegrationTests(UsersPostgresSqlFixture
     }
 
     [Fact]
+    [Trait("Category", "Integration")]
     public async Task Should_Not_Calculate_BMI_When_Height_Is_Missing()
     {
         // Arrange

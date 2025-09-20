@@ -14,6 +14,7 @@ public class CreateExerciseCommandHandlerTests
     private readonly Mock<ILogger<CreateExerciseCommandHandler>> _logger = new();
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Create_Exercise_And_Return_Dto()
     {
         var cmd = new CreateExerciseCommand(
@@ -41,6 +42,7 @@ public class CreateExerciseCommandHandlerTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Propagate_Failure_From_Repository()
     {
         var cmd = new CreateExerciseCommand(

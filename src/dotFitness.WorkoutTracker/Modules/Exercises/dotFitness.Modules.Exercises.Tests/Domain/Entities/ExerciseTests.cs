@@ -6,6 +6,7 @@ namespace dotFitness.Modules.Exercises.Tests.Domain.Entities;
 public class ExerciseTests
 {
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Create_Valid_Exercise_With_Required_Properties()
     {
         var exercise = new Exercise
@@ -24,6 +25,7 @@ public class ExerciseTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Update_Exercise_And_Refresh_UpdatedAt()
     {
         var exercise = new Exercise { Name = "Push Up" };
@@ -38,6 +40,7 @@ public class ExerciseTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Add_And_Remove_MuscleGroup()
     {
         var exercise = new Exercise { Name = "Push Up" };
@@ -56,6 +59,7 @@ public class ExerciseTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Add_And_Remove_Equipment()
     {
         var exercise = new Exercise { Name = "Push Up" };
@@ -66,6 +70,7 @@ public class ExerciseTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Add_And_Remove_Tags()
     {
         var exercise = new Exercise { Name = "Push Up" };

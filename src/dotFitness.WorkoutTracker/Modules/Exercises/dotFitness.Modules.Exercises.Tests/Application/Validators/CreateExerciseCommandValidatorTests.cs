@@ -10,6 +10,7 @@ public class CreateExerciseCommandValidatorTests
     private readonly CreateExerciseCommandValidator _validator = new();
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Pass_Validation_For_Valid_Command()
     {
         var command = new CreateExerciseCommand(
@@ -30,6 +31,7 @@ public class CreateExerciseCommandValidatorTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Fail_When_UserId_Missing()
     {
         var command = new CreateExerciseCommand(
@@ -51,6 +53,7 @@ public class CreateExerciseCommandValidatorTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Fail_When_Name_Empty()
     {
         var command = new CreateExerciseCommand(
@@ -71,6 +74,7 @@ public class CreateExerciseCommandValidatorTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Fail_When_MuscleGroups_Empty()
     {
         var command = new CreateExerciseCommand(
@@ -92,6 +96,7 @@ public class CreateExerciseCommandValidatorTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Fail_When_Instruction_Contains_Empty()
     {
         var command = new CreateExerciseCommand(
@@ -113,6 +118,7 @@ public class CreateExerciseCommandValidatorTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Fail_When_VideoUrl_Invalid()
     {
         var command = new CreateExerciseCommand(

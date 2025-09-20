@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using dotFitness.SharedKernel.Tests.PostgreSQL;
 using dotFitness.Modules.Users.Infrastructure.Data;
 

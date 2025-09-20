@@ -14,6 +14,7 @@ public class GetAllEquipmentQueryHandlerTests
     private readonly Mock<ILogger<GetAllEquipmentQueryHandler>> _logger = new();
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Return_Equipment_List()
     {
         _repo.Setup(r => r.GetAllForUserAsync(1, It.IsAny<CancellationToken>()))
@@ -29,6 +30,7 @@ public class GetAllEquipmentQueryHandlerTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Propagate_Failure()
     {
         _repo.Setup(r => r.GetAllForUserAsync(1, It.IsAny<CancellationToken>()))

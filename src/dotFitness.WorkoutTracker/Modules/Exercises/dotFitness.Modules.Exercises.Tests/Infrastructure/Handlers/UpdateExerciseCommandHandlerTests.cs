@@ -14,6 +14,7 @@ public class UpdateExerciseCommandHandlerTests
     private readonly Mock<ILogger<UpdateExerciseCommandHandler>> _logger = new();
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Update_When_User_Owns_Exercise()
     {
         var existing = new Exercise { Id = "ex1", UserId = 1, Name = "Old" };
@@ -44,6 +45,7 @@ public class UpdateExerciseCommandHandlerTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Return_Failure_When_Not_Found()
     {
         _repo.Setup(r => r.GetByIdAsync("ex1", It.IsAny<CancellationToken>()))
@@ -71,6 +73,7 @@ public class UpdateExerciseCommandHandlerTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Return_Failure_When_User_Not_Owner()
     {
         var existing = new Exercise { Id = "ex1", UserId = -1, Name = "Old" };

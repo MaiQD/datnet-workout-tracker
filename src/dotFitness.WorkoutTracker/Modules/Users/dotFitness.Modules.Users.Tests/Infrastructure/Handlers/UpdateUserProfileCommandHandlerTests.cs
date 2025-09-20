@@ -40,6 +40,7 @@ public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Handle_Valid_Command_Successfully()
     {
         // Arrange
@@ -95,6 +96,7 @@ public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Return_NotFound_When_User_Does_Not_Exist()
     {
         // Arrange
@@ -122,6 +124,7 @@ public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Handle_Repository_Update_Errors_Gracefully()
     {
         // Arrange
@@ -159,6 +162,7 @@ public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Update_Only_Provided_Fields()
     {
         // Arrange
@@ -206,6 +210,7 @@ public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
     }
 
     [Theory]
+    [Trait("Category", "Unit")]
     [InlineData("")]
     [InlineData("   ")]
     [InlineData(null)]

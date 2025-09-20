@@ -41,6 +41,7 @@ public class UserServiceIntegrationTests(UsersPostgresSqlFixture fixture) : IAsy
     }
 
     [Fact]
+    [Trait("Category", "Integration")]
     public async Task Should_Create_New_User_When_User_Does_Not_Exist()
     {
         // Arrange
@@ -73,6 +74,7 @@ public class UserServiceIntegrationTests(UsersPostgresSqlFixture fixture) : IAsy
     }
 
     [Fact]
+    [Trait("Category", "Integration")]
     public async Task Should_Create_Admin_User_When_Email_Is_In_Admin_List()
     {
         // Arrange
@@ -100,6 +102,7 @@ public class UserServiceIntegrationTests(UsersPostgresSqlFixture fixture) : IAsy
     }
 
     [Fact]
+    [Trait("Category", "Integration")]
     public async Task Should_Return_Existing_User_When_User_Already_Exists()
     {
         // Arrange
@@ -144,6 +147,7 @@ public class UserServiceIntegrationTests(UsersPostgresSqlFixture fixture) : IAsy
     }
 
     [Fact]
+    [Trait("Category", "Integration")]
     public async Task Should_Not_Update_Profile_Picture_When_It_Hasnt_Changed()
     {
         // Arrange
@@ -184,6 +188,7 @@ public class UserServiceIntegrationTests(UsersPostgresSqlFixture fixture) : IAsy
     }
 
     [Fact]
+    [Trait("Category", "Integration")]
     public async Task Should_Handle_Database_Errors_Gracefully()
     {
         // Arrange
@@ -205,6 +210,7 @@ public class UserServiceIntegrationTests(UsersPostgresSqlFixture fixture) : IAsy
     }
 
     [Theory]
+    [Trait("Category", "Integration")]
     [InlineData("admin@dotfitness.com", true)]
     [InlineData("superuser@dotfitness.com", true)]
     [InlineData("regular@example.com", false)]
