@@ -14,19 +14,20 @@ public class CreateExerciseCommandHandlerTests
     private readonly Mock<ILogger<CreateExerciseCommandHandler>> _logger = new();
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Create_Exercise_And_Return_Dto()
     {
         var cmd = new CreateExerciseCommand(
-            UserId: "user1",
+            UserId: 1,
             Name: "Push Up",
             Description: "desc",
-            MuscleGroups: new(){"Chest"},
-            Equipment: new(){"Bodyweight"},
-            Instructions: new(){"Do it"},
+            MuscleGroups: ["Chest"],
+            Equipment: ["Bodyweight"],
+            Instructions: ["Do it"],
             Difficulty: ExerciseDifficulty.Beginner,
             VideoUrl: null,
             ImageUrl: null,
-            Tags: new()
+            Tags: []
         );
 
         _repo.Setup(r => r.CreateAsync(It.IsAny<Exercise>(), It.IsAny<CancellationToken>()))
@@ -41,19 +42,20 @@ public class CreateExerciseCommandHandlerTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Propagate_Failure_From_Repository()
     {
         var cmd = new CreateExerciseCommand(
-            UserId: "user1",
+            UserId: 1,
             Name: "Push Up",
             Description: null,
-            MuscleGroups: new(){"Chest"},
-            Equipment: new(){"Bodyweight"},
-            Instructions: new(){"Do it"},
+            MuscleGroups: ["Chest"],
+            Equipment: ["Bodyweight"],
+            Instructions: ["Do it"],
             Difficulty: ExerciseDifficulty.Beginner,
             VideoUrl: null,
             ImageUrl: null,
-            Tags: new()
+            Tags: []
         );
 
         _repo.Setup(r => r.CreateAsync(It.IsAny<Exercise>(), It.IsAny<CancellationToken>()))

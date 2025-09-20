@@ -5,5 +5,5 @@ using MediatR;
 namespace dotFitness.Modules.Exercises.Application.Queries;
 
 public record GetAllEquipmentQuery(
-    string UserId
+    int UserId
 ) : IRequest<Result<IEnumerable<EquipmentDto>>>;

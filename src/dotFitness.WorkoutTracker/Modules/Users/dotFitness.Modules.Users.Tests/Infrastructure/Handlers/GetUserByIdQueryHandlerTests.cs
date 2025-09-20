@@ -1,65 +1,61 @@
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
-using dotFitness.Modules.Users.Application.DTOs;
 using dotFitness.Modules.Users.Application.Mappers;
 using dotFitness.Modules.Users.Application.Queries;
 using dotFitness.Modules.Users.Domain.Entities;
-using dotFitness.Modules.Users.Domain.Repositories;
+using dotFitness.Modules.Users.Infrastructure.Data;
 using dotFitness.Modules.Users.Infrastructure.Handlers;
-using dotFitness.SharedKernel.Results;
+using dotFitness.Modules.Users.Tests.Infrastructure.Extensions;
+using dotFitness.Modules.Users.Tests.Infrastructure.Fixtures;
 
 namespace dotFitness.Modules.Users.Tests.Infrastructure.Handlers;
 
-public class GetUserByIdQueryHandlerTests
+public class GetUserByIdQueryHandlerTests : IAsyncLifetime
 {
-    private readonly Mock<IUserRepository> _userRepositoryMock;
-    private readonly UserMapper _userMapper;
-    private readonly GetUserByIdQueryHandler _handler;
+    private readonly UsersUnitTestFixture _fixture = new();
+    private readonly UserMapper _userMapper = new();
+    private readonly ILogger<GetUserByIdQueryHandler> _logger = new Mock<ILogger<GetUserByIdQueryHandler>>().Object;
+    private UsersDbContext _context = null!;
+    private GetUserByIdQueryHandler _handler = null!;
 
-    public GetUserByIdQueryHandlerTests()
+    public async Task InitializeAsync()
     {
-        _userRepositoryMock = new Mock<IUserRepository>();
-        _userMapper = new UserMapper();
-        var loggerMock = new Mock<ILogger<GetUserByIdQueryHandler>>();
-
+        _context = _fixture.CreateInMemoryDbContext<UsersDbContext>();
+        await _context.Database.EnsureCreatedAsync();
+        
         _handler = new GetUserByIdQueryHandler(
-            _userRepositoryMock.Object,
+            _context,
             _userMapper,
-            loggerMock.Object
+            _logger
         );
     }
 
+    public async Task DisposeAsync()
+    {
+        await _context.DisposeAsync();
+        await _fixture.DisposeAsync();
+    }
+
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Return_User_When_Found()
     {
         // Arrange
-        var query = new GetUserByIdQuery("user123");
         var user = new User
         {
-            Id = "user123",
-            Email = "test@example.com",
+            Email = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             Gender = Gender.Male,
-            UnitPreference = UnitPreference.Metric
-        };
-
-        var expectedDto = new UserDto
-        {
-            Id = "user123",
-            Email = "test@example.com",
-            DisplayName = "Test User",
-            Gender = nameof(Gender.Male),
-            DateOfBirth = null,
-            UnitPreference = nameof(UnitPreference.Metric),
-            Roles = ["User"],
+            UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
-        _userRepositoryMock
-            .Setup(x => x.GetByIdAsync("user123", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Success(user));
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+
+        var query = new GetUserByIdQuery(user.Id);
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
@@ -67,71 +63,68 @@ public class GetUserByIdQueryHandlerTests
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value!.Id.Should().Be("user123");
-        result.Value.Email.Should().Be("test@example.com");
+        result.Value!.Id.Should().Be(user.Id);
+        result.Value.Email.Should().Be(user.Email);
         result.Value.DisplayName.Should().Be("Test User");
-
-        _userRepositoryMock.Verify(x => x.GetByIdAsync("user123", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Return_NotFound_When_User_DoesNot_Exist()
     {
         // Arrange
-        var query = new GetUserByIdQuery("nonexistent");
-
-        _userRepositoryMock
-            .Setup(x => x.GetByIdAsync("nonexistent", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Failure<User>("User not found"));
+        var query = new GetUserByIdQuery(this.GenerateUniqueUserId()); // Non-existent user
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
 
         // Assert
-        result.IsSuccess.Should().BeFalse();
+        result.IsFailure.Should().BeTrue();
         result.Error.Should().Be("User not found");
-
-        _userRepositoryMock.Verify(x => x.GetByIdAsync("nonexistent", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Handle_Repository_Errors_Gracefully()
     {
         // Arrange
-        var query = new GetUserByIdQuery("user123");
+        var user = new User
+        {
+            Email = this.GenerateUniqueEmail(),
+            DisplayName = "Test User",
+            UnitPreference = UnitPreference.Metric,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
 
-        _userRepositoryMock
-            .Setup(x => x.GetByIdAsync("user123", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Failure<User>("Database connection failed"));
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+
+        // Dispose context to simulate database error
+        await _context.DisposeAsync();
+
+        var query = new GetUserByIdQuery(user.Id);
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
 
         // Assert
-        result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("User not found");
-
-        _userRepositoryMock.Verify(x => x.GetByIdAsync("user123", It.IsAny<CancellationToken>()), Times.Once);
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Contain("Failed to get user");
     }
 
-    [Theory]
-    [InlineData("")]
-    [InlineData("   ")]
-    [InlineData(null)]
-    public async Task Should_Handle_Invalid_User_Id(string? invalidId)
+    [Fact]
+    [Trait("Category", "Unit")]
+    public async Task Should_Handle_Invalid_User_Id()
     {
         // Arrange
-        var query = new GetUserByIdQuery(invalidId!);
-
-        _userRepositoryMock
-            .Setup(x => x.GetByIdAsync(invalidId!, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Failure<User>("Invalid user ID"));
+        var query = new GetUserByIdQuery(0); // Invalid user ID
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
 
         // Assert
-        result.IsSuccess.Should().BeFalse();
-        result.Error.Should().NotBeNullOrEmpty();
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be("User not found");
     }
 }

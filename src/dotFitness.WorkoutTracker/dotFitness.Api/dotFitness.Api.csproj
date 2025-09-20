@@ -22,6 +22,7 @@
     <PackageReference Include="Serilog.AspNetCore" />
     <PackageReference Include="Swashbuckle.AspNetCore" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" />
     <ProjectReference Include="..\Modules\Users\dotFitness.Modules.Users.Application\dotFitness.Modules.Users.Application.csproj" />
     <ProjectReference Include="..\Modules\Exercises\dotFitness.Modules.Exercises.Application\dotFitness.Modules.Exercises.Application.csproj" />
   </ItemGroup>

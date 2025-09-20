@@ -1,5 +1,3 @@
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
 using dotFitness.SharedKernel.Interfaces;
 using UnitsNet;
 
@@ -7,34 +5,15 @@ namespace dotFitness.Modules.Users.Domain.Entities;
 
 public class UserMetric : IEntity
 {
-    [BsonId]
-    [BsonRepresentation(BsonType.ObjectId)]
-    public string Id { get; set; } = ObjectId.GenerateNewId().ToString();
+    public int Id { get; set; }
+    public int UserId { get; set; }
 
-    [BsonElement("userId")]
-    [BsonRequired]
-    public string UserId { get; set; } = string.Empty;
-
-    [BsonElement("date")]
-    [BsonRequired]
     public DateTime Date { get; set; } = DateTime.UtcNow.Date; // Store as date only
-
-    [BsonElement("weight")]
     public double? Weight { get; set; } // in kg or lbs depending on user preference
-
-    [BsonElement("height")]
     public double? Height { get; set; } // in cm or inches depending on user preference
-
-    [BsonElement("bmi")]
     public double? Bmi { get; set; } // Calculated BMI
-
-    [BsonElement("notes")]
     public string? Notes { get; set; }
-
-    [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-    [BsonElement("updatedAt")]
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
     public void CalculateBmi(UnitPreference unitPreference)

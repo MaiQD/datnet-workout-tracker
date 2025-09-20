@@ -4,4 +4,4 @@ using dotFitness.SharedKernel.Results;
 
 namespace dotFitness.Modules.Users.Application.Queries;
 
-public record GetUserByIdQuery(string UserId) : IRequest<Result<UserDto>>;
+public record GetUserByIdQuery(int UserId) : IRequest<Result<UserDto>>;

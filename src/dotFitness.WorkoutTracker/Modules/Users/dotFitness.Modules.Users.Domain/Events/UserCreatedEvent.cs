@@ -5,7 +5,7 @@ public class UserCreatedEvent
     public string UserId { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string DisplayName { get; set; } = string.Empty;
-    public List<string> Roles { get; set; } = new();
+    public List<string> Roles { get; set; } = [];
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public UserCreatedEvent()

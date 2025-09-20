@@ -6,6 +6,7 @@ namespace dotFitness.Modules.Users.Tests.Domain.Entities;
 public class UserTests
 {
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Create_Valid_User_With_Required_Properties()
     {
         // Arrange & Act
@@ -16,7 +17,6 @@ public class UserTests
         };
 
         // Assert
-        user.Id.Should().NotBeNullOrEmpty();
         user.Email.Should().Be("test@example.com");
         user.DisplayName.Should().Be("Test User");
         user.LoginMethod.Should().Be(LoginMethod.Google);
@@ -28,6 +28,7 @@ public class UserTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Add_Role_Successfully()
     {
         // Arrange
@@ -44,6 +45,7 @@ public class UserTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Not_Add_Duplicate_Role()
     {
         // Arrange
@@ -63,6 +65,7 @@ public class UserTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Remove_Role_Successfully()
     {
         // Arrange
@@ -82,6 +85,7 @@ public class UserTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Not_Remove_Base_User_Role()
     {
         // Arrange
@@ -99,6 +103,7 @@ public class UserTests
     }
 
     [Theory]
+    [Trait("Category", "Unit")]
     [InlineData("New Display Name")]
     [InlineData("Another Name")]
     public void Should_Update_Display_Name(string newDisplayName)
@@ -118,6 +123,7 @@ public class UserTests
     }
 
     [Theory]
+    [Trait("Category", "Unit")]
     [InlineData(Gender.Male)]
     [InlineData(Gender.Female)]
     [InlineData(Gender.Other)]
@@ -139,6 +145,7 @@ public class UserTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Update_Date_Of_Birth()
     {
         // Arrange
@@ -157,6 +164,7 @@ public class UserTests
     }
 
     [Theory]
+    [Trait("Category", "Unit")]
     [InlineData(UnitPreference.Metric)]
     [InlineData(UnitPreference.Imperial)]
     public void Should_Update_Unit_Preference(UnitPreference unitPreference)
@@ -176,6 +184,7 @@ public class UserTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Not_Update_Profile_With_Empty_Display_Name()
     {
         // Arrange
@@ -193,6 +202,7 @@ public class UserTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Update_Multiple_Profile_Properties()
     {
         // Arrange

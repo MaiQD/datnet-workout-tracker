@@ -9,6 +9,7 @@ public class UpdateUserProfileCommandValidator : AbstractValidator<UpdateUserPro
     {
         RuleFor(x => x.UserId)
             .NotEmpty()
+            .GreaterThan(0)
             .WithMessage("User ID is required.");
 
         RuleFor(x => x.Request.DisplayName)

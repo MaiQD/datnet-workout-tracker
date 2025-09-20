@@ -1,25 +1,26 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 using dotFitness.Modules.Users.Application.Queries;
 using dotFitness.Modules.Users.Application.DTOs;
 using dotFitness.Modules.Users.Application.Mappers;
-using dotFitness.Modules.Users.Domain.Repositories;
+using dotFitness.Modules.Users.Infrastructure.Data;
 using dotFitness.SharedKernel.Results;
 
 namespace dotFitness.Modules.Users.Infrastructure.Handlers;
 
 public class GetUserMetricsQueryHandler : IRequestHandler<GetUserMetricsQuery, Result<IEnumerable<UserMetricDto>>>
 {
-    private readonly IUserMetricsRepository _userMetricsRepository;
+    private readonly UsersDbContext _context;
     private readonly UserMetricMapper _userMetricMapper;
     private readonly ILogger<GetUserMetricsQueryHandler> _logger;
 
     public GetUserMetricsQueryHandler(
-        IUserMetricsRepository userMetricsRepository,
+        UsersDbContext context,
         UserMetricMapper userMetricMapper,
         ILogger<GetUserMetricsQueryHandler> logger)
     {
-        _userMetricsRepository = userMetricsRepository;
+        _context = context;
         _userMetricMapper = userMetricMapper;
         _logger = logger;
     }
@@ -28,27 +29,23 @@ public class GetUserMetricsQueryHandler : IRequestHandler<GetUserMetricsQuery, R
     {
         try
         {
-            Result<IEnumerable<Domain.Entities.UserMetric>> metricsResult;
+            IQueryable<Domain.Entities.UserMetric> query = _context.UserMetrics
+                .Where(um => um.UserId == request.UserId);
 
             if (request.StartDate.HasValue && request.EndDate.HasValue)
             {
-                // Get metrics by date range
-                metricsResult = await _userMetricsRepository.GetByUserIdAndDateRangeAsync(
-                    request.UserId, request.StartDate.Value, request.EndDate.Value, cancellationToken);
-            }
-            else
-            {
-                // Get metrics with pagination
-                metricsResult = await _userMetricsRepository.GetByUserIdAsync(
-                    request.UserId, request.Skip, request.Take, cancellationToken);
+                // Filter by date range
+                query = query.Where(um => um.Date >= request.StartDate.Value && um.Date <= request.EndDate.Value);
             }
 
-            if (metricsResult.IsFailure)
-            {
-                return Result.Failure<IEnumerable<UserMetricDto>>(metricsResult.Error!);
-            }
+            // Apply ordering and pagination
+            var metrics = await query
+                .OrderByDescending(um => um.Date)
+                .ThenByDescending(um => um.CreatedAt)
+                .Skip(request.Skip)
+                .Take(request.Take)
+                .ToListAsync(cancellationToken);
 
-            var metrics = metricsResult.Value!;
             var metricDtos = metrics.Select(m => _userMetricMapper.ToDto(m)).ToList();
 
             return Result.Success<IEnumerable<UserMetricDto>>(metricDtos);

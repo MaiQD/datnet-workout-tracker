@@ -551,36 +551,65 @@ public static class UserMapper
 
 ## 🧪 Testing Strategy
 
-### Unit Testing
+### Test Architecture Overview
+The testing strategy follows a **two-tier approach** optimized for both speed and reliability:
+
+- **Unit Tests**: Fast, isolated tests using in-memory databases
+- **Integration Tests**: Comprehensive tests using real databases via Testcontainers
+
+### Unit Testing (In-Memory Database)
 ```csharp
 [Fact]
-public async Task Handle_ValidCommand_ReturnsSuccess()
+public async Task Handle_ValidCommand_ShouldCreateUserSuccessfully()
 {
     // Arrange
-    var command = new CreateUserCommand { /* ... */ };
-    var handler = new CreateUserCommandHandler(_mockRepo, _mockMediator);
+    var command = new CreateUserCommand { Email = this.GenerateUniqueEmail() };
+    var handler = new CreateUserCommandHandler(_context, _mapper, _logger);
 
     // Act
     var result = await handler.Handle(command, CancellationToken.None);
 
     // Assert
     result.IsSuccess.Should().BeTrue();
-    result.Value.Should().NotBeNull();
+    result.Value.Email.Should().Be(command.Email);
 }
 ```
 
-### Integration Testing
-- MongoDB integration with Testcontainers
-- Full module testing with real dependencies
-- API endpoint testing with HTTP client
+### Integration Testing (PostgreSQL + MongoDB)
+```csharp
+[Collection("UsersPostgreSQL.Shared")]
+public class CreateUserCommandHandlerIntegrationTests(UsersPostgresSqlFixture fixture)
+{
+    [Fact]
+    public async Task Handle_ValidCommand_ShouldPersistToDatabase()
+    {
+        // Arrange
+        var context = fixture.CreateFreshUsersDbContext();
+        var command = new CreateUserCommand { Email = this.GenerateUniqueEmail() };
+
+        // Act & Assert
+        // Full database integration testing
+    }
+}
+```
+
+### Test Fixture Architecture
+- **Module-Specific Fixtures**: Each module has its own test fixtures
+- **Schema Isolation**: PostgreSQL tests use module-specific schemas
+- **Test Data Generation**: Unique test data to prevent conflicts
+- **Collection Definitions**: Proper test isolation via xUnit collections
 
 ### Test Structure
 ```
 dotFitness.Modules.Users.Tests/
-├── Domain/           # Entity and business logic tests
-├── Application/      # Command/Query handler tests
-├── Infrastructure/   # Repository and external service tests
-└── MongoDB/          # Database integration tests
+├── Domain/                    # Entity and business logic tests
+├── Application/               # Command/Query handler tests
+├── Infrastructure/
+│   ├── Handlers/             # Unit tests (in-memory)
+│   ├── Intergrations/        # Integration tests (PostgreSQL)
+│   ├── Fixtures/             # Test fixtures and collections
+│   └── Extensions/           # Test data generation utilities
+└── MongoDB/                   # MongoDB integration tests
 ```
 
 ## 📊 Monitoring & Observability

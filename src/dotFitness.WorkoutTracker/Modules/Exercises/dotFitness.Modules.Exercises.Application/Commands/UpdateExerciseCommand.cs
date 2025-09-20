@@ -7,7 +7,7 @@ namespace dotFitness.Modules.Exercises.Application.Commands;
 
 public record UpdateExerciseCommand(
     string ExerciseId,
-    string UserId,
+    int UserId,
     string Name,
     string? Description,
     List<string> MuscleGroups,

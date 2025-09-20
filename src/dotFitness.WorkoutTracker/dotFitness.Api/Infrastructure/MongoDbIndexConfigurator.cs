@@ -37,11 +37,10 @@ public static class MongoDbIndexConfigurator
         var outboxCollection = database.GetCollection<OutboxMessage>("outboxMessages");
         var outboxIndexBuilder = Builders<OutboxMessage>.IndexKeys;
         
-        await outboxCollection.Indexes.CreateManyAsync(new[]
-        {
+        await outboxCollection.Indexes.CreateManyAsync([
             new CreateIndexModel<OutboxMessage>(outboxIndexBuilder.Ascending(x => x.IsProcessed)),
             new CreateIndexModel<OutboxMessage>(outboxIndexBuilder.Ascending(x => x.CreatedAt)),
             new CreateIndexModel<OutboxMessage>(outboxIndexBuilder.Ascending(x => x.EventType))
-        });
+        ]);
     }
 } 

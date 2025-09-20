@@ -5,7 +5,10 @@ using dotFitness.ModuleContracts;
 using dotFitness.Modules.Exercises.Domain.Entities;
 using dotFitness.Modules.Exercises.Domain.Repositories;
 using dotFitness.Modules.Exercises.Infrastructure.Repositories;
+using dotFitness.Modules.Exercises.Infrastructure.HealthChecks;
+using dotFitness.Modules.Exercises.Infrastructure.EventHandlers;
 using dotFitness.SharedKernel.Inbox;
+using dotFitness.SharedKernel.Events;
 
 namespace dotFitness.Modules.Exercises.Infrastructure.Configuration;
 
@@ -55,9 +58,19 @@ public class ExercisesModuleInstaller : IModuleInstaller
         services.AddScoped<IEquipmentRepository, EquipmentRepository>();
         services.AddScoped<IUserPreferencesProjectionRepository, UserPreferencesProjectionRepository>();
 
+        // Register event handlers for cross-module communication
+        services.AddScoped<IEventHandler<UserProfileUpdatedEvent>, UserProfileUpdatedEventHandler>();
+
         // Register MediatR handlers (auto-registered in Bootstrap) - removed
 
         // Register validators (auto-registered in Bootstrap) - removed
+
+        // Register Exercises module health check
+        services.AddHealthChecks()
+            .AddCheck<ExercisesModuleHealthCheck>("exercises-module", tags: ["module", "exercises", "live"]);
+
+        // Register Exercises module configuration validator
+        services.AddScoped<dotFitness.SharedKernel.Configuration.IModuleConfigurationValidator, ExercisesConfigurationValidator>();
     }
 
     public void ConfigureIndexes(IMongoDatabase database)

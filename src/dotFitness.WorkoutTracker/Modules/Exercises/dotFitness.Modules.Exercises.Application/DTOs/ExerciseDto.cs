@@ -13,7 +13,7 @@ public record ExerciseDto(
     string? VideoUrl,
     string? ImageUrl,
     bool IsGlobal,
-    string? UserId,
+    int? UserId,
     List<string> Tags,
     DateTime CreatedAt,
     DateTime UpdatedAt

@@ -16,6 +16,7 @@ builder.Host.UseSerilog();
 // Configure application settings
 builder.Services.Configure<GoogleOAuthSettings>(builder.Configuration.GetSection("GoogleOAuth"));
 builder.Services.Configure<CorsSettings>(builder.Configuration.GetSection("CorsSettings"));
+builder.Services.Configure<OutboxProcessorSettings>(builder.Configuration.GetSection("OutboxProcessor"));
 
 // Add core API services
 builder.Services.AddCoreApiServices();
@@ -43,7 +44,8 @@ await MongoDbIndexConfigurator.ConfigureIndexesAsync(app.Services);
 await MongoDbSeeder.ConfigureSeedsAsync(app.Services);
 
 // Configure the application pipeline
-app.ConfigureSwaggerUi()
+app.UseGlobalErrorHandler()
+   .ConfigureSwaggerUi()
    .ConfigureCoreMiddleware()
    .ConfigureHealthChecks()
    .ConfigureEndpoints()

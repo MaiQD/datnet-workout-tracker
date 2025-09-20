@@ -14,9 +14,10 @@ public class UpdateExerciseCommandHandlerTests
     private readonly Mock<ILogger<UpdateExerciseCommandHandler>> _logger = new();
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Update_When_User_Owns_Exercise()
     {
-        var existing = new Exercise { Id = "ex1", UserId = "user1", Name = "Old" };
+        var existing = new Exercise { Id = "ex1", UserId = 1, Name = "Old" };
         _repo.Setup(r => r.GetByIdAsync("ex1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(dotFitness.SharedKernel.Results.Result.Success<Exercise?>(existing));
         _repo.Setup(r => r.UpdateAsync(existing, It.IsAny<CancellationToken>()))
@@ -24,16 +25,16 @@ public class UpdateExerciseCommandHandlerTests
 
         var cmd = new UpdateExerciseCommand(
             ExerciseId: "ex1",
-            UserId: "user1",
+            UserId: 1,
             Name: "New",
             Description: null,
-            MuscleGroups: new(),
-            Equipment: new(),
-            Instructions: new(),
+            MuscleGroups: [],
+            Equipment: [],
+            Instructions: [],
             Difficulty: ExerciseDifficulty.Beginner,
             VideoUrl: null,
             ImageUrl: null,
-            Tags: new()
+            Tags: []
         );
 
         var handler = new UpdateExerciseCommandHandler(_repo.Object, _logger.Object);
@@ -44,6 +45,7 @@ public class UpdateExerciseCommandHandlerTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Return_Failure_When_Not_Found()
     {
         _repo.Setup(r => r.GetByIdAsync("ex1", It.IsAny<CancellationToken>()))
@@ -51,16 +53,16 @@ public class UpdateExerciseCommandHandlerTests
 
         var cmd = new UpdateExerciseCommand(
             ExerciseId: "ex1",
-            UserId: "user1",
+            UserId: 1,
             Name: "New",
             Description: null,
-            MuscleGroups: new(),
-            Equipment: new(),
-            Instructions: new(),
+            MuscleGroups: [],
+            Equipment: [],
+            Instructions: [],
             Difficulty: ExerciseDifficulty.Beginner,
             VideoUrl: null,
             ImageUrl: null,
-            Tags: new()
+            Tags: []
         );
 
         var handler = new UpdateExerciseCommandHandler(_repo.Object, _logger.Object);
@@ -71,24 +73,25 @@ public class UpdateExerciseCommandHandlerTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task Should_Return_Failure_When_User_Not_Owner()
     {
-        var existing = new Exercise { Id = "ex1", UserId = "other", Name = "Old" };
+        var existing = new Exercise { Id = "ex1", UserId = -1, Name = "Old" };
         _repo.Setup(r => r.GetByIdAsync("ex1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(dotFitness.SharedKernel.Results.Result.Success<Exercise?>(existing));
 
         var cmd = new UpdateExerciseCommand(
             ExerciseId: "ex1",
-            UserId: "user1",
+            UserId: 1,
             Name: "New",
             Description: null,
-            MuscleGroups: new(),
-            Equipment: new(),
-            Instructions: new(),
+            MuscleGroups: [],
+            Equipment: [],
+            Instructions: [],
             Difficulty: ExerciseDifficulty.Beginner,
             VideoUrl: null,
             ImageUrl: null,
-            Tags: new()
+            Tags: []
         );
 
         var handler = new UpdateExerciseCommandHandler(_repo.Object, _logger.Object);

@@ -5,5 +5,5 @@ namespace dotFitness.Modules.Exercises.Application.Commands;
 
 public record DeleteExerciseCommand(
     string ExerciseId,
-    string UserId
+    int UserId
 ) : IRequest<Result>;

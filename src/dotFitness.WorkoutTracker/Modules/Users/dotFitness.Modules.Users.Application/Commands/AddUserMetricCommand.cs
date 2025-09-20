@@ -11,7 +11,7 @@ public record AddUserMetricCommand : IRequest<Result<UserMetricDto>>
     {
     }
 
-    public AddUserMetricCommand(string UserId, DateTime Date, double? Weight, double? Height, string? Notes)
+    public AddUserMetricCommand(int UserId, DateTime Date, double? Weight, double? Height, string? Notes)
     {
         this.UserId = UserId;
         this.Date = Date;
@@ -20,7 +20,7 @@ public record AddUserMetricCommand : IRequest<Result<UserMetricDto>>
         this.Notes = Notes;
     }
 
-    [Required] public string UserId { get; set; } = string.Empty;
+    [Required] public int UserId { get; set; }
 
     [Required] public DateTime Date { get; init; }
 

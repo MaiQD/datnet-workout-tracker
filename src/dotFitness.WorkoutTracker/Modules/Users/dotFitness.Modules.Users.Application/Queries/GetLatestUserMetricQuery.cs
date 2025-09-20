@@ -5,11 +5,11 @@ using System.ComponentModel.DataAnnotations;
 
 namespace dotFitness.Modules.Users.Application.Queries;
 
-public class GetLatestUserMetricQuery(string userId) : IRequest<Result<UserMetricDto>>
+public class GetLatestUserMetricQuery(int userId) : IRequest<Result<UserMetricDto>>
 {
-    public GetLatestUserMetricQuery() : this(string.Empty)
+    public GetLatestUserMetricQuery() : this(0)
     {
     }
     [Required]
-    public string UserId { get; set; } = userId;
+    public int UserId { get; set; } = userId;
 };

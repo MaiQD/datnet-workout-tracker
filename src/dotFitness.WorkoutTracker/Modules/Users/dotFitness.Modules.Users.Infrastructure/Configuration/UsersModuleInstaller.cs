@@ -2,16 +2,17 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.EntityFrameworkCore;
 using MongoDB.Driver;
 using System.Text;
 using dotFitness.ModuleContracts;
 using dotFitness.Modules.Users.Domain.Entities;
-using dotFitness.Modules.Users.Domain.Repositories;
-using dotFitness.Modules.Users.Infrastructure.Repositories;
 using dotFitness.Modules.Users.Infrastructure.Services;
 using dotFitness.Modules.Users.Application.Mappers;
 using dotFitness.Modules.Users.Application.Services;
 using dotFitness.Modules.Users.Infrastructure.Settings;
+using dotFitness.Modules.Users.Infrastructure.Data;
+using dotFitness.Modules.Users.Infrastructure.HealthChecks;
 using dotFitness.SharedKernel.Inbox;
 
 namespace dotFitness.Modules.Users.Infrastructure.Configuration;
@@ -49,6 +50,37 @@ public class UsersModuleInstaller : IModuleInstaller
 
         services.AddAuthorization();
 
+        // Configure PostgreSQL DbContext for Users module
+        services.AddDbContext<UsersDbContext>(options =>
+        {
+            // Try Aspire connection first, then fallback to manual configuration
+            var connectionString = configuration.GetConnectionString("dotFitnessDb-pg") 
+                                   ?? configuration.GetConnectionString("PostgreSQL");
+            options.UseNpgsql(connectionString, npgsqlOptions =>
+            {
+                npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "users");
+                
+                // Configure retry strategy - can be disabled for explicit transaction control
+                var enableRetryStrategy = configuration.GetValue<bool>("Database:EnableRetryStrategy", defaultValue: true);
+                if (enableRetryStrategy)
+                {
+                    npgsqlOptions.EnableRetryOnFailure(maxRetryCount: 3, maxRetryDelay: TimeSpan.FromSeconds(5), errorCodesToAdd: null);
+                }
+            });
+            
+            // Enable sensitive data logging in development
+            if (configuration.GetValue<bool>("Logging:EnableSensitiveDataLogging"))
+            {
+                options.EnableSensitiveDataLogging();
+            }
+            
+            // Enable detailed errors in development
+            if (configuration.GetValue<bool>("Logging:EnableDetailedErrors"))
+            {
+                options.EnableDetailedErrors();
+            }
+        });
+
         // Register MongoDB collections specific to Users module
         services.AddSingleton(sp =>
         {
@@ -69,9 +101,6 @@ public class UsersModuleInstaller : IModuleInstaller
             return database.GetCollection<InboxMessage>("inboxMessages");
         });
 
-        // Register repositories
-        services.AddScoped<IUserRepository, UserRepository>();
-        services.AddScoped<IUserMetricsRepository, UserMetricsRepository>();
 
         // Register services
         services.AddScoped<IGoogleAuthService, GoogleAuthService>();
@@ -87,6 +116,16 @@ public class UsersModuleInstaller : IModuleInstaller
         // Register Mapperly mappers - they will be generated as implementations
         services.AddScoped<UserMapper>();
         services.AddScoped<UserMetricMapper>();
+
+        // Register Users module health check
+        services.AddHealthChecks()
+            .AddCheck<UsersModuleHealthCheck>("users-module", tags: ["module", "users", "live"]);
+
+        // Register Users module configuration validator
+        services.AddScoped<dotFitness.SharedKernel.Configuration.IModuleConfigurationValidator, UsersConfigurationValidator>();
+
+        // Register database migration service for auto-applying migrations
+        services.AddHostedService<DatabaseMigrationService>();
     }
 
     public void ConfigureIndexes(IMongoDatabase database)

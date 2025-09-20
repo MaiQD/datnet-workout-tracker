@@ -4,7 +4,7 @@ using dotFitness.SharedKernel.Interfaces;
 
 namespace dotFitness.Modules.Exercises.Domain.Entities;
 
-public class Exercise : IEntity
+public class Exercise : IEntity<string>
 {
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
@@ -18,13 +18,13 @@ public class Exercise : IEntity
     public string? Description { get; set; }
 
     [BsonElement("muscleGroups")]
-    public List<string> MuscleGroups { get; set; } = new();
+    public List<string> MuscleGroups { get; set; } = [];
 
     [BsonElement("equipment")]
-    public List<string> Equipment { get; set; } = new();
+    public List<string> Equipment { get; set; } = [];
 
     [BsonElement("instructions")]
-    public List<string> Instructions { get; set; } = new();
+    public List<string> Instructions { get; set; } = [];
 
     [BsonElement("difficulty")]
     [BsonRepresentation(BsonType.String)]
@@ -40,10 +40,10 @@ public class Exercise : IEntity
     public bool IsGlobal { get; set; } = false;
 
     [BsonElement("userId")]
-    public string? UserId { get; set; } // null for global exercises
+    public int? UserId { get; set; } // null for global exercises
 
     [BsonElement("tags")]
-    public List<string> Tags { get; set; } = new();
+    public List<string> Tags { get; set; } = [];
 
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

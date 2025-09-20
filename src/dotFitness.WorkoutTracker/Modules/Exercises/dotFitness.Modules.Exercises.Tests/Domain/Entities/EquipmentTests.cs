@@ -6,6 +6,7 @@ namespace dotFitness.Modules.Exercises.Tests.Domain.Entities;
 public class EquipmentTests
 {
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Create_Valid_Equipment_With_Required_Properties()
     {
         var equipment = new Equipment
@@ -25,6 +26,7 @@ public class EquipmentTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Update_Equipment_And_Refresh_UpdatedAt()
     {
         var equipment = new Equipment { Name = "Barbell" };

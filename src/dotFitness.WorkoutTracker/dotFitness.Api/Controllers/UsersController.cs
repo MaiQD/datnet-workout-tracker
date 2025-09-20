@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using MediatR;
-using System.Security.Claims;
+using dotFitness.Api.Infrastructure.Extensions;
 using dotFitness.Modules.Users.Application.Commands;
-using dotFitness.Modules.Users.Application.Queries;
 using dotFitness.Modules.Users.Application.DTOs;
+using dotFitness.Modules.Users.Application.Queries;
 
 namespace dotFitness.Api.Controllers;
 
@@ -36,12 +36,7 @@ public class UsersController : ControllerBase
     {
         try
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId))
-            {
-                return Unauthorized(new { error = "User ID not found in token" });
-            }
-
+            var userId = User.GetRequiredUserId();
             var query = new GetUserProfileQuery { UserId = userId };
             var result = await _mediator.Send(query);
 
@@ -52,6 +47,11 @@ public class UsersController : ControllerBase
             }
 
             return Ok(result.Value);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogWarning("Unauthorized access: {Message}", ex.Message);
+            return Unauthorized(new { error = ex.Message });
         }
         catch (Exception ex)
         {
@@ -76,12 +76,7 @@ public class UsersController : ControllerBase
     {
         try
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId))
-            {
-                return Unauthorized(new { error = "User ID not found in token" });
-            }
-
+            var userId = User.GetRequiredUserId();
             var command = new UpdateUserProfileCommand(userId, request);
             var result = await _mediator.Send(command);
 
@@ -121,11 +116,7 @@ public class UsersController : ControllerBase
     {
         try
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId))
-            {
-                return Unauthorized(new { error = "User ID not found in token" });
-            }
+            var userId = User.GetRequiredUserId();
 
             // Set the user ID from the token to ensure user can only add metrics for themselves
             command.UserId = userId;
@@ -175,11 +166,7 @@ public class UsersController : ControllerBase
     {
         try
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId))
-            {
-                return Unauthorized(new { error = "User ID not found in token" });
-            }
+            var userId = User.GetRequiredUserId();
 
             // Limit the maximum number of records that can be retrieved
             take = Math.Min(take, 100);
@@ -224,11 +211,7 @@ public class UsersController : ControllerBase
     {
         try
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId))
-            {
-                return Unauthorized(new { error = "User ID not found in token" });
-            }
+            var userId = User.GetRequiredUserId();
 
             var query = new GetLatestUserMetricQuery { UserId = userId };
             var result = await _mediator.Send(query);

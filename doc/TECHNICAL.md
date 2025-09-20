@@ -312,14 +312,23 @@ public static void RegisterAllModules(this IServiceCollection services, IConfigu
 - **Implementation:** Configuring Serilog in the `dotFitness.Api` project, using its structured logging capabilities and various sinks (e.g., Console, File, Azure Application Insights).
 - **Benefits:** Easier log analysis, improved observability, faster debugging in production.
 
-### 5.9. Testing (xUnit.net, Moq, FluentAssertions)
+### 5.9. Testing (xUnit.net, Moq, FluentAssertions, Testcontainers)
 
 - **Purpose:** To ensure the correctness and reliability of the application's logic through automated testing.
 - **Implementation:**
     - **xUnit.net:** The primary unit testing framework. Dedicated test projects for each module (`dotFitness.Modules.X.Tests`).
     - **Moq:** A mocking library used to create mock objects for dependencies, isolating the code under test (e.g., mocking `IMongoCollection<T>`, `IMediator`).
     - **FluentAssertions:** An assertion library that provides a highly readable and fluent syntax for asserting test outcomes.
-- **Benefits:** High code quality, regression prevention, faster development cycles.
+    - **Testcontainers:** Container-based testing for integration tests with real databases (MongoDB, PostgreSQL).
+    - **In-Memory Databases:** Fast unit tests using Entity Framework Core In-Memory provider.
+    - **Schema-Aware Fixtures:** Module-specific test fixtures with proper database schema isolation.
+- **Test Architecture:**
+    - **MongoDB Modules:** Use `MongoDbFixture` with Testcontainers for integration testing.
+    - **PostgreSQL Modules:** Use in-memory databases for unit tests, PostgreSQL for integration tests.
+    - **Hybrid Modules:** Use appropriate fixtures based on the specific functionality being tested.
+    - **Module Isolation:** Each module has its own test fixtures and database schemas.
+    - **Test Data Generation:** Unique test data generation to prevent test conflicts.
+- **Benefits:** High code quality, regression prevention, faster development cycles, reliable integration testing.
 
 ## 6. Database Schema (Hybrid MongoDB + PostgreSQL)
 

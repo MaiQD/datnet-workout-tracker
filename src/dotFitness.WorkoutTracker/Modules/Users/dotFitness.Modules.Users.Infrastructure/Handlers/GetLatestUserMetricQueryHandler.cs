@@ -1,25 +1,26 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 using dotFitness.Modules.Users.Application.Queries;
 using dotFitness.Modules.Users.Application.DTOs;
 using dotFitness.Modules.Users.Application.Mappers;
-using dotFitness.Modules.Users.Domain.Repositories;
+using dotFitness.Modules.Users.Infrastructure.Data;
 using dotFitness.SharedKernel.Results;
 
 namespace dotFitness.Modules.Users.Infrastructure.Handlers;
 
 public class GetLatestUserMetricQueryHandler : IRequestHandler<GetLatestUserMetricQuery, Result<UserMetricDto>>
 {
-    private readonly IUserMetricsRepository _userMetricsRepository;
+    private readonly UsersDbContext _context;
     private readonly UserMetricMapper _userMetricMapper;
     private readonly ILogger<GetLatestUserMetricQueryHandler> _logger;
 
     public GetLatestUserMetricQueryHandler(
-        IUserMetricsRepository userMetricsRepository,
+        UsersDbContext context,
         UserMetricMapper userMetricMapper,
         ILogger<GetLatestUserMetricQueryHandler> logger)
     {
-        _userMetricsRepository = userMetricsRepository;
+        _context = context;
         _userMetricMapper = userMetricMapper;
         _logger = logger;
     }
@@ -28,15 +29,18 @@ public class GetLatestUserMetricQueryHandler : IRequestHandler<GetLatestUserMetr
     {
         try
         {
-            var metricResult = await _userMetricsRepository.GetLatestByUserIdAsync(request.UserId, cancellationToken);
-            if (metricResult.IsFailure)
+            var metric = await _context.UserMetrics
+                .Where(um => um.UserId == request.UserId)
+                .OrderByDescending(um => um.Date)
+                .ThenByDescending(um => um.CreatedAt)
+                .FirstOrDefaultAsync(cancellationToken);
+            
+            if (metric == null)
             {
                 return Result.Failure<UserMetricDto>("No metrics found for user");
             }
 
-            var metric = metricResult.Value!;
             var metricDto = _userMetricMapper.ToDto(metric);
-
             return Result.Success(metricDto);
         }
         catch (Exception ex)

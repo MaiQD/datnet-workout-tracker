@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using dotFitness.Modules.Users.Application.Commands;
 using dotFitness.Modules.Users.Application.DTOs;
 using dotFitness.Modules.Users.Application.Services;
-using dotFitness.Modules.Users.Infrastructure.Services;
 using dotFitness.SharedKernel.Results;
 
 namespace dotFitness.Modules.Users.Infrastructure.Handlers;

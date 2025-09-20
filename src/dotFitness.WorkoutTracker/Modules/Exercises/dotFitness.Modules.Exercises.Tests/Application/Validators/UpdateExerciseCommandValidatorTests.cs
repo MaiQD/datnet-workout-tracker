@@ -10,20 +10,21 @@ public class UpdateExerciseCommandValidatorTests
     private readonly UpdateExerciseCommandValidator _validator = new();
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Pass_Validation_For_Valid_Command()
     {
         var command = new UpdateExerciseCommand(
             ExerciseId: "ex1",
-            UserId: "user1",
+            UserId: 1,
             Name: "Push Up",
             Description: "desc",
-            MuscleGroups: new List<string>{"Chest"},
-            Equipment: new List<string>{"Bodyweight"},
-            Instructions: new List<string>{"Do it"},
+            MuscleGroups: ["Chest"],
+            Equipment: ["Bodyweight"],
+            Instructions: ["Do it"],
             Difficulty: ExerciseDifficulty.Advanced,
             VideoUrl: "https://example.com/v",
             ImageUrl: "https://example.com/i",
-            Tags: new List<string>{"home"}
+            Tags: ["home"]
         );
 
         var result = _validator.TestValidate(command);
@@ -31,20 +32,21 @@ public class UpdateExerciseCommandValidatorTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Fail_When_ExerciseId_Missing()
     {
         var command = new UpdateExerciseCommand(
             ExerciseId: "",
-            UserId: "user1",
+            UserId: 1,
             Name: "Push Up",
             Description: null,
-            MuscleGroups: new List<string>{"Chest"},
-            Equipment: new List<string>{"Bodyweight"},
-            Instructions: new List<string>{"Do it"},
+            MuscleGroups: ["Chest"],
+            Equipment: ["Bodyweight"],
+            Instructions: ["Do it"],
             Difficulty: ExerciseDifficulty.Beginner,
             VideoUrl: null,
             ImageUrl: null,
-            Tags: new List<string>()
+            Tags: []
         );
 
         var result = _validator.TestValidate(command);

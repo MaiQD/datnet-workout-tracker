@@ -1,3 +1,24 @@
+# dotFitness Documentation Index
+
+This directory contains all project documentation for the dotFitness Workout Tracker.
+
+## 📋 Core Documentation
+
+- **[URS.md](URS.md)** - Business User Requirements Specification
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - System architecture and design patterns
+- **[TECHNICAL.md](TECHNICAL.md)** - Technical implementation details
+- **[UI_DESIGN.md](UI_DESIGN.md)** - User interface design and specifications
+- **[PROJECT_STATUS.md](PROJECT_STATUS.md)** - Current project status and progress
+
+## 🔧 Development Documentation
+
+- **[ADD_NEW_MODULE.md](ADD_NEW_MODULE.md)** - Guidelines for adding new modules
+- **[CI_CD.md](CI_CD.md)** - Continuous Integration and Deployment setup
+- **[GOOGLE_OAUTH_SWAGGER_SETUP.md](GOOGLE_OAUTH_SWAGGER_SETUP.md)** - OAuth and Swagger configuration
+- **[STEP_BY_STEP.md](STEP_BY_STEP.md)** - Step-by-step implementation guide
+
+---
+
 # Business User Requirements Specification (URS)
 
 Document Name: dotFitness Business User Requirements Specification

@@ -1,4 +1,4 @@
-using System.Text.Json;
+using dotFitness.SharedKernel.Configuration;
 
 namespace dotFitness.Api.Infrastructure;
 
@@ -7,25 +7,30 @@ namespace dotFitness.Api.Infrastructure;
 /// </summary>
 public static class ModuleConfigurationValidator
 {
-    public static readonly string[] ModuleNames = { "Users", "Exercises", "Routines", "WorkoutLogs" };
 
     /// <summary>
-    /// Validates configuration for all modules
+    /// Validates configuration for all modules using auto-discovered validators
     /// </summary>
     /// <param name="configuration">The configuration to validate</param>
     /// <param name="logger">Logger for validation results</param>
+    /// <param name="moduleValidators">Auto-discovered module validators</param>
     /// <returns>Validation result with details</returns>
-    public static ModuleConfigurationValidationResult ValidateModuleConfiguration(IConfiguration configuration, ILogger logger)
+    public static ModuleConfigurationValidationResult ValidateModuleConfiguration(
+        IConfiguration configuration, 
+        ILogger logger, 
+        IEnumerable<IModuleConfigurationValidator> moduleValidators)
     {
         var result = new ModuleConfigurationValidationResult();
-        var moduleNames = ModuleNames;
+        var discoveredModules = moduleValidators.ToList();
 
-        logger.LogInformation("Starting module configuration validation for {ModuleCount} modules", moduleNames.Length);
+        logger.LogInformation("Starting module configuration validation for {ModuleCount} discovered modules: {Modules}", 
+            discoveredModules.Count, string.Join(", ", discoveredModules.Select(v => v.ModuleName)));
 
-        foreach (var moduleName in moduleNames)
+        foreach (var validator in discoveredModules)
         {
-            var moduleValidation = ValidateModuleConfiguration(configuration, moduleName, logger);
-            result.ModuleValidations[moduleName] = moduleValidation;
+            var moduleSection = configuration.GetSection($"Modules:{validator.ModuleName}");
+            var moduleValidation = ValidateModuleConfiguration(configuration, validator, moduleSection, logger);
+            result.ModuleValidations[validator.ModuleName] = moduleValidation;
         }
 
         // Validate global module settings
@@ -47,111 +52,35 @@ public static class ModuleConfigurationValidator
     }
 
     /// <summary>
-    /// Validates configuration for a specific module
+    /// Validates configuration for a specific module using its validator
     /// </summary>
     /// <param name="configuration">The configuration to validate</param>
-    /// <param name="moduleName">Name of the module to validate</param>
+    /// <param name="validator">The module validator</param>
+    /// <param name="moduleSection">The module configuration section</param>
     /// <param name="logger">Logger for validation results</param>
     /// <returns>Module-specific validation result</returns>
-    private static ModuleValidationResult ValidateModuleConfiguration(IConfiguration configuration, string moduleName, ILogger logger)
+    private static ModuleValidationResult ValidateModuleConfiguration(
+        IConfiguration configuration, 
+        IModuleConfigurationValidator validator, 
+        IConfigurationSection moduleSection, 
+        ILogger logger)
     {
-        var result = new ModuleValidationResult { ModuleName = moduleName };
-        var moduleSection = configuration.GetSection($"Modules:{moduleName}");
-
-        logger.LogDebug("Validating configuration for module: {ModuleName}", moduleName);
+        logger.LogDebug("Validating configuration for module: {ModuleName}", validator.ModuleName);
 
         // Check if module section exists
         if (!moduleSection.Exists())
         {
-            result.AddWarning($"Module configuration section 'Modules:{moduleName}' not found (module may be optional)");
-        }
-        else
-        {
-            // Validate module-specific settings based on module name
-            switch (moduleName.ToLowerInvariant())
-            {
-                case "users":
-                    ValidateUsersModuleConfiguration(moduleSection, result, logger);
-                    break;
-                case "exercises":
-                    ValidateExercisesModuleConfiguration(moduleSection, result, logger);
-                    break;
-                default:
-                    ValidateGenericModuleConfiguration(moduleSection, result, logger);
-                    break;
-            }
+            var result = new ModuleValidationResult { ModuleName = validator.ModuleName };
+            result.AddWarning($"Module configuration section 'Modules:{validator.ModuleName}' not found (module may be optional)");
+            result.IsValid = !result.Errors.Any();
+            return result;
         }
 
-        result.IsValid = !result.Errors.Any();
-        return result;
+        // Use the module's own validator
+        return validator.ValidateConfiguration(moduleSection, logger);
     }
 
-    /// <summary>
-    /// Validates Users module specific configuration
-    /// </summary>
-    private static void ValidateUsersModuleConfiguration(IConfigurationSection moduleSection, ModuleValidationResult result, ILogger logger)
-    {
-        // Validate JWT settings
-        var jwtSection = moduleSection.GetSection("JwtSettings");
-        if (jwtSection.Exists())
-        {
-            var requiredJwtSettings = new[] { "SecretKey", "Issuer", "Audience" };
-            foreach (var setting in requiredJwtSettings)
-            {
-                if (string.IsNullOrEmpty(jwtSection[setting]))
-                {
-                    result.AddError($"JWT setting '{setting}' is missing or empty");
-                }
-            }
-        }
 
-        // Validate Admin settings
-        var adminSection = moduleSection.GetSection("AdminSettings");
-        if (!adminSection.Exists())
-        {
-            result.AddWarning("Admin settings not found for Users module (optional)");
-            logger.LogDebug("Admin settings not found for Users module (optional)");
-        }
-    }
-
-    /// <summary>
-    /// Validates Exercises module specific configuration
-    /// </summary>
-    private static void ValidateExercisesModuleConfiguration(IConfigurationSection moduleSection, ModuleValidationResult result, ILogger logger)
-    {
-        // Check for exercise-specific settings
-        var maxExercisesPerUser = moduleSection.GetValue<int?>("MaxExercisesPerUser");
-        if (maxExercisesPerUser.HasValue && maxExercisesPerUser.Value <= 0)
-        {
-            result.AddError("MaxExercisesPerUser must be greater than 0");
-        }
-
-        var enableGlobalExercises = moduleSection.GetValue<bool?>("EnableGlobalExercises");
-        if (enableGlobalExercises.HasValue)
-        {
-            logger.LogDebug("Global exercises enabled: {Enabled}", enableGlobalExercises.Value);
-        }
-    }
-
-    /// <summary>
-    /// Validates Routines module specific configuration
-    /// </summary>
-    private static void ValidateRoutinesModuleConfiguration(IConfigurationSection moduleSection, ModuleValidationResult result, ILogger logger)
-    {
-        // Routines module is not implemented yet, so this is just a placeholder
-        result.AddWarning("Routines module configuration validation not implemented (module not yet available)");
-        logger.LogDebug("Routines module configuration validation skipped (module not yet available)");
-    }
-
-    /// <summary>
-    /// Validates WorkoutLogs module specific configuration
-    /// </summary>
-    private static void ValidateWorkoutLogsModuleConfiguration(IConfigurationSection moduleSection, ModuleValidationResult result, ILogger logger)
-    {
-        // WorkoutLogs module is not implemented yet, so this is just a placeholder
-        result.AddWarning("WorkoutLogs module configuration validation not implemented (module not yet available)");
-        logger.LogDebug("WorkoutLogs module configuration validation skipped (module not yet available)");
-    }
 
     /// <summary>
     /// Validates generic module configuration
@@ -183,47 +112,3 @@ public static class ModuleConfigurationValidator
         }
     }
 }
-
-/// <summary>
-/// Result of module configuration validation
-/// </summary>
-public class ModuleConfigurationValidationResult
-{
-    public ModuleConfigurationValidationResult()
-    {
-        ModuleValidations = new Dictionary<string, ModuleValidationResult>();
-        GlobalErrors = new List<string>();
-        GlobalWarnings = new List<string>();
-    }
-
-    public Dictionary<string, ModuleValidationResult> ModuleValidations { get; set; }
-    public List<string> GlobalErrors { get; set; }
-    public List<string> GlobalWarnings { get; set; }
-
-    public bool IsValid => !GlobalErrors.Any() && ModuleValidations.Values.All(v => v.IsValid);
-
-    public void AddGlobalError(string error) => GlobalErrors.Add(error);
-    public void AddGlobalWarning(string warning) => GlobalWarnings.Add(warning);
-
-    public string ToJson() => JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
-}
-
-/// <summary>
-/// Result of individual module validation
-/// </summary>
-public class ModuleValidationResult
-{
-    public ModuleValidationResult()
-    {
-        Errors = new List<string>();
-        Warnings = new List<string>();
-    }
-
-    public string ModuleName { get; set; } = string.Empty;
-    public List<string> Errors { get; set; }
-    public List<string> Warnings { get; set; }
-    public bool IsValid { get; set; }
-
-    public void AddError(string error) => Errors.Add(error);
-    public void AddWarning(string warning) => Warnings.Add(warning);
-} 

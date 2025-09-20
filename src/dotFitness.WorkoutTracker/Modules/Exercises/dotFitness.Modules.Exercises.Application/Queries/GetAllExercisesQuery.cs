@@ -6,7 +6,7 @@ using MediatR;
 namespace dotFitness.Modules.Exercises.Application.Queries;
 
 public record GetAllExercisesQuery(
-    string UserId,
+    int UserId,
     string? SearchTerm = null,
     List<string>? MuscleGroups = null,
     List<string>? Equipment = null,

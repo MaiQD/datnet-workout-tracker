@@ -46,7 +46,8 @@ public class EquipmentRepository : IEquipmentRepository
         }
     }
 
-    public async Task<Result<IEnumerable<Equipment>>> GetByUserIdAsync(string userId, CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<Equipment>>> GetByUserIdAsync(int userId,
+        CancellationToken cancellationToken = default)
     {
         try
         {
@@ -80,7 +81,8 @@ public class EquipmentRepository : IEquipmentRepository
         }
     }
 
-    public async Task<Result<IEnumerable<Equipment>>> GetAllForUserAsync(string userId, CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<Equipment>>> GetAllForUserAsync(int userId,
+        CancellationToken cancellationToken = default)
     {
         try
         {
@@ -166,12 +168,13 @@ public class EquipmentRepository : IEquipmentRepository
         }
     }
 
-    public async Task<Result<Equipment?>> GetByNameAsync(string name, string? userId = null, CancellationToken cancellationToken = default)
+    public async Task<Result<Equipment?>> GetByNameAsync(string name, int? userId = null,
+        CancellationToken cancellationToken = default)
     {
         try
         {
             FilterDefinition<Equipment> filter;
-            if (string.IsNullOrEmpty(userId))
+            if (!userId.HasValue)
             {
                 // Search only global equipment
                 filter = Builders<Equipment>.Filter.And(
@@ -201,7 +204,8 @@ public class EquipmentRepository : IEquipmentRepository
         }
     }
 
-    public async Task<Result<bool>> UserOwnsEquipmentAsync(string equipmentId, string userId, CancellationToken cancellationToken = default)
+    public async Task<Result<bool>> UserOwnsEquipmentAsync(string equipmentId, int userId,
+        CancellationToken cancellationToken = default)
     {
         try
         {

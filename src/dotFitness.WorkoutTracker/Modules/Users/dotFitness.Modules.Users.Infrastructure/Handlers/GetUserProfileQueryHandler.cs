@@ -1,25 +1,26 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 using dotFitness.Modules.Users.Application.Queries;
 using dotFitness.Modules.Users.Application.DTOs;
 using dotFitness.Modules.Users.Application.Mappers;
-using dotFitness.Modules.Users.Domain.Repositories;
+using dotFitness.Modules.Users.Infrastructure.Data;
 using dotFitness.SharedKernel.Results;
 
 namespace dotFitness.Modules.Users.Infrastructure.Handlers;
 
 public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, Result<UserDto>>
 {
-    private readonly IUserRepository _userRepository;
+    private readonly UsersDbContext _context;
     private readonly UserMapper _userMapper;
     private readonly ILogger<GetUserProfileQueryHandler> _logger;
 
     public GetUserProfileQueryHandler(
-        IUserRepository userRepository,
+        UsersDbContext context,
         UserMapper userMapper,
         ILogger<GetUserProfileQueryHandler> logger)
     {
-        _userRepository = userRepository;
+        _context = context;
         _userMapper = userMapper;
         _logger = logger;
     }
@@ -28,15 +29,15 @@ public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, R
     {
         try
         {
-            var userResult = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
-            if (userResult.IsFailure)
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
+            
+            if (user == null)
             {
                 return Result.Failure<UserDto>("User profile not found");
             }
 
-            var user = userResult.Value!;
             var userDto = _userMapper.ToDto(user);
-
             return Result.Success(userDto);
         }
         catch (Exception ex)

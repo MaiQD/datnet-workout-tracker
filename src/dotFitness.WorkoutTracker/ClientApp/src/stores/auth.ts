@@ -34,12 +34,19 @@ export const useAuthStore = defineStore('auth', () => {
       const response: GoogleAuthResponse = await googleAuthService.signIn()
       
       // Create user object from response
-      const userData = {
+      const userData: User = {
         id: response.userId,
         email: response.email,
         name: response.displayName,
-        roles: response.roles,
-        profilePicture: response.profilePicture
+        roles: response.roles || [],
+        profilePicture: response.profilePicture,
+        gender: response.gender,
+        dateOfBirth: response.dateOfBirth,
+        unitPreference: response.unitPreference,
+        loginMethod: response.loginMethod,
+        createdAt: response.createdAt,
+        updatedAt: response.updatedAt
+    
       }
       
       user.value = userData

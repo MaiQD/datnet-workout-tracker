@@ -1,5 +1,6 @@
 var builder = DistributedApplication.CreateBuilder(args);
 var postgres = builder.AddPostgres("postgres")
+    .WithLifetime(ContainerLifetime.Persistent)
     .WithPgAdmin();
 var postgresDb = postgres.AddDatabase("dotFitnessDb-pg");
 

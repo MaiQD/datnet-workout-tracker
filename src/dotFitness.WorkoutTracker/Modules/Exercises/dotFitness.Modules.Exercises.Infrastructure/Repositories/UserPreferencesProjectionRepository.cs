@@ -14,7 +14,8 @@ public class UserPreferencesProjectionRepository : IUserPreferencesProjectionRep
         _collection = database.GetCollection<UserPreferencesProjection>("userPreferencesProjections");
     }
 
-    public async Task<Result<UserPreferencesProjection?>> GetByUserIdAsync(string userId, CancellationToken cancellationToken = default)
+    public async Task<Result<UserPreferencesProjection?>> GetByUserIdAsync(int userId,
+        CancellationToken cancellationToken = default)
     {
         try
         {

@@ -16,6 +16,7 @@ public class LoginWithGoogleCommandValidatorTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Pass_Validation_For_Valid_Command()
     {
         // Arrange
@@ -33,6 +34,7 @@ public class LoginWithGoogleCommandValidatorTests
     }
 
     [Theory]
+    [Trait("Category", "Unit")]
     [InlineData("")]
     [InlineData("   ")]
     [InlineData(null)]
@@ -54,6 +56,7 @@ public class LoginWithGoogleCommandValidatorTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Have_Validation_Error_For_Missing_Required_Field()
     {
         // Arrange

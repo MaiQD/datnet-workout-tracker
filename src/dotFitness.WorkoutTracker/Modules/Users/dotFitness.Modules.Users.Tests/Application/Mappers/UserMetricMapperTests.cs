@@ -14,13 +14,14 @@ public class UserMetricMapperTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Map_Entity_To_Dto_Correctly()
     {
         // Arrange
         var userMetric = new UserMetric
         {
-            Id = "metric123",
-            UserId = "user123",
+            Id = 1,
+            UserId = 1,
             Date = new DateTime(2024, 1, 1),
             Weight = 70.5,
             Height = 175.0,
@@ -35,8 +36,8 @@ public class UserMetricMapperTests
 
         // Assert
         dto.Should().NotBeNull();
-        dto.Id.Should().Be("metric123");
-        dto.UserId.Should().Be("user123");
+        dto.Id.Should().Be(1);
+        dto.UserId.Should().Be(1);
         dto.Date.Should().Be(new DateTime(2024, 1, 1));
         dto.Weight.Should().Be(70.5);
         dto.Height.Should().Be(175.0);
@@ -48,13 +49,14 @@ public class UserMetricMapperTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Handle_Null_Optional_Values_In_Mapping()
     {
         // Arrange
         var userMetric = new UserMetric
         {
-            Id = "metric123",
-            UserId = "user123",
+            Id = 1,
+            UserId = 1,
             Date = new DateTime(2024, 1, 1),
             Weight = null, // Null optional field
             Height = null, // Null optional field
@@ -69,8 +71,8 @@ public class UserMetricMapperTests
 
         // Assert
         dto.Should().NotBeNull();
-        dto.Id.Should().Be("metric123");
-        dto.UserId.Should().Be("user123");
+        dto.Id.Should().Be(1);
+        dto.UserId.Should().Be(1);
         dto.Date.Should().Be(new DateTime(2024, 1, 1));
         dto.Weight.Should().BeNull();
         dto.Height.Should().BeNull();
@@ -80,13 +82,14 @@ public class UserMetricMapperTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Map_Weight_Only_Measurement()
     {
         // Arrange
         var userMetric = new UserMetric
         {
-            Id = "metric123",
-            UserId = "user123",
+            Id = 1,
+            UserId = 1,
             Date = new DateTime(2024, 1, 1),
             Weight = 70.0,
             Height = null,
@@ -109,13 +112,14 @@ public class UserMetricMapperTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Map_Height_Only_Measurement()
     {
         // Arrange
         var userMetric = new UserMetric
         {
-            Id = "metric123",
-            UserId = "user123",
+            Id = 1,
+            UserId = 1,
             Date = new DateTime(2024, 1, 1),
             Weight = null,
             Height = 175.0,
@@ -138,6 +142,7 @@ public class UserMetricMapperTests
     }
 
     [Theory]
+    [Trait("Category", "Unit")]
     [InlineData(17.0, "Underweight")]
     [InlineData(22.0, "Normal weight")]
     [InlineData(27.0, "Overweight")]
@@ -147,8 +152,8 @@ public class UserMetricMapperTests
         // Arrange
         var userMetric = new UserMetric
         {
-            Id = "metric123",
-            UserId = "user123",
+            Id = 1,
+            UserId = 1,
             Date = new DateTime(2024, 1, 1),
             Weight = 70.0,
             Height = 175.0,
@@ -167,6 +172,7 @@ public class UserMetricMapperTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Preserve_DateTime_Precision()
     {
         // Arrange
@@ -176,8 +182,8 @@ public class UserMetricMapperTests
         
         var userMetric = new UserMetric
         {
-            Id = "metric123",
-            UserId = "user123",
+            Id = 1,
+            UserId = 1,
             Date = preciseDate,
             Weight = 70.0,
             Height = 175.0,
@@ -196,13 +202,14 @@ public class UserMetricMapperTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Map_Complete_Measurement_With_All_Fields()
     {
         // Arrange
         var userMetric = new UserMetric
         {
-            Id = "metric123",
-            UserId = "user123",
+            Id = 1,
+            UserId = 1,
             Date = new DateTime(2024, 1, 15),
             Weight = 72.5,
             Height = 180.0,
@@ -217,8 +224,8 @@ public class UserMetricMapperTests
 
         // Assert
         dto.Should().NotBeNull();
-        dto.Id.Should().Be("metric123");
-        dto.UserId.Should().Be("user123");
+        dto.Id.Should().Be(1);
+        dto.UserId.Should().Be(1);
         dto.Date.Should().Be(new DateTime(2024, 1, 15));
         dto.Weight.Should().Be(72.5);
         dto.Height.Should().Be(180.0);
@@ -230,6 +237,7 @@ public class UserMetricMapperTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Handle_Edge_Case_BMI_Values()
     {
         // Test boundary BMI values
@@ -248,8 +256,8 @@ public class UserMetricMapperTests
             // Arrange
             var userMetric = new UserMetric
             {
-                Id = "metric123",
-                UserId = "user123",
+                Id = 1,
+                UserId = 1,
                 Date = new DateTime(2024, 1, 1),
                 Bmi = bmi,
                 CreatedAt = DateTime.UtcNow,
@@ -265,13 +273,14 @@ public class UserMetricMapperTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Map_Empty_Notes_String()
     {
         // Arrange
         var userMetric = new UserMetric
         {
-            Id = "metric123",
-            UserId = "user123",
+            Id = 1,
+            UserId = 1,
             Date = new DateTime(2024, 1, 1),
             Weight = 70.0,
             Notes = "", // Empty string
@@ -288,13 +297,14 @@ public class UserMetricMapperTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public void Should_Map_Large_Weight_And_Height_Values()
     {
         // Arrange
         var userMetric = new UserMetric
         {
-            Id = "metric123",
-            UserId = "user123",
+            Id = 1,
+            UserId = 1,
             Date = new DateTime(2024, 1, 1),
             Weight = 999.99, // Large weight value
             Height = 250.0, // Large height value

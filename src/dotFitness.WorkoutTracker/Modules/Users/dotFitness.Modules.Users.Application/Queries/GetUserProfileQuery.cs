@@ -8,5 +8,5 @@ namespace dotFitness.Modules.Users.Application.Queries;
 public class GetUserProfileQuery : IRequest<Result<UserDto>>
 {
     [Required]
-    public string UserId { get; set; } = string.Empty;
+    public int UserId { get; set; }
 }

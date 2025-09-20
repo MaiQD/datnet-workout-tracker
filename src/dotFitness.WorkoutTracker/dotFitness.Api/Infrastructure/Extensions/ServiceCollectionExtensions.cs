@@ -1,10 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Models;
 using FluentValidation.AspNetCore;
-using MongoDB.Driver;
-using dotFitness.SharedKernel.Outbox;
 using dotFitness.Api.Infrastructure.Settings;
 using dotFitness.Api.Infrastructure.Swagger;
+using dotFitness.Api.Infrastructure.Services;
 using dotFitness.Bootstrap;
 using Microsoft.Extensions.Options;
 
@@ -36,6 +35,9 @@ public static class ServiceCollectionExtensions
 
         services.AddFluentValidationAutoValidation()
             .AddFluentValidationClientsideAdapters();
+
+        // Register background services
+        services.AddHostedService<OutboxProcessorService>();
 
         return services;
     }
@@ -94,7 +96,7 @@ public static class ServiceCollectionExtensions
                             Id = "Bearer"
                         }
                     },
-                    new string[]{}
+                    []
                 },
                 {
                     new()
@@ -146,18 +148,22 @@ public static class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddModuleServices(this IServiceCollection services, IConfiguration configuration, ILogger logger)
     {
-        // Add health checks for modules
-        services.AddModuleHealthChecks();
+        // Add global health checks (modules register their own)
+        services.AddGlobalHealthChecks();
 
-        // Validate module configuration
-        var configurationValidation = ModuleConfigurationValidator.ValidateModuleConfiguration(configuration, logger);
+        // Register all modules using interface-based approach via Bootstrap
+        services.RegisterAllModules(configuration, logger);
+        
+        // Get all module configuration validators for validation
+        var serviceProvider = services.BuildServiceProvider();
+        var moduleValidators = serviceProvider.GetServices<dotFitness.SharedKernel.Configuration.IModuleConfigurationValidator>();
+        
+        // Validate module configuration using discovered validators
+        var configurationValidation = ModuleConfigurationValidator.ValidateModuleConfiguration(configuration, logger, moduleValidators);
         if (!configurationValidation.IsValid)
         {
             logger.LogWarning("Module configuration validation found issues: {ValidationResult}", configurationValidation.ToJson());
         }
-
-        // Register all modules using interface-based approach via Bootstrap
-        services.RegisterAllModules(configuration, logger);
 
         return services;
     }
