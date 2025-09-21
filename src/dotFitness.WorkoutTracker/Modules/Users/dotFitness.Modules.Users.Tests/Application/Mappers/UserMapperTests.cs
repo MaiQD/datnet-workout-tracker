@@ -6,12 +6,6 @@ namespace dotFitness.Modules.Users.Tests.Application.Mappers;
 
 public class UserMapperTests
 {
-    private readonly UserMapper _mapper;
-
-    public UserMapperTests()
-    {
-        _mapper = new UserMapper();
-    }
 
     [Fact]
     [Trait("Category", "Unit")]
@@ -35,7 +29,7 @@ public class UserMapperTests
         };
 
         // Act
-        var dto = _mapper.ToDto(user);
+        var dto = UserMapper.ToDto(user);
 
         // Assert
         dto.Should().NotBeNull();
@@ -72,7 +66,7 @@ public class UserMapperTests
         };
 
         // Act
-        var dto = _mapper.ToDto(user);
+        var dto = UserMapper.ToDto(user);
 
         // Assert
         dto.Should().NotBeNull();
@@ -105,7 +99,7 @@ public class UserMapperTests
                 UpdatedAt = DateTime.UtcNow
             };
 
-            var dto = _mapper.ToDto(user);
+            var dto = UserMapper.ToDto(user);
 
             // The mapping should preserve the enum value
             dto.Should().NotBeNull();
@@ -133,7 +127,7 @@ public class UserMapperTests
                 UpdatedAt = DateTime.UtcNow
             };
 
-            var dto = _mapper.ToDto(user);
+            var dto = UserMapper.ToDto(user);
 
             dto.Should().NotBeNull();
             dto.Gender.Should().Be(gender.ToString());
@@ -158,7 +152,7 @@ public class UserMapperTests
                 UpdatedAt = DateTime.UtcNow
             };
 
-            var dto = _mapper.ToDto(user);
+            var dto = UserMapper.ToDto(user);
 
             dto.Should().NotBeNull();
             dto.UnitPreference.Should().Be(unitPreference.ToString());
@@ -182,7 +176,7 @@ public class UserMapperTests
         };
 
         // Act
-        var dto = _mapper.ToDto(user);
+        var dto = UserMapper.ToDto(user);
 
         // Assert
         dto.Should().NotBeNull();
@@ -208,7 +202,7 @@ public class UserMapperTests
         };
 
         // Act
-        var dto = _mapper.ToDto(user);
+        var dto = UserMapper.ToDto(user);
 
         // Assert
         dto.Should().NotBeNull();
@@ -236,7 +230,7 @@ public class UserMapperTests
         };
 
         // Act
-        var dto = _mapper.ToDto(user);
+        var dto = UserMapper.ToDto(user);
 
         // Assert
         dto.Should().NotBeNull();
@@ -261,7 +255,7 @@ public class UserMapperTests
         };
 
         // Act
-        var dto = _mapper.ToDto(user);
+        var dto = UserMapper.ToDto(user);
 
         // Assert
         dto.Should().NotBeNull();
@@ -285,7 +279,7 @@ public class UserMapperTests
         };
 
         // Act
-        var dto = _mapper.ToDto(user);
+        var dto = UserMapper.ToDto(user);
 
         // Assert
         dto.Should().NotBeNull();

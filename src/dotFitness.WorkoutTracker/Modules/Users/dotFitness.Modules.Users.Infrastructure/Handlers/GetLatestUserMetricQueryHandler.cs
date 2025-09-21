@@ -12,16 +12,13 @@ namespace dotFitness.Modules.Users.Infrastructure.Handlers;
 public class GetLatestUserMetricQueryHandler : IRequestHandler<GetLatestUserMetricQuery, Result<UserMetricDto>>
 {
     private readonly UsersDbContext _context;
-    private readonly UserMetricMapper _userMetricMapper;
     private readonly ILogger<GetLatestUserMetricQueryHandler> _logger;
 
     public GetLatestUserMetricQueryHandler(
         UsersDbContext context,
-        UserMetricMapper userMetricMapper,
         ILogger<GetLatestUserMetricQueryHandler> logger)
     {
         _context = context;
-        _userMetricMapper = userMetricMapper;
         _logger = logger;
     }
 
@@ -40,7 +37,7 @@ public class GetLatestUserMetricQueryHandler : IRequestHandler<GetLatestUserMetr
                 return Result.Failure<UserMetricDto>("No metrics found for user");
             }
 
-            var metricDto = _userMetricMapper.ToDto(metric);
+            var metricDto = UserMetricMapper.ToDto(metric);
             return Result.Success(metricDto);
         }
         catch (Exception ex)

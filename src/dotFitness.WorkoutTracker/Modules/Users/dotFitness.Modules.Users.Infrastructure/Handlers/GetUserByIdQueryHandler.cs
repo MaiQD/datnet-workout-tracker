@@ -11,17 +11,13 @@ namespace dotFitness.Modules.Users.Infrastructure.Handlers;
 
 public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, Result<UserDto>>
 {
-    private readonly UsersDbContext _context;
-    private readonly UserMapper _userMapper;
-    private readonly ILogger<GetUserByIdQueryHandler> _logger;
+    private readonly UsersDbContext _context;    private readonly ILogger<GetUserByIdQueryHandler> _logger;
 
     public GetUserByIdQueryHandler(
         UsersDbContext context,
-        UserMapper userMapper,
         ILogger<GetUserByIdQueryHandler> logger)
     {
         _context = context;
-        _userMapper = userMapper;
         _logger = logger;
     }
 
@@ -37,7 +33,7 @@ public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, Result<
                 return Result.Failure<UserDto>("User not found");
             }
 
-            var userDto = _userMapper.ToDto(user);
+            var userDto = UserMapper.ToDto(user);
             return Result.Success(userDto);
         }
         catch (Exception ex)

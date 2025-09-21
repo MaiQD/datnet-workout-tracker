@@ -12,16 +12,13 @@ namespace dotFitness.Modules.Users.Infrastructure.Handlers;
 public class GetUserMetricsQueryHandler : IRequestHandler<GetUserMetricsQuery, Result<IEnumerable<UserMetricDto>>>
 {
     private readonly UsersDbContext _context;
-    private readonly UserMetricMapper _userMetricMapper;
     private readonly ILogger<GetUserMetricsQueryHandler> _logger;
 
     public GetUserMetricsQueryHandler(
         UsersDbContext context,
-        UserMetricMapper userMetricMapper,
         ILogger<GetUserMetricsQueryHandler> logger)
     {
         _context = context;
-        _userMetricMapper = userMetricMapper;
         _logger = logger;
     }
 
@@ -46,7 +43,7 @@ public class GetUserMetricsQueryHandler : IRequestHandler<GetUserMetricsQuery, R
                 .Take(request.Take)
                 .ToListAsync(cancellationToken);
 
-            var metricDtos = metrics.Select(m => _userMetricMapper.ToDto(m)).ToList();
+            var metricDtos = UserMetricMapper.ToDto(metrics);
 
             return Result.Success<IEnumerable<UserMetricDto>>(metricDtos);
         }
