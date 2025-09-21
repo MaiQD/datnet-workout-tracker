@@ -15,16 +15,13 @@ namespace dotFitness.Modules.Users.Infrastructure.Handlers;
 public class UpdateUserProfileCommandHandler : IRequestHandler<UpdateUserProfileCommand, Result<UserDto>>
 {
     private readonly UsersDbContext _context;
-    private readonly UserMapper _userMapper;
     private readonly ILogger<UpdateUserProfileCommandHandler> _logger;
 
     public UpdateUserProfileCommandHandler(
         UsersDbContext context,
-        UserMapper userMapper,
         ILogger<UpdateUserProfileCommandHandler> logger)
     {
         _context = context;
-        _userMapper = userMapper;
         _logger = logger;
     }
 
@@ -69,7 +66,7 @@ public class UpdateUserProfileCommandHandler : IRequestHandler<UpdateUserProfile
                         user.UnitPreference == originalUnitPreference)
                     {
                         // No changes made, return current user
-                        return Result.Success(_userMapper.ToDto(user));
+                        return Result.Success(UserMapper.ToDto(user));
                     }
 
                     // 3. Save changes to database
@@ -99,7 +96,7 @@ public class UpdateUserProfileCommandHandler : IRequestHandler<UpdateUserProfile
                     await transaction.CommitAsync(cancellationToken);
                     
                     _logger.LogInformation("Successfully updated profile for user {UserId}", user.Id);
-                    return Result.Success(_userMapper.ToDto(user));
+                    return Result.Success(UserMapper.ToDto(user));
                 }
                 catch
                 {

@@ -13,16 +13,13 @@ namespace dotFitness.Modules.Users.Infrastructure.Handlers;
 public class AddUserMetricCommandHandler : IRequestHandler<AddUserMetricCommand, Result<UserMetricDto>>
 {
     private readonly UsersDbContext _context;
-    private readonly UserMetricMapper _userMetricMapper;
     private readonly ILogger<AddUserMetricCommandHandler> _logger;
 
     public AddUserMetricCommandHandler(
         UsersDbContext context,
-        UserMetricMapper userMetricMapper,
         ILogger<AddUserMetricCommandHandler> logger)
     {
         _context = context;
-        _userMetricMapper = userMetricMapper;
         _logger = logger;
     }
 
@@ -80,7 +77,7 @@ public class AddUserMetricCommandHandler : IRequestHandler<AddUserMetricCommand,
 
                     await transaction.CommitAsync(cancellationToken);
 
-                    var metricDto = _userMetricMapper.ToDto(userMetric);
+                    var metricDto = UserMetricMapper.ToDto(userMetric);
 
                     _logger.LogInformation("User metric added successfully for user {UserId} on {Date}", 
                         request.UserId, request.Date.ToString("yyyy-MM-dd"));

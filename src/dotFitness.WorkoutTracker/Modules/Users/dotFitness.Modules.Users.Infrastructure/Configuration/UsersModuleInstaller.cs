@@ -112,11 +112,7 @@ public class UsersModuleInstaller : IModuleInstaller
 
         // Register MediatR handlers (auto-registered in Bootstrap) - removed
         // Register validators (auto-registered in Bootstrap) - removed
-
-        // Register Mapperly mappers - they will be generated as implementations
-        services.AddScoped<UserMapper>();
-        services.AddScoped<UserMetricMapper>();
-
+        
         // Register Users module health check
         services.AddHealthChecks()
             .AddCheck<UsersModuleHealthCheck>("users-module", tags: ["module", "users", "live"]);

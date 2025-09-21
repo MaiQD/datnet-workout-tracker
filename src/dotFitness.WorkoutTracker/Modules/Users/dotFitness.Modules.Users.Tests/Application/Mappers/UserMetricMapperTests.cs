@@ -6,12 +6,6 @@ namespace dotFitness.Modules.Users.Tests.Application.Mappers;
 
 public class UserMetricMapperTests
 {
-    private readonly UserMetricMapper _mapper;
-
-    public UserMetricMapperTests()
-    {
-        _mapper = new UserMetricMapper();
-    }
 
     [Fact]
     [Trait("Category", "Unit")]
@@ -32,7 +26,7 @@ public class UserMetricMapperTests
         };
 
         // Act
-        var dto = _mapper.ToDto(userMetric);
+        var dto = UserMetricMapper.ToDto(userMetric);
 
         // Assert
         dto.Should().NotBeNull();
@@ -67,7 +61,7 @@ public class UserMetricMapperTests
         };
 
         // Act
-        var dto = _mapper.ToDto(userMetric);
+        var dto = UserMetricMapper.ToDto(userMetric);
 
         // Assert
         dto.Should().NotBeNull();
@@ -100,7 +94,7 @@ public class UserMetricMapperTests
         };
 
         // Act
-        var dto = _mapper.ToDto(userMetric);
+        var dto = UserMetricMapper.ToDto(userMetric);
 
         // Assert
         dto.Should().NotBeNull();
@@ -130,7 +124,7 @@ public class UserMetricMapperTests
         };
 
         // Act
-        var dto = _mapper.ToDto(userMetric);
+        var dto = UserMetricMapper.ToDto(userMetric);
 
         // Assert
         dto.Should().NotBeNull();
@@ -163,7 +157,7 @@ public class UserMetricMapperTests
         };
 
         // Act
-        var dto = _mapper.ToDto(userMetric);
+        var dto = UserMetricMapper.ToDto(userMetric);
 
         // Assert
         dto.Should().NotBeNull();
@@ -192,7 +186,7 @@ public class UserMetricMapperTests
         };
 
         // Act
-        var dto = _mapper.ToDto(userMetric);
+        var dto = UserMetricMapper.ToDto(userMetric);
 
         // Assert
         dto.Should().NotBeNull();
@@ -220,7 +214,7 @@ public class UserMetricMapperTests
         };
 
         // Act
-        var dto = _mapper.ToDto(userMetric);
+        var dto = UserMetricMapper.ToDto(userMetric);
 
         // Assert
         dto.Should().NotBeNull();
@@ -265,7 +259,7 @@ public class UserMetricMapperTests
             };
 
             // Act
-            var dto = _mapper.ToDto(userMetric);
+            var dto = UserMetricMapper.ToDto(userMetric);
 
             // Assert
             dto.BmiCategory.Should().Be(expected, $"BMI {bmi} should map to category '{expected}'");
@@ -289,7 +283,7 @@ public class UserMetricMapperTests
         };
 
         // Act
-        var dto = _mapper.ToDto(userMetric);
+        var dto = UserMetricMapper.ToDto(userMetric);
 
         // Assert
         dto.Should().NotBeNull();
@@ -314,7 +308,7 @@ public class UserMetricMapperTests
         };
 
         // Act
-        var dto = _mapper.ToDto(userMetric);
+        var dto = UserMetricMapper.ToDto(userMetric);
 
         // Assert
         dto.Should().NotBeNull();

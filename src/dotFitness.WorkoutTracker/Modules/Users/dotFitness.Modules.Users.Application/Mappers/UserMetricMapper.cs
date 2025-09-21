@@ -5,10 +5,11 @@ using dotFitness.Modules.Users.Application.DTOs;
 namespace dotFitness.Modules.Users.Application.Mappers;
 
 [Mapper]
-public partial class UserMetricMapper
+public static partial class UserMetricMapper
 {
     [MapProperty(nameof(@MapBmiCategory), nameof(UserMetricDto.BmiCategory))]
-    public partial UserMetricDto ToDto(UserMetric userMetric);
+    public static partial UserMetricDto ToDto(UserMetric userMetric);
+    public static partial IEnumerable<UserMetricDto> ToDto(IEnumerable<UserMetric> userMetrics);
     
-    private string MapBmiCategory(UserMetric userMetric) => userMetric.GetBmiCategory();
+    private static string MapBmiCategory(UserMetric userMetric) => userMetric.GetBmiCategory();
 }
