@@ -28,13 +28,14 @@ public class AuthControllerTests
     {
         // Arrange
         var request = new LoginWithGoogleRequest { GoogleToken = "test-token" };
+        var fixedDate = new DateTime(2024, 1, 15, 10, 30, 0, DateTimeKind.Utc);
         var loginResponse = new LoginResponseDto
         {
             Token = "jwt-token",
             UserId = 1,
             Email = "test@example.com",
             DisplayName = "Test User",
-            ExpiresAt = DateTime.UtcNow.AddHours(1)
+            ExpiresAt = fixedDate.AddHours(1)
         };
 
         _mediatorMock

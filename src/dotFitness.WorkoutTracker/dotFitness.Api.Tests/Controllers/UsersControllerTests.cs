@@ -113,13 +113,14 @@ public class UsersControllerTests
     public async Task GetMetrics_Should_Return_Ok_When_Metrics_Found()
     {
         // Arrange
+        var fixedDate = new DateTime(2024, 1, 15, 10, 30, 0, DateTimeKind.Utc);
         var metrics = new List<UserMetricDto>
         {
             new UserMetricDto
             {
                 Id = 1,
                 UserId = 1,
-                Date = DateTime.UtcNow,
+                Date = fixedDate,
                 Weight = 70.5,
                 Height = 175.0,
                 Bmi = 23.0,

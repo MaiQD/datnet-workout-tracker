@@ -46,12 +46,13 @@ public class ExercisesControllerTests
     public async Task GetAllExercises_Should_Return_Ok_When_Exercises_Found()
     {
         // Arrange
+        var fixedDate = new DateTime(2024, 1, 15, 10, 30, 0, DateTimeKind.Utc);
         var exercises = new List<ExerciseDto>
         {
             new ExerciseDto("1", "Push Up", "Basic push up exercise", 
                 new List<string> { "Chest" }, new List<string> { "Bodyweight" }, 
                 new List<string> { "Step 1", "Step 2" }, ExerciseDifficulty.Beginner, 
-                null, null, true, null, new List<string> { "strength" }, DateTime.UtcNow, DateTime.UtcNow)
+                null, null, true, null, new List<string> { "strength" }, fixedDate, fixedDate)
         };
 
         _mediatorMock
@@ -71,10 +72,11 @@ public class ExercisesControllerTests
     public async Task GetExerciseById_Should_Return_Ok_When_Exercise_Found()
     {
         // Arrange
+        var fixedDate = new DateTime(2024, 1, 15, 10, 30, 0, DateTimeKind.Utc);
         var exercise = new ExerciseDto("1", "Push Up", "Basic push up exercise", 
             new List<string> { "Chest" }, new List<string> { "Bodyweight" }, 
             new List<string> { "Step 1", "Step 2" }, ExerciseDifficulty.Beginner, 
-            null, null, true, null, new List<string> { "strength" }, DateTime.UtcNow, DateTime.UtcNow);
+            null, null, true, null, new List<string> { "strength" }, fixedDate, fixedDate);
 
         _mediatorMock
             .Setup(m => m.Send(It.IsAny<GetExerciseByIdQuery>(), It.IsAny<CancellationToken>()))
@@ -120,10 +122,11 @@ public class ExercisesControllerTests
             new List<string> { "strength" }
         );
 
+        var fixedDate = new DateTime(2024, 1, 15, 10, 30, 0, DateTimeKind.Utc);
         var createdExercise = new ExerciseDto("1", "Push Up", "Basic push up exercise", 
             new List<string> { "Chest" }, new List<string> { "Bodyweight" }, 
             new List<string> { "Step 1", "Step 2" }, ExerciseDifficulty.Beginner, 
-            null, null, false, 1, new List<string> { "strength" }, DateTime.UtcNow, DateTime.UtcNow);
+            null, null, false, 1, new List<string> { "strength" }, fixedDate, fixedDate);
 
         _mediatorMock
             .Setup(m => m.Send(It.IsAny<CreateExerciseCommand>(), It.IsAny<CancellationToken>()))
@@ -142,9 +145,10 @@ public class ExercisesControllerTests
     public async Task GetAllMuscleGroups_Should_Return_Ok_When_MuscleGroups_Found()
     {
         // Arrange
+        var fixedDate = new DateTime(2024, 1, 15, 10, 30, 0, DateTimeKind.Utc);
         var muscleGroups = new List<MuscleGroupDto>
         {
-            new MuscleGroupDto("1", "Chest", "Upper body", true, null, DateTime.UtcNow, DateTime.UtcNow)
+            new MuscleGroupDto("1", "Chest", "Upper body", true, null, fixedDate, fixedDate)
         };
 
         _mediatorMock
@@ -164,9 +168,10 @@ public class ExercisesControllerTests
     public async Task GetAllEquipment_Should_Return_Ok_When_Equipment_Found()
     {
         // Arrange
+        var fixedDate = new DateTime(2024, 1, 15, 10, 30, 0, DateTimeKind.Utc);
         var equipment = new List<EquipmentDto>
         {
-            new EquipmentDto("1", "Dumbbells", "Adjustable dumbbells", "Weight training", true, "user1", DateTime.UtcNow, DateTime.UtcNow)
+            new EquipmentDto("1", "Dumbbells", "Adjustable dumbbells", "Weight training", true, "user1", fixedDate, fixedDate)
         };
 
         _mediatorMock
