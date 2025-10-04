@@ -39,6 +39,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotFitness.Aspire.AppHost",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotFitness.Aspire.ServiceDefaults", "dotFitness.Aspire.ServiceDefaults\dotFitness.Aspire.ServiceDefaults.csproj", "{89948BD5-8D7E-4DA8-BAC5-3D4B992C31A6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotFitness.Api.Tests", "dotFitness.Api.Tests\dotFitness.Api.Tests.csproj", "{0EEA619B-0323-4E6F-A936-49E97686259C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -229,6 +231,18 @@ Global
 		{89948BD5-8D7E-4DA8-BAC5-3D4B992C31A6}.Release|x64.Build.0 = Release|Any CPU
 		{89948BD5-8D7E-4DA8-BAC5-3D4B992C31A6}.Release|x86.ActiveCfg = Release|Any CPU
 		{89948BD5-8D7E-4DA8-BAC5-3D4B992C31A6}.Release|x86.Build.0 = Release|Any CPU
+		{0EEA619B-0323-4E6F-A936-49E97686259C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0EEA619B-0323-4E6F-A936-49E97686259C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0EEA619B-0323-4E6F-A936-49E97686259C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{0EEA619B-0323-4E6F-A936-49E97686259C}.Debug|x64.Build.0 = Debug|Any CPU
+		{0EEA619B-0323-4E6F-A936-49E97686259C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{0EEA619B-0323-4E6F-A936-49E97686259C}.Debug|x86.Build.0 = Debug|Any CPU
+		{0EEA619B-0323-4E6F-A936-49E97686259C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0EEA619B-0323-4E6F-A936-49E97686259C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0EEA619B-0323-4E6F-A936-49E97686259C}.Release|x64.ActiveCfg = Release|Any CPU
+		{0EEA619B-0323-4E6F-A936-49E97686259C}.Release|x64.Build.0 = Release|Any CPU
+		{0EEA619B-0323-4E6F-A936-49E97686259C}.Release|x86.ActiveCfg = Release|Any CPU
+		{0EEA619B-0323-4E6F-A936-49E97686259C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

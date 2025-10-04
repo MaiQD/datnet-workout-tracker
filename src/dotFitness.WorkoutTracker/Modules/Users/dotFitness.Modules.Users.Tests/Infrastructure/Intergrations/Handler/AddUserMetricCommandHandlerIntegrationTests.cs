@@ -15,7 +15,6 @@ namespace dotFitness.Modules.Users.Tests.Infrastructure.Intergrations.Handler;
 [Collection("UsersPostgreSQL.Shared")]
 public class AddUserMetricCommandHandlerIntegrationTests(UsersPostgresSqlFixture fixture)
 {
-    private readonly UserMetricMapper _userMetricMapper = new();
     private readonly ILogger<AddUserMetricCommandHandler> _logger = new Mock<ILogger<AddUserMetricCommandHandler>>().Object;
 
     private async Task<(UsersDbContext context, AddUserMetricCommandHandler handler)> CreateHandlerAsync()
@@ -31,7 +30,6 @@ public class AddUserMetricCommandHandlerIntegrationTests(UsersPostgresSqlFixture
         
         var handler = new AddUserMetricCommandHandler(
             context,
-            _userMetricMapper,
             _logger
         );
 

@@ -16,7 +16,6 @@ namespace dotFitness.Modules.Users.Tests.Infrastructure.Handlers;
 public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
 {
     private readonly UsersUnitTestFixture _fixture = new();
-    private readonly UserMapper _userMapper = new();
     private readonly ILogger<UpdateUserProfileCommandHandler> _logger = new Mock<ILogger<UpdateUserProfileCommandHandler>>().Object;
     private UsersDbContext _context = null!;
     private UpdateUserProfileCommandHandler _handler = null!;
@@ -28,7 +27,6 @@ public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
         
         _handler = new UpdateUserProfileCommandHandler(
             _context,
-            _userMapper,
             _logger
         );
     }

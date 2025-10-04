@@ -14,7 +14,6 @@ namespace dotFitness.Modules.Users.Tests.Infrastructure.Handlers;
 public class GetUserByIdQueryHandlerTests : IAsyncLifetime
 {
     private readonly UsersUnitTestFixture _fixture = new();
-    private readonly UserMapper _userMapper = new();
     private readonly ILogger<GetUserByIdQueryHandler> _logger = new Mock<ILogger<GetUserByIdQueryHandler>>().Object;
     private UsersDbContext _context = null!;
     private GetUserByIdQueryHandler _handler = null!;
@@ -26,7 +25,6 @@ public class GetUserByIdQueryHandlerTests : IAsyncLifetime
         
         _handler = new GetUserByIdQueryHandler(
             _context,
-            _userMapper,
             _logger
         );
     }
