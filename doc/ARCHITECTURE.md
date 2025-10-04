@@ -26,6 +26,12 @@ dotFitness implements a **Modular Monolith** architecture that combines the simp
 - Testable and maintainable code structure
 - Clear separation of concerns
 
+### 4. **Security-First Design**
+- Multi-level authorization validation
+- Cross-user access prevention
+- Comprehensive audit logging
+- Zero-trust security model
+
 #### 3.1 Single Responsibility Principle (SRP)
 - Each class has exactly one reason to change.
 - Split responsibilities into focused classes:
@@ -548,6 +554,107 @@ public static class UserMapper
 - Result pattern implementation
 - Shared utilities and constants
 - No business logic in shared components
+
+## 🔒 Security Architecture
+
+### Security-First Design Principles
+
+The dotFitness architecture implements a **security-first approach** with multiple layers of protection to ensure user data privacy and prevent unauthorized access.
+
+#### 1. **Multi-Level Authorization Framework**
+
+```csharp
+// Controller Level - Policy-based authorization
+[HttpGet("users/{id}/profile")]
+[Authorize(Policy = "SelfOrAdmin")]
+public async Task<IActionResult> GetUserProfile(int id)
+{
+    // Policy ensures: current user == id OR current user is Admin
+}
+
+// Business Logic Level - Resource ownership validation
+public async Task<Result<UserDto>> Handle(GetUserProfileQuery request)
+{
+    var currentUserId = _httpContextAccessor.HttpContext?.User.GetUserId();
+    
+    if (currentUserId != request.UserId && 
+        !_httpContextAccessor.HttpContext?.User.IsInRole("Admin") == true)
+    {
+        return Result.Failure<UserDto>("Access denied: You can only view your own profile");
+    }
+}
+
+// Repository Level - Data filtering
+public async Task<User?> GetByIdAsync(int userId)
+{
+    return await _context.Users
+        .Where(u => u.Id == userId)
+        .FirstOrDefaultAsync();
+}
+```
+
+#### 2. **Cross-User Access Prevention**
+
+- **Parameter Validation**: All user-specific endpoints validate that the requesting user has permission to access the requested resource
+- **Route Protection**: Authorization policies prevent manipulation of route parameters
+- **Business Logic Validation**: Additional validation in query/command handlers
+- **Data Filtering**: Repository-level filtering ensures users only access their own data
+
+#### 3. **Authorization Policies**
+
+```csharp
+// Critical security policies
+services.AddAuthorization(options =>
+{
+    // SelfOrAdmin: Users can only access their own data
+    options.AddPolicy("SelfOrAdmin", policy =>
+        policy.RequireAssertion(context =>
+        {
+            var currentUserId = context.User.GetUserId();
+            var requestedUserId = GetUserIdFromRoute(context);
+            return context.User.IsInRole("Admin") || 
+                   currentUserId == requestedUserId;
+        }));
+    
+    // OwnerUserOrAdmin: Resource ownership validation
+    options.AddPolicy("OwnerUserOrAdmin", policy =>
+        policy.RequireAssertion(context =>
+        {
+            var currentUserId = context.User.GetUserId();
+            var resourceOwnerId = GetResourceOwnerId(context);
+            return context.User.IsInRole("Admin") || 
+                   currentUserId == resourceOwnerId;
+        }));
+});
+```
+
+#### 4. **Security Testing Strategy**
+
+- **Cross-User Access Tests**: Verify users cannot access other users' data
+- **Admin Privilege Tests**: Validate admin-only functionality
+- **Policy Enforcement Tests**: Test all authorization policies
+- **Token Validation Tests**: Security testing for JWT handling
+
+#### 5. **Audit Logging and Monitoring**
+
+- **Authentication Events**: Complete logging of login, logout, token refresh
+- **Authorization Events**: Logging of access attempts and policy evaluations
+- **Security Monitoring**: Real-time monitoring of security events
+- **Compliance Support**: Audit trails for data protection regulations
+
+#### 6. **Rate Limiting and Protection**
+
+- **Authentication Endpoints**: Rate limiting on login, registration, token refresh
+- **Brute Force Protection**: Protection against automated attacks
+- **API Abuse Prevention**: Rate limiting on sensitive operations
+
+### Security Benefits
+
+- **Data Privacy**: Users can only access their own data
+- **Admin Control**: Proper admin privilege validation
+- **Audit Compliance**: Complete audit trails for security events
+- **Attack Prevention**: Protection against common web vulnerabilities
+- **Zero Trust**: No implicit trust in user requests
 
 ## 🧪 Testing Strategy
 

@@ -2,9 +2,9 @@
 
 Document Name: dotFitness Business User Requirements Specification
 
-Version: 1.1 (Updated)
+Version: 1.2 (Security Enhanced)
 
-Date: June 10, 2025
+Date: October 2, 2025
 
 ---
 
@@ -30,6 +30,18 @@ The primary target audience for **dotFitness** is:
 ### 1.4. Scope of the Project
 
 This document defines the requirements for the initial release of the **dotFitness** web application.
+
+### 1.5. Security Enhancements (Version 1.2)
+
+This version includes critical security enhancements to address cross-user data access vulnerabilities and strengthen the authorization framework:
+
+- **Cross-User Access Prevention**: Comprehensive policies to prevent users from accessing other users' data
+- **Multi-Level Resource Validation**: Validation at controller, business logic, and repository levels
+- **Enhanced Authorization Policies**: Implementation of SelfOrAdmin, OwnerUserOrAdmin, and other critical policies
+- **Security Testing Requirements**: Comprehensive testing for authorization and access control
+- **Audit Logging**: Complete logging of authentication and authorization events
+- **Rate Limiting**: Protection against brute force attacks on authentication endpoints
+- **Token Refresh Support**: Enhanced session management with automatic token refresh
 
 **In-Scope:**
 
@@ -147,7 +159,7 @@ Optional/Future (Premium):
 
 - **AR-001: Roles:** The system defines three roles:
   - `Admin`: System-level manager with unrestricted access. Manages global data (muscle groups, equipment, global exercises), roles, and PT–client assignments.
-  - `PT`: Coach with scoped access to their assigned clients. Can create PT-owned resources (e.g., routines) and assign them to their clients. Cannot access other PTs’ clients.
+  - `PT`: Coach with scoped access to their assigned clients. Can create PT-owned resources (e.g., routines) and assign them to their clients. Cannot access other PTs' clients.
   - `User`: End-user. Can manage their own workouts, routines, and exercises.
 - **AR-002: Policy Enforcement:** The API SHALL enforce access using policy-based authorization with, at minimum, the following policies:
   - `AdminOnly`: `Admin` role required.
@@ -162,6 +174,17 @@ Optional/Future (Premium):
   - `PT` (Future): Restricted to resources owned by the `PT` or their assigned clients.
   - `User`: Restricted to resources owned by the acting user.
 - **AR-004: Token Claims:** Authentication tokens (JWT) SHALL include the user identifier and role claims. Authorization decisions SHALL be made server-side based on these claims and repository checks (e.g., PT–client assignment).
+- **AR-005: Cross-User Access Prevention:** The system SHALL prevent users from accessing other users' data through parameter manipulation or route manipulation. All user-specific endpoints SHALL validate that the requesting user has permission to access the requested resource.
+- **AR-006: Resource Ownership Validation:** The system SHALL validate resource ownership at multiple levels:
+  - Controller level: Using authorization policies
+  - Business logic level: In query/command handlers
+  - Repository level: In data access methods
+- **AR-007: Security Testing:** The system SHALL include comprehensive security testing to verify:
+  - Cross-user access prevention
+  - Admin privilege validation
+  - Policy enforcement
+  - Token validation
+- **AR-008: Audit Logging:** The system SHALL log all authentication and authorization events for security monitoring and compliance.
 
 ### 2.8. Onboarding (OB)
 
@@ -198,6 +221,11 @@ Optional/Future (Premium):
 - **NFR-S-003:** Authentication SHALL be handled by Google's secure OAuth 2.0 protocol.
 - **NFR-S-004:** The system SHALL protect against common web vulnerabilities (e.g., XSS, CSRF, SQL Injection equivalent for NoSQL).
 - **NFR-S-005:** Sensitive information (e.g., API keys, database credentials) SHALL be managed securely outside of the codebase (e.g., environment variables, cloud secrets management).
+- **NFR-S-006:** The system SHALL implement comprehensive authorization policies to prevent cross-user data access and ensure users can only access their own data unless explicitly authorized.
+- **NFR-S-007:** All user-specific endpoints SHALL validate resource ownership at multiple levels (controller, business logic, and repository levels).
+- **NFR-S-008:** The system SHALL include rate limiting on authentication endpoints to prevent brute force attacks and abuse.
+- **NFR-S-009:** The system SHALL implement comprehensive audit logging for all authentication and authorization events for security monitoring and compliance.
+- **NFR-S-010:** The system SHALL support token refresh mechanisms to maintain secure user sessions without requiring frequent re-authentication.
 
 ### 3.3. Usability
 

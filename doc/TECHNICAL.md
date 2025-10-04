@@ -515,11 +515,69 @@ CREATE TABLE routine_exercises (
 
 ## 7. Authentication and Authorization
 
+### 7.1. Current Implementation
 - **Authentication:** Handled exclusively via **Google OAuth 2.0**. Upon successful Google authentication, the backend issues a **JWT (JSON Web Token)** containing user identity and roles.
 - **Authorization:**
     - **Role-Based Access Control (RBAC):** Users will have roles (e.g., "User", "Admin").
     - **Policy-Based Authorization:** ASP.NET Core policies will enforce access rules (e.g., `[Authorize(Roles = "Admin")]` for admin functionalities; custom policies for data ownership like "users can only manage their own exercises").
 - **Admin Initiation:** The first admin account will be designated via a **Configuration/Environment Variable Whitelist**. Upon first login, if a user's Google email matches a whitelisted email, they will automatically be assigned the "Admin" role.
+
+### 7.2. Enhanced Security Framework (Version 1.2)
+
+#### 7.2.1. ASP.NET Core Identity APIs Integration
+- **Built-in Authentication:** Leverages Microsoft's Identity APIs for comprehensive authentication and authorization
+- **Automatic Refresh Tokens:** Built-in refresh token support for seamless user sessions
+- **OAuth Provider Support:** Native Google OAuth integration alongside custom JWT implementation
+- **Zero Infrastructure Cost:** Runs within existing ASP.NET Core application
+
+#### 7.2.2. Authorization Policies Implementation
+```csharp
+// Critical security policies to prevent cross-user data access
+services.AddAuthorization(options =>
+{
+    // SelfOrAdmin: Users can only access their own data
+    options.AddPolicy("SelfOrAdmin", policy =>
+        policy.RequireAssertion(context =>
+        {
+            var currentUserId = context.User.GetUserId();
+            var requestedUserId = GetUserIdFromRoute(context);
+            return context.User.IsInRole("Admin") || 
+                   currentUserId == requestedUserId;
+        }));
+    
+    // OwnerUserOrAdmin: Resource ownership validation
+    options.AddPolicy("OwnerUserOrAdmin", policy =>
+        policy.RequireAssertion(context =>
+        {
+            var currentUserId = context.User.GetUserId();
+            var resourceOwnerId = GetResourceOwnerId(context);
+            return context.User.IsInRole("Admin") || 
+                   currentUserId == resourceOwnerId;
+        }));
+});
+```
+
+#### 7.2.3. Multi-Level Security Validation
+- **Controller Level:** Authorization policies prevent unauthorized access
+- **Business Logic Level:** Query/command handlers validate resource ownership
+- **Repository Level:** Data access methods enforce user-specific filtering
+
+#### 7.2.4. Security Testing Requirements
+- **Cross-User Access Prevention:** Comprehensive testing to ensure users cannot access other users' data
+- **Admin Privilege Validation:** Testing admin-only functionality
+- **Policy Enforcement:** Verification of all authorization policies
+- **Token Validation:** Security testing for JWT token handling
+
+#### 7.2.5. Audit Logging and Monitoring
+- **Authentication Events:** Complete logging of login, logout, and token refresh events
+- **Authorization Events:** Logging of access attempts and policy evaluations
+- **Security Monitoring:** Real-time monitoring of authentication and authorization events
+- **Compliance Support:** Audit trails for data protection and security compliance
+
+#### 7.2.6. Rate Limiting and Protection
+- **Authentication Endpoints:** Rate limiting on login, registration, and token refresh endpoints
+- **Brute Force Protection:** Protection against automated attacks
+- **API Abuse Prevention:** Rate limiting on sensitive operations
 
 ## 8. Onboarding Flow (Technical)
 
