@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dotFitness | Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F0F4F8;
+        }
+        .sidebar {
+            background-color: #ffffff;
+        }
+        .nav-link.active {
+            background-color: #EBF5FF;
+            color: #3B82F6;
+            font-weight: 600;
+        }
+         .nav-link.active svg {
+            color: #3B82F6;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 250px;
+            max-height: 40vh;
+        }
+        .sidebar-transition {
+            transition: transform 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="text-gray-700 antialiased">
+    <!-- Chosen Palette: Spike Admin Inspired Palette (Primary: Light Blue, Accents: Green, Orange, Purple) -->
+    <!-- Application Structure Plan: The UI is structured as a modern web application dashboard. A fixed sidebar on the left (for desktop) provides primary navigation, while the main content area on the right displays dynamic content. This structure is standard for admin panels and dashboards, offering excellent usability and clear separation of navigation and content. For mobile, the sidebar collapses and is toggled by a hamburger icon, preserving screen real estate. This design directly adapts the user-provided screenshots. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Workout Summary Stats (from image) -> Goal: Show key metrics -> Viz: Styled numeric cards -> Interaction: None -> Justification: Provides a quick, scannable overview of user activity.
+        - Report Info: Favorite Exercise Progress (e.g., Push-ups) -> Goal: Visualize performance -> Viz: Line Chart -> Interaction: Hover tooltips -> Justification: A line chart effectively shows trends over time for a specific exercise, fitting well within the "Workout Summary" card -> Library: Chart.js.
+        - Report Info: Quick Actions (from image) -> Goal: Provide easy access to core features -> Viz: Grid of colored buttons with icons -> Interaction: Clicks would navigate to respective app sections -> Justification: Visually appealing and highly functional, guiding users to primary tasks.
+        - Report Info: Recent Workouts (from image) -> Goal: Show activity history -> Viz: List of recent activities -> Interaction: None -> Justification: Gives users immediate feedback on their latest sessions.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <div class="relative min-h-screen lg:flex">
+        <aside id="sidebar" class="sidebar lg:block fixed lg:static inset-y-0 left-0 z-50 w-64 shadow-xl sidebar-transition transform -translate-x-full lg:translate-x-0">
+            <div class="flex flex-col h-full">
+                <div class="h-20 flex items-center justify-center">
+                    <h1 class="text-2xl font-bold text-blue-600">dotFitness</h1>
+                </div>
+                <nav class="flex-1 px-4 py-2 space-y-2">
+                    <a href="#dashboard" class="nav-link active flex items-center p-3 rounded-lg text-gray-600 hover:bg-blue-50 transition-colors duration-200">
+                        <svg class="w-6 h-6 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="#workouts" class="nav-link flex items-center p-3 rounded-lg text-gray-600 hover:bg-blue-50 transition-colors duration-200">
+                        <svg class="w-6 h-6 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
+                        <span>Workouts</span>
+                    </a>
+                    <a href="#exercises" class="nav-link flex items-center p-3 rounded-lg text-gray-600 hover:bg-blue-50 transition-colors duration-200">
+                         <svg class="w-6 h-6 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        <span>Exercises</span>
+                    </a>
+                    <a href="#progress" class="nav-link flex items-center p-3 rounded-lg text-gray-600 hover:bg-blue-50 transition-colors duration-200">
+                         <svg class="w-6 h-6 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                        <span>Progress</span>
+                    </a>
+                </nav>
+                <div class="p-4">
+                    <div class="bg-blue-50 rounded-lg p-4 text-center">
+                        <div class="w-16 h-16 rounded-full bg-blue-200 mx-auto mb-2 flex items-center justify-center text-3xl">🐖</div>
+                        <p class="font-semibold text-blue-800">Upgrade to Pro</p>
+                        <p class="text-sm text-blue-600">Unlock all features.</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        
+        <div id="backdrop" class="fixed inset-0 bg-black opacity-50 z-40 hidden lg:hidden"></div>
+
+        <div class="flex-1 flex flex-col">
+            <header class="bg-white shadow-sm h-20 flex items-center justify-between px-6">
+                <button id="menu-button" class="lg:hidden text-gray-500">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+                <div class="hidden sm:block">
+                     <h2 class="text-xl font-semibold text-gray-800">Dashboard</h2>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button class="text-gray-500 hover:text-gray-700">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                    </button>
+                    <div class="w-10 h-10 rounded-full bg-gray-200">
+                        <img src="https://placehold.co/40x40/EBF5FF/3B82F6?text=U" alt="User Avatar" class="rounded-full w-full h-full object-cover">
+                    </div>
+                </div>
+            </header>
+            <main class="flex-1 p-6 space-y-6">
+                <section id="dashboard" class="scroll-mt-20">
+                    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                        <div class="xl:col-span-2 bg-white rounded-xl shadow-md p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Workout Summary</h3>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center mb-6">
+                                <div>
+                                    <p class="text-2xl font-bold text-blue-600">24</p>
+                                    <p class="text-sm text-gray-500">Total Workouts</p>
+                                </div>
+                                <div>
+                                    <p class="text-2xl font-bold text-blue-600">3</p>
+                                    <p class="text-sm text-gray-500">This Week</p>
+                                </div>
+                                <div>
+                                    <p class="text-2xl font-bold text-blue-600">12</p>
+                                    <p class="text-sm text-gray-500">This Month</p>
+                                </div>
+                                <div>
+                                    <p class="text-2xl font-bold text-blue-600">18.5h</p>
+                                    <p class="text-sm text-gray-500">Total Time</p>
+                                </div>
+                            </div>
+                            <h4 class="text-md font-semibold text-gray-600 mb-2">Favorite Exercise: Push-ups</h4>
+                            <div class="chart-container">
+                                <canvas id="favoriteExerciseChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-md p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
+                             <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-[#EBF9F1] p-4 rounded-lg text-center cursor-pointer hover:opacity-90">
+                                    <div class="w-12 h-12 bg-[#D1F2E0] rounded-full mx-auto flex items-center justify-center text-green-600 text-2xl mb-2">▶</div>
+                                    <p class="font-semibold text-green-800">Start Workout</p>
+                                </div>
+                                <div class="bg-[#EBF5FF] p-4 rounded-lg text-center cursor-pointer hover:opacity-90">
+                                    <div class="w-12 h-12 bg-[#D4E7FE] rounded-full mx-auto flex items-center justify-center text-blue-600 text-2xl font-bold">🏋️</div>
+                                    <p class="font-semibold text-blue-800">View Exercises</p>
+                                </div>
+                                <div class="bg-[#FFF9EB] p-4 rounded-lg text-center cursor-pointer hover:opacity-90">
+                                     <div class="w-12 h-12 bg-[#FFEED1] rounded-full mx-auto flex items-center justify-center text-orange-600 text-2xl">📈</div>
+                                    <p class="font-semibold text-orange-800">Track Progress</p>
+                                </div>
+                                <div class="bg-[#FEF2F2] p-4 rounded-lg text-center cursor-pointer hover:opacity-90">
+                                     <div class="w-12 h-12 bg-[#FEE2E2] rounded-full mx-auto flex items-center justify-center text-red-600 text-2xl">🎯</div>
+                                    <p class="font-semibold text-red-800">Set Goals</p>
+                                </div>
+                            </div>
+                             <button class="w-full mt-4 py-2 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition-colors">Sign Out</button>
+                        </div>
+                    </div>
+                </section>
+                
+                <section id="workouts" class="scroll-mt-20">
+                     <div class="bg-white rounded-xl shadow-md p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Recent Workouts</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-4 font-bold text-blue-600">🏃</div>
+                                    <div>
+                                        <p class="font-semibold text-gray-700">Morning Cardio</p>
+                                        <p class="text-sm text-gray-500">20/09/2025 - 30 minutes</p>
+                                    </div>
+                                </div>
+                                <span class="px-3 py-1 text-sm font-medium bg-green-100 text-green-700 rounded-full">Good</span>
+                            </div>
+                             <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mr-4 font-bold text-purple-600">💪</div>
+                                    <div>
+                                        <p class="font-semibold text-gray-700">Upper Body Strength</p>
+                                        <p class="text-sm text-gray-500">18/09/2025 - 5 exercises, 45 minutes</p>
+                                    </div>
+                                </div>
+                                <span class="px-3 py-1 text-sm font-medium bg-yellow-100 text-yellow-700 rounded-full">Stronger</span>
+                            </div>
+                             <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center mr-4 font-bold text-red-600">🧘</div>
+                                    <div>
+                                        <p class="font-semibold text-gray-700">Flexibility Flow</p>
+                                        <p class="text-sm text-gray-500">17/09/2025 - 15 minutes</p>
+                                    </div>
+                                </div>
+                                <span class="px-3 py-1 text-sm font-medium bg-blue-100 text-blue-700 rounded-full">Relaxed</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            
+            const favoriteExerciseCtx = document.getElementById('favoriteExerciseChart').getContext('2d');
+            new Chart(favoriteExerciseCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Aug 1', 'Aug 8', 'Aug 15', 'Aug 22', 'Sep 1', 'Sep 8', 'Sep 15', 'Sep 22'],
+                    datasets: [{
+                        label: 'Max Reps',
+                        data: [15, 18, 17, 20, 22, 21, 24, 25],
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: 'rgba(59, 130, 246, 1)',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        tension: 0.4,
+                        fill: true,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                             grid: {
+                                drawBorder: false,
+                            },
+                        },
+                        x: {
+                            grid: {
+                                display: false,
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                         tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: '#111827',
+                            titleFont: { weight: 'bold' },
+                            bodyFont: { size: 14 },
+                            padding: 12,
+                            cornerRadius: 8,
+                            displayColors: false,
+                        }
+                    }
+                }
+            });
+
+            const sidebar = document.getElementById('sidebar');
+            const menuButton = document.getElementById('menu-button');
+            const backdrop = document.getElementById('backdrop');
+
+            const toggleSidebar = () => {
+                sidebar.classList.toggle('-translate-x-full');
+                backdrop.classList.toggle('hidden');
+            };
+
+            menuButton.addEventListener('click', toggleSidebar);
+            backdrop.addEventListener('click', toggleSidebar);
+
+            const sections = document.querySelectorAll('section[id]');
+            const navLinks = document.querySelectorAll('.nav-link');
+            const headerHeight = document.querySelector('header').offsetHeight;
+
+            const observerOptions = {
+                root: null,
+                rootMargin: `-${headerHeight}px 0px 0px 0px`,
+                threshold: 0.4
+            };
+
+            const sectionObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.getAttribute('id');
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href') === `#${id}`) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach(section => {
+                sectionObserver.observe(section);
+            });
+            
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    if (window.innerWidth < 1024) {
+                       toggleSidebar();
+                    }
+                });
+            });
+
+        });
+    </script>
+</body>
+</html>
