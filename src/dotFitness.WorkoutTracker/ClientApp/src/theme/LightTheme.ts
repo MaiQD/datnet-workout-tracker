@@ -51,8 +51,8 @@ const BLUE_THEME: ThemeTypes = {
         
         // Grays
         grey50: '#F9FAFB',
-        grey100: '#F3F4F6',
-        grey200: '#E5E7EB',
+        grey100: '#6B7280',
+        grey200: '#111827',
         grey300: '#D1D5DB',
         grey400: '#9CA3AF',
         grey500: '#6B7280',
@@ -67,8 +67,6 @@ const BLUE_THEME: ThemeTypes = {
         // Legacy colors for compatibility
         indigo:'#8B5CF6',
         lightindigo:'#F3F0FF',
-        grey100: '#6B7280',
-        grey200: '#111827',
         darkbg:'#374151',
         bgdark:'#111827'
     }
