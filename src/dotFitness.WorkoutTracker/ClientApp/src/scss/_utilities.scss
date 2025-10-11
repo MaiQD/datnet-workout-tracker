@@ -1,0 +1,26 @@
+// Cursor utilities
+.cursor-pointer {
+  cursor: pointer;
+}
+
+// Hover effects
+.hover-opacity {
+  transition: opacity 0.2s ease-in-out;
+  &:hover {
+    opacity: 0.9;
+  }
+}
+
+.hover-lift {
+  transition: transform 0.2s ease-in-out;
+  &:hover {
+    transform: translateY(-2px);
+  }
+}
+
+// Action card backgrounds
+.bg-action-green { background-color: $action-green-bg !important; }
+.bg-action-blue { background-color: $action-blue-bg !important; }
+.bg-action-orange { background-color: $action-orange-bg !important; }
+.bg-action-red { background-color: $action-red-bg !important; }
+.bg-action-purple { background-color: $action-purple-bg !important; }

@@ -1,0 +1,40 @@
+// Design Tokens as SCSS variables
+$primary-blue: #3B82F6;
+$success-green: #22C55E;
+$warning-orange: #F59E0B;
+$error-red: #EF4444;
+
+// Action Card Colors
+$action-green-bg: #EBF9F1;
+$action-blue-bg: #EBF5FF;
+$action-orange-bg: #FFF9EB;
+$action-red-bg: #FEF2F2;
+$action-purple-bg: #F3F0FF;
+
+// Background Colors
+$bg-primary: #F0F4F8;
+$bg-surface: #FFFFFF;
+$bg-light: #F9FAFB;
+
+// Text Colors
+$text-primary: #111827;
+$text-secondary: #6B7280;
+
+// Borders
+$border-color: #E5E7EB;
+
+// Shadows
+$shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+$shadow-card-hover: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+
+// Border Radius
+$radius-card: 0.75rem;
+$radius-button: 0.5rem;
+$radius-badge: 9999px;
+
+// Spacing
+$spacing-card-padding: 1.5rem;
+$spacing-card-gap: 1.5rem;
+
+// Typography
+$font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;

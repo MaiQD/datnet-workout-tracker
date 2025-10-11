@@ -1,71 +1,90 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import BaseWorkoutItem from '@/components/common/BaseWorkoutItem.vue'
+import { designTokens } from '@/config/designTokens'
 
 interface Workout {
   id: string
   name: string
   date: string
   duration: number
-  exercises: number
+  exercises?: number
   type: 'strength' | 'cardio' | 'flexibility'
+  status: 'Good' | 'Stronger' | 'Relaxed'
+  emoji: string
+  avatarColor: 'blue' | 'purple' | 'red' | 'green'
 }
 
 const recentWorkouts = ref<Workout[]>([])
 
 onMounted(() => {
   // TODO: Fetch actual workout data from API
-  // For now, using mock data
+  // For now, using mock data matching the sample
   recentWorkouts.value = [
     {
       id: '1',
-      name: 'Upper Body Strength',
-      date: '2024-01-15',
-      duration: 45,
-      exercises: 6,
-      type: 'strength'
+      name: 'Morning Cardio',
+      date: '2025-09-20',
+      duration: 30,
+      exercises: 3,
+      type: 'cardio',
+      status: 'Good',
+      emoji: '🏃',
+      avatarColor: 'blue'
     },
     {
       id: '2',
-      name: 'Morning Cardio',
-      date: '2024-01-14',
-      duration: 30,
-      exercises: 3,
-      type: 'cardio'
+      name: 'Upper Body Strength',
+      date: '2025-09-18',
+      duration: 45,
+      exercises: 5,
+      type: 'strength',
+      status: 'Stronger',
+      emoji: '💪',
+      avatarColor: 'purple'
     },
     {
       id: '3',
-      name: 'Full Body Circuit',
-      date: '2024-01-12',
-      duration: 60,
-      exercises: 8,
-      type: 'strength'
+      name: 'Flexibility Flow',
+      date: '2025-09-17',
+      duration: 15,
+      exercises: 1,
+      type: 'flexibility',
+      status: 'Relaxed',
+      emoji: '🧘',
+      avatarColor: 'red'
     }
   ]
 })
 
-const getTypeColor = (type: string) => {
-  switch (type) {
-    case 'strength': return 'primary'
-    case 'cardio': return 'success'
-    case 'flexibility': return 'info'
-    default: return 'grey'
+const getStatusType = (status: string): 'good' | 'stronger' | 'relaxed' => {
+  switch (status) {
+    case 'Good': return 'good'
+    case 'Stronger': return 'stronger'
+    case 'Relaxed': return 'relaxed'
+    default: return 'good'
   }
 }
 
-const getTypeIcon = (type: string) => {
-  switch (type) {
-    case 'strength': return 'mdi-dumbbell'
-    case 'cardio': return 'mdi-run'
-    case 'flexibility': return 'mdi-yoga'
-    default: return 'mdi-help'
+const formatWorkoutDetails = (workout: Workout): string => {
+  const date = new Date(workout.date).toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  })
+  
+  if (workout.exercises) {
+    return `${date} - ${workout.exercises} exercises, ${workout.duration} minutes`
   }
+  
+  return `${date} - ${workout.duration} minutes`
 }
 </script>
 
 <template>
-  <v-card class="recent-workouts">
+  <v-card class="recent-workouts" elevation="0" :style="{ borderRadius: designTokens.borderRadius.card, boxShadow: designTokens.shadows.card }">
     <v-card-title class="d-flex align-center">
-      <v-icon icon="mdi-clock-outline" class="mr-2" color="primary"></v-icon>
+      <v-icon icon="mdi-clock-outline" class="mr-2" :color="designTokens.colors.primary"></v-icon>
       <span>Recent Workouts</span>
     </v-card-title>
     
@@ -76,42 +95,24 @@ const getTypeIcon = (type: string) => {
         <div class="text-caption text-medium-emphasis">Start your fitness journey today!</div>
       </div>
       
-      <div v-else>
-        <div
+      <div v-else class="space-y-4">
+        <BaseWorkoutItem
           v-for="workout in recentWorkouts"
           :key="workout.id"
-          class="workout-item d-flex align-center py-3"
-        >
-          <v-avatar
-            :color="getTypeColor(workout.type)"
-            size="40"
-            class="mr-3"
-          >
-            <v-icon :icon="getTypeIcon(workout.type)" color="white"></v-icon>
-          </v-avatar>
-          
-          <div class="flex-grow-1">
-            <div class="text-subtitle-2 font-weight-medium">{{ workout.name }}</div>
-            <div class="text-caption text-medium-emphasis">
-              {{ new Date(workout.date).toLocaleDateString() }} • {{ workout.duration }}min • {{ workout.exercises }} exercises
-            </div>
-          </div>
-          
-          <v-chip
-            :color="getTypeColor(workout.type)"
-            size="small"
-            variant="tonal"
-          >
-            {{ workout.type }}
-          </v-chip>
-        </div>
+          :name="workout.name"
+          :emoji="workout.emoji"
+          :details="formatWorkoutDetails(workout)"
+          :status="getStatusType(workout.status)"
+          :status-text="workout.status"
+          :avatar-color="workout.avatarColor"
+        />
       </div>
     </v-card-text>
     
     <v-card-actions>
       <v-btn
         variant="text"
-        color="primary"
+        :color="designTokens.colors.primary"
         block
         to="/workouts"
       >
@@ -126,7 +127,7 @@ const getTypeIcon = (type: string) => {
   height: 100%;
 }
 
-.workout-item:not(:last-child) {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+.space-y-4 > * + * {
+  margin-top: 1rem;
 }
 </style>
