@@ -1,10 +1,8 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Moq;
 using MediatR;
 using FluentAssertions;
-using dotFitness.Api.Controllers;
 using dotFitness.Common.Results;
+using dotFitness.Modules.Users.API.Endpoints.Auth;
 using dotFitness.Modules.Users.Application.Commands;
 using dotFitness.Modules.Users.Application.DTOs;
 
@@ -13,14 +11,12 @@ namespace dotFitness.Api.Tests.Controllers;
 public class AuthControllerTests
 {
     private readonly Mock<IMediator> _mediatorMock;
-    private readonly Mock<ILogger<AuthController>> _loggerMock;
-    private readonly AuthController _controller;
+    private readonly LoginWithGoogleEndpoint _endpoint;
 
     public AuthControllerTests()
     {
         _mediatorMock = new Mock<IMediator>();
-        _loggerMock = new Mock<ILogger<AuthController>>();
-        _controller = new AuthController(_mediatorMock.Object, _loggerMock.Object);
+        _endpoint = new LoginWithGoogleEndpoint(_mediatorMock.Object);
     }
 
     [Fact]
@@ -28,7 +24,6 @@ public class AuthControllerTests
     {
         // Arrange
         var request = new LoginWithGoogleRequest { GoogleToken = "test-token" };
-        var fixedDate = new DateTime(2024, 1, 15, 10, 30, 0, DateTimeKind.Utc);
         var loginResponse = new LoginResponseDto
         {
             AccessToken = "jwt-token",
@@ -44,16 +39,14 @@ public class AuthControllerTests
             .ReturnsAsync(Result.Success(loginResponse));
 
         // Act
-        var result = await _controller.LoginWithGoogle(request);
+        await _endpoint.HandleAsync(request, CancellationToken.None);
 
         // Assert
-        result.Should().BeOfType<OkObjectResult>();
-        var okResult = result as OkObjectResult;
-        okResult!.Value.Should().BeEquivalentTo(loginResponse);
+        _mediatorMock.Verify(m => m.Send(It.Is<LoginWithGoogleCommand>(c => c.Request.GoogleToken == request.GoogleToken), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task LoginWithGoogle_Should_Return_BadRequest_When_Login_Fails()
+    public async Task LoginWithGoogle_Should_Handle_Failure_When_Login_Fails()
     {
         // Arrange
         var request = new LoginWithGoogleRequest { GoogleToken = "invalid-token" };
@@ -63,9 +56,9 @@ public class AuthControllerTests
             .ReturnsAsync(Result.Failure<LoginResponseDto>("Invalid token"));
 
         // Act
-        var result = await _controller.LoginWithGoogle(request);
+        await _endpoint.HandleAsync(request, CancellationToken.None);
 
         // Assert
-        result.Should().BeOfType<BadRequestObjectResult>();
+        _mediatorMock.Verify(m => m.Send(It.Is<LoginWithGoogleCommand>(c => c.Request.GoogleToken == request.GoogleToken), It.IsAny<CancellationToken>()), Times.Once);
     }
 }

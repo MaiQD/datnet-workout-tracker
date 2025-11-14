@@ -23,8 +23,10 @@
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
+    <PackageReference Include="FastEndpoints" />
     <ProjectReference Include="..\Modules\Exercises\dotFitness.Modules.Exercises.Infrastructure\dotFitness.Modules.Exercises.Infrastructure.csproj" />
     <ProjectReference Include="..\Modules\Users\dotFitness.Modules.Users.Infrastructure\dotFitness.Modules.Users.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Users\dotFitness.Modules.Users.API\dotFitness.Modules.Users.API.csproj" />
   </ItemGroup>
 
 </Project>

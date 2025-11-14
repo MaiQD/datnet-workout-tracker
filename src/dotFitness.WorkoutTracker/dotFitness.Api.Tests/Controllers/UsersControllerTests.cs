@@ -1,46 +1,52 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Moq;
 using MediatR;
 using FluentAssertions;
-using dotFitness.Api.Controllers;
+using FastEndpoints;
+using dotFitness.Common.Results;
+using dotFitness.Modules.Users.API.Endpoints.Users;
 using dotFitness.Modules.Users.Application.Commands;
 using dotFitness.Modules.Users.Application.DTOs;
 using dotFitness.Modules.Users.Application.Queries;
 using System.Security.Claims;
-using dotFitness.Common.Results;
+using Microsoft.AspNetCore.Http;
 
 namespace dotFitness.Api.Tests.Controllers;
 
 public class UsersControllerTests
 {
     private readonly Mock<IMediator> _mediatorMock;
-    private readonly Mock<ILogger<UsersController>> _loggerMock;
-    private readonly UsersController _controller;
+    private readonly Guid _testUserId;
 
     public UsersControllerTests()
     {
         _mediatorMock = new Mock<IMediator>();
-        _loggerMock = new Mock<ILogger<UsersController>>();
-        _controller = new UsersController(_mediatorMock.Object, _loggerMock.Object);
+        _testUserId = Guid.NewGuid();
+    }
+
+    private TEndpoint CreateEndpointWithUser<TEndpoint>(Func<IMediator, TEndpoint> factory) where TEndpoint : class
+    {
+        var endpoint = factory(_mediatorMock.Object);
         
-        // Setup user claims
-        var userId = Guid.NewGuid();
+        // Setup HttpContext with user claims
         var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+            new Claim(ClaimTypes.NameIdentifier, _testUserId.ToString()),
             new Claim(ClaimTypes.Role, "User")
         };
         var identity = new ClaimsIdentity(claims, "test");
         var principal = new ClaimsPrincipal(identity);
-        
-        _controller.ControllerContext = new ControllerContext
+
+        var httpContext = new DefaultHttpContext
         {
-            HttpContext = new Microsoft.AspNetCore.Http.DefaultHttpContext
-            {
-                User = principal
-            }
+            User = principal
         };
+
+        // Use reflection to set HttpContext
+        var httpContextProperty = endpoint.GetType().BaseType?.GetProperty("HttpContext", 
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        httpContextProperty?.SetValue(endpoint, httpContext);
+        
+        return endpoint;
     }
 
     [Fact]
@@ -49,37 +55,40 @@ public class UsersControllerTests
         // Arrange
         var userDto = new UserDto
         {
-            Id = Guid.NewGuid(),
+            Id = _testUserId,
             Email = "test@example.com",
             DisplayName = "Test User"
         };
 
         _mediatorMock
-            .Setup(m => m.Send(It.IsAny<GetUserProfileQuery>(), It.IsAny<CancellationToken>()))
+            .Setup(m => m.Send(It.Is<GetUserProfileQuery>(q => q.UserId == _testUserId), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(userDto));
 
+        var endpoint = CreateEndpointWithUser(m => new GetUserProfileEndpoint(m));
+
         // Act
-        var result = await _controller.GetProfile();
+        await endpoint.HandleAsync(new EmptyRequest(), CancellationToken.None);
 
         // Assert
-        result.Should().BeOfType<OkObjectResult>();
-        var okResult = result as OkObjectResult;
-        okResult!.Value.Should().BeEquivalentTo(userDto);
+        _mediatorMock.Verify(m => m.Send(It.Is<GetUserProfileQuery>(q => q.UserId == _testUserId), It.IsAny<CancellationToken>()), Times.Once);
+        endpoint.Response.Should().BeEquivalentTo(userDto);
     }
 
     [Fact]
-    public async Task GetProfile_Should_Return_NotFound_When_Profile_Not_Found()
+    public async Task GetProfile_Should_Handle_Failure_When_Profile_Not_Found()
     {
         // Arrange
         _mediatorMock
-            .Setup(m => m.Send(It.IsAny<GetUserProfileQuery>(), It.IsAny<CancellationToken>()))
+            .Setup(m => m.Send(It.Is<GetUserProfileQuery>(q => q.UserId == _testUserId), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Failure<UserDto>("User not found"));
 
+        var endpoint = CreateEndpointWithUser(m => new GetUserProfileEndpoint(m));
+
         // Act
-        var result = await _controller.GetProfile();
+        await endpoint.HandleAsync(new EmptyRequest(), CancellationToken.None);
 
         // Assert
-        result.Should().BeOfType<NotFoundObjectResult>();
+        _mediatorMock.Verify(m => m.Send(It.Is<GetUserProfileQuery>(q => q.UserId == _testUserId), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -93,22 +102,23 @@ public class UsersControllerTests
         
         var userDto = new UserDto
         {
-            Id = Guid.NewGuid(),
+            Id = _testUserId,
             Email = "test@example.com",
             DisplayName = "Updated Name"
         };
 
         _mediatorMock
-            .Setup(m => m.Send(It.IsAny<UpdateUserProfileCommand>(), It.IsAny<CancellationToken>()))
+            .Setup(m => m.Send(It.Is<UpdateUserProfileCommand>(c => c.UserId == _testUserId && c.Request.DisplayName == request.DisplayName), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(userDto));
 
+        var endpoint = CreateEndpointWithUser(m => new UpdateUserProfileEndpoint(m));
+
         // Act
-        var result = await _controller.UpdateProfile(request);
+        await endpoint.HandleAsync(request, CancellationToken.None);
 
         // Assert
-        result.Should().BeOfType<OkObjectResult>();
-        var okResult = result as OkObjectResult;
-        okResult!.Value.Should().BeEquivalentTo(userDto);
+        _mediatorMock.Verify(m => m.Send(It.Is<UpdateUserProfileCommand>(c => c.UserId == _testUserId), It.IsAny<CancellationToken>()), Times.Once);
+        endpoint.Response.Should().BeEquivalentTo(userDto);
     }
 
     [Fact]
@@ -121,7 +131,7 @@ public class UsersControllerTests
             new UserMetricDto
             {
                 Id = 1,
-                UserId = Guid.NewGuid(),
+                UserId = _testUserId,
                 Date = fixedDate,
                 Weight = 70.5,
                 Height = 175.0,
@@ -131,15 +141,17 @@ public class UsersControllerTests
         };
 
         _mediatorMock
-            .Setup(m => m.Send(It.IsAny<GetUserMetricsQuery>(), It.IsAny<CancellationToken>()))
+            .Setup(m => m.Send(It.Is<GetUserMetricsQuery>(q => q.UserId == _testUserId), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(metrics.AsEnumerable()));
 
+        var endpoint = CreateEndpointWithUser(m => new GetUserMetricsEndpoint(m));
+
         // Act
-        var result = await _controller.GetMetrics();
+        var request = new GetUserMetricsRequest();
+        await endpoint.HandleAsync(request, CancellationToken.None);
 
         // Assert
-        result.Should().BeOfType<OkObjectResult>();
-        var okResult = result as OkObjectResult;
-        okResult!.Value.Should().BeEquivalentTo(metrics);
+        _mediatorMock.Verify(m => m.Send(It.Is<GetUserMetricsQuery>(q => q.UserId == _testUserId), It.IsAny<CancellationToken>()), Times.Once);
+        endpoint.Response.Should().BeEquivalentTo(metrics);
     }
 }

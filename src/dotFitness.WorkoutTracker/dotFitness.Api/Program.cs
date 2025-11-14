@@ -1,10 +1,10 @@
 using Serilog;
+using FastEndpoints;
 using dotFitness.Api.Infrastructure;
 using dotFitness.Api.Infrastructure.Configuration;
 using dotFitness.Api.Infrastructure.Extensions;
 using dotFitness.Api.Infrastructure.Settings;
 using dotFitness.Aspire.ServiceDefaults;
-
 
 var builder = WebApplication.CreateBuilder(args);
 // Configure Serilog
@@ -37,6 +37,9 @@ var microsoftLogger = loggerFactory.CreateLogger("ModuleRegistry");
 builder.Services.AddModuleServices(builder.Configuration, microsoftLogger);
 builder.Services.AddApiAuthorization(); // Add API-level authorization policies
 
+// Add FastEndpoints
+builder.Services.AddFastEndpoints();
+
 builder.AddServiceDefaults();
 
 var app = builder.Build();
@@ -61,3 +64,11 @@ app.UseGlobalErrorHandler()
 Log.Information("dotFitness API starting up...");
 
 app.Run();
+
+// Make Program class accessible for testing
+namespace dotFitness.Api
+{
+    public partial class Program
+    {
+    }
+}

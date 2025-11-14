@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="xunit"/>
+        <PackageReference Include="Moq"/>
+        <PackageReference Include="FluentAssertions"/>
+        <PackageReference Include="Testcontainers.MongoDb" />
+        <PackageReference Include="Testcontainers.PostgreSql" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\..\dotFitness.Common.Tests\dotFitness.Common.Tests.csproj" />
+      <ProjectReference Include="..\dotFitness.Modules.Users.Infrastructure\dotFitness.Modules.Users.Infrastructure.csproj" />
+    </ItemGroup>
+</Project>

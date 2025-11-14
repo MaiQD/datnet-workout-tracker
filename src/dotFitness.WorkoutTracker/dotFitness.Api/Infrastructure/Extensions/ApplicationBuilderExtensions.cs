@@ -1,3 +1,4 @@
+using FastEndpoints;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
 using dotFitness.Api.Infrastructure.Settings;
@@ -151,6 +152,7 @@ public static class ApplicationBuilderExtensions
     public static WebApplication ConfigureEndpoints(this WebApplication app)
     {
         app.MapControllers();
+        app.UseFastEndpoints();
         return app;
     }
 } 

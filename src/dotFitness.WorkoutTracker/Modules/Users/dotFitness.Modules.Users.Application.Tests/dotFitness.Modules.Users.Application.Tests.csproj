@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="xunit" />
+        <PackageReference Include="Moq" />
+        <PackageReference Include="FluentAssertions" />
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\dotFitness.Modules.Users.Application\dotFitness.Modules.Users.Application.csproj" />
+    </ItemGroup>
+
+</Project>

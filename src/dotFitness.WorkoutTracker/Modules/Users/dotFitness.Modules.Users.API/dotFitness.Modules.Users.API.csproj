@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\..\dotFitness.Common.API\dotFitness.Common.API.csproj" />
+      <ProjectReference Include="..\..\..\dotFitness.Common\dotFitness.Common.csproj" />
+      <ProjectReference Include="..\dotFitness.Modules.Users.Application\dotFitness.Modules.Users.Application.csproj" />
+      <ProjectReference Include="..\dotFitness.Modules.Users.Infrastructure\dotFitness.Modules.Users.Infrastructure.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="FastEndpoints" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Endpoints\Auth\LoginWithGoogleValidator.cs">
+        <DependentUpon>LoginWithGoogleEndpoint.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Endpoints\Users\AddUserMetricRequest.cs">
+        <DependentUpon>AddUserMetricEndpoint.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Endpoints\Users\AddUserMetricValidator.cs">
+        <DependentUpon>AddUserMetricEndpoint.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Endpoints\Users\GetUserMetricsRequest.cs">
+        <DependentUpon>GetUserMetricsEndpoint.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Endpoints\Users\UpdateUserProfileValidator.cs">
+        <DependentUpon>UpdateUserProfileEndpoint.cs</DependentUpon>
+      </Compile>
+    </ItemGroup>
+
+</Project>

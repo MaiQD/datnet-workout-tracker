@@ -37,6 +37,7 @@
     <PackageVersion Include="System.Text.Json" Version="9.0.9" />
     <PackageVersion Include="UnitsNet" Version="5.74.0" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.2" />
+    <PackageVersion Include="FastEndpoints" Version="5.31.0" />
   </ItemGroup>
   <ItemGroup Label="Aspire Packages">
     <PackageVersion Include="Aspire.Hosting.NodeJs" Version="9.4.2" />
@@ -63,5 +64,6 @@
     <PackageVersion Include="Moq" Version="4.20.72" />
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.9" />
     <PackageVersion Include="Microsoft.AspNetCore.Http" Version="2.2.2" />
+    <PackageVersion Include="FastEndpoints.Testing" Version="5.31.0" />
   </ItemGroup>
 </Project>
