@@ -1,4 +1,4 @@
-namespace dotFitness.Modules.Users.Infrastructure.Settings;
+namespace dotFitness.Modules.Users.Application.Settings;
 
 /// <summary>
 /// JWT configuration settings for token generation and validation

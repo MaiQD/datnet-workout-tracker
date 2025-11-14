@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace dotFitness.Modules.Users.Application.DTOs;
+namespace dotFitness.Modules.Users.Application.Commands;
 
 /// <summary>
 /// Request DTO for Google OAuth login

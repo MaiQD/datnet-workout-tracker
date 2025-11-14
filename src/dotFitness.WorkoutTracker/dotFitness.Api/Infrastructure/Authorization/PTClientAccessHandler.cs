@@ -16,7 +16,7 @@ public class PTClientAccessHandler(UsersDbContext context, ISecurityAuditService
     {
         var httpContext = context1.Resource as HttpContext;
         var currentUserId = context1.User.GetRequiredUserId();
-        var clientUserId = GetClientUserIdFromRoute(httpContext);
+        var clientUserId = GetClientUserIdFromRoute(httpContext!);
         var ipAddress = httpContext?.Connection.RemoteIpAddress?.ToString();
         var userAgent = httpContext?.Request.Headers.UserAgent.ToString();
 

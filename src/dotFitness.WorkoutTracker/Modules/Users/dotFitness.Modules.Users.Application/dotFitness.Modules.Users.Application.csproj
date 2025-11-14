@@ -13,6 +13,36 @@
     <PackageReference Include="Riok.Mapperly" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="Queries\GetLatestUserMetricQuery.cs">
+      <DependentUpon>GetLatestUserMetricQueryHandler.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Queries\GetUserByIdQuery.cs">
+      <DependentUpon>GetUserByIdQueryHandler.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Queries\GetUserMetricsQuery.cs">
+      <DependentUpon>GetUserMetricsQueryHandler.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Queries\GetUserProfileQuery.cs">
+      <DependentUpon>GetUserProfileQueryHandler.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Commands\AddUserMetricCommand.cs">
+      <DependentUpon>AddUserMetricCommandHandler.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Commands\LoginWithGoogleCommand.cs">
+      <DependentUpon>LoginWithGoogleCommandHandler.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Commands\UpdateUserProfileCommand.cs">
+      <DependentUpon>UpdateUserProfileCommandHandler.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Commands\LoginWithGoogleRequest.cs">
+      <DependentUpon>LoginWithGoogleCommandHandler.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Commands\UpdateUserProfileRequest.cs">
+      <DependentUpon>UpdateUserProfileCommandHandler.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>

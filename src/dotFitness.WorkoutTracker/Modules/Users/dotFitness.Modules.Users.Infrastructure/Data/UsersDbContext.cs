@@ -7,12 +7,9 @@ using dotFitness.Modules.Users.Infrastructure.Data.Configurations;
 
 namespace dotFitness.Modules.Users.Infrastructure.Data;
 
-public class UsersDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>
+public class UsersDbContext(DbContextOptions<UsersDbContext> options)
+    : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>(options)
 {
-    public UsersDbContext(DbContextOptions<UsersDbContext> options) : base(options) 
-    {
-    }
-    
     public virtual DbSet<UserMetric> UserMetrics { get; set; } = null!;
     public virtual DbSet<OutboxMessageEntity> OutboxMessages { get; set; } = null!;
     

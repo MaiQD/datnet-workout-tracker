@@ -1,9 +1,9 @@
 using dotFitness.Common.Configuration;
 using dotFitness.Modules.Users.Application.Services;
+using dotFitness.Modules.Users.Application.Settings;
 using dotFitness.Modules.Users.Domain.Entities;
 using dotFitness.Modules.Users.Infrastructure.Configuration;
 using dotFitness.Modules.Users.Infrastructure.Data;
-using dotFitness.Modules.Users.Infrastructure.Settings;
 using FluentAssertions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;

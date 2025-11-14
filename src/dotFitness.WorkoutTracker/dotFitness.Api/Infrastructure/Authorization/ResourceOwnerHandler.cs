@@ -62,7 +62,7 @@ public class ResourceOwnerHandler(UsersDbContext context, ISecurityAuditService 
 
         // Check if user owns the resource
         var resource = await GetResourceAsync(resourceId.Value);
-        if (resource != null && resource.UserId == currentUserId)
+        if (resource != null && resource!.UserId == currentUserId)
         {
             await auditService.LogAuthorizationAttemptAsync(
                 currentUserId,
@@ -115,10 +115,10 @@ public class ResourceOwnerHandler(UsersDbContext context, ISecurityAuditService 
         return null;
     }
 
-    private async Task<dynamic?> GetResourceAsync(Guid resourceId)
+    private Task<dynamic?> GetResourceAsync(Guid resourceId)
     {
         // For testing purposes, we'll create a mock resource with the current user as owner
         // In a real implementation, this would query the appropriate repository based on resource type
-        return new { UserId = resourceId }; // Mock resource for testing
+        return Task.FromResult<dynamic?>(new { UserId = resourceId }); // Mock resource for testing
     }
 }

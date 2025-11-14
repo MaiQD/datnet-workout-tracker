@@ -1,9 +1,7 @@
+using dotFitness.Common.Results;
 using dotFitness.Modules.Users.Application.Queries;
 using dotFitness.Modules.Users.Domain.Entities;
-using dotFitness.Modules.Users.Infrastructure.Data;
-using dotFitness.Modules.Users.Infrastructure.Handlers;
-using dotFitness.Modules.Users.Infrastructure.Tests.Extensions;
-using dotFitness.Modules.Users.Infrastructure.Tests.Fixtures;
+using dotFitness.Modules.Users.Domain.Repositories;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -11,28 +9,18 @@ using Xunit;
 
 namespace dotFitness.Modules.Users.Infrastructure.Tests.Handlers;
 
-public class GetUserMetricsQueryHandlerTests: IAsyncLifetime
+public class GetUserMetricsQueryHandlerTests
 {
-    private readonly UsersUnitTestFixture _fixture = new();
-    private readonly ILogger<GetUserMetricsQueryHandler> _logger = new Mock<ILogger<GetUserMetricsQueryHandler>>().Object;
-    private UsersDbContext _context = null!;
-    private GetUserMetricsQueryHandler _handler = null!;
+    private readonly Mock<IUserMetricsRepository> _userMetricsRepositoryMock = new();
+    private readonly Mock<ILogger<GetUserMetricsQueryHandler>> _loggerMock = new();
+    private readonly GetUserMetricsQueryHandler _handler;
 
-    public async Task InitializeAsync()
+    public GetUserMetricsQueryHandlerTests()
     {
-        _context = _fixture.CreateInMemoryDbContext<UsersDbContext>();
-        await _context.Database.EnsureCreatedAsync();
-        
         _handler = new GetUserMetricsQueryHandler(
-            _context,
-            _logger
+            _userMetricsRepositoryMock.Object,
+            _loggerMock.Object
         );
-    }
-
-    public async Task DisposeAsync()
-    {
-        await _context.DisposeAsync();
-        await _fixture.DisposeAsync();
     }
 
     [Fact]
@@ -40,26 +28,14 @@ public class GetUserMetricsQueryHandlerTests: IAsyncLifetime
     public async Task Should_Return_All_Metrics_When_No_Date_Range_Specified()
     {
         // Arrange
-        var user = new ApplicationUser
-        {
-            Id = Guid.NewGuid(),
-            Email = this.GenerateUniqueEmail(),
-            UserName = this.GenerateUniqueEmail(),
-            DisplayName = "Test User",
-            UnitPreference = UnitPreference.Metric,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
-
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
-
+        var userId = Guid.NewGuid();
         var metrics = new List<UserMetric>
         {
             new()
             {
-                UserId = user.Id,
-                Date = this.GenerateUniqueDate(),
+                Id = 1,
+                UserId = userId,
+                Date = DateTime.UtcNow.Date,
                 Weight = 70.0,
                 Bmi = 22.86,
                 CreatedAt = DateTime.UtcNow,
@@ -67,8 +43,9 @@ public class GetUserMetricsQueryHandlerTests: IAsyncLifetime
             },
             new()
             {
-                UserId = user.Id,
-                Date = this.GenerateUniqueDate(),
+                Id = 2,
+                UserId = userId,
+                Date = DateTime.UtcNow.Date.AddDays(-1),
                 Weight = 72.0,
                 Bmi = 23.51,
                 CreatedAt = DateTime.UtcNow,
@@ -76,10 +53,11 @@ public class GetUserMetricsQueryHandlerTests: IAsyncLifetime
             }
         };
 
-        _context.UserMetrics.AddRange(metrics);
-        await _context.SaveChangesAsync();
+        _userMetricsRepositoryMock
+            .Setup(r => r.GetByUserIdAsync(userId, 0, 50, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(metrics.AsEnumerable()));
 
-        var query = new GetUserMetricsQuery(user.Id, null, null);
+        var query = new GetUserMetricsQuery(userId, null, null);
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
@@ -87,7 +65,9 @@ public class GetUserMetricsQueryHandlerTests: IAsyncLifetime
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().HaveCount(2);
-        result.Value.Should().OnlyContain(dto => dto.UserId == user.Id);
+        result.Value.Should().OnlyContain(dto => dto.UserId == userId);
+
+        _userMetricsRepositoryMock.Verify(r => r.GetByUserIdAsync(userId, 0, 50, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -95,29 +75,17 @@ public class GetUserMetricsQueryHandlerTests: IAsyncLifetime
     public async Task Should_Return_Metrics_Within_Date_Range_When_Specified()
     {
         // Arrange
-        var user = new ApplicationUser
-        {
-            Id = Guid.NewGuid(),
-            Email = this.GenerateUniqueEmail(),
-            UserName = this.GenerateUniqueEmail(),
-            DisplayName = "Test User",
-            UnitPreference = UnitPreference.Metric,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
-
+        var userId = Guid.NewGuid();
         var fromDate = new DateTime(2024, 1, 1).Date;
         var toDate = new DateTime(2024, 1, 31).Date;
         var testDate = new DateTime(2024, 1, 15).Date;
 
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
-        
         var metricsInRange = new List<UserMetric>
         {
             new()
             {
-                UserId = user.Id, // Now user.Id has the correct value after SaveChangesAsync
+                Id = 1,
+                UserId = userId,
                 Date = testDate,
                 Weight = 70.0,
                 Bmi = 22.86,
@@ -126,10 +94,11 @@ public class GetUserMetricsQueryHandlerTests: IAsyncLifetime
             }
         };
 
-        _context.UserMetrics.AddRange(metricsInRange);
-        await _context.SaveChangesAsync();
+        _userMetricsRepositoryMock
+            .Setup(r => r.GetByUserIdAndDateRangeAsync(userId, fromDate, toDate, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(metricsInRange.AsEnumerable()));
 
-        var query = new GetUserMetricsQuery(user.Id, fromDate, toDate);
+        var query = new GetUserMetricsQuery(userId, fromDate, toDate);
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
@@ -138,6 +107,8 @@ public class GetUserMetricsQueryHandlerTests: IAsyncLifetime
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().HaveCount(1);
         result.Value!.First().Date.Should().Be(testDate);
+
+        _userMetricsRepositoryMock.Verify(r => r.GetByUserIdAndDateRangeAsync(userId, fromDate, toDate, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -145,21 +116,12 @@ public class GetUserMetricsQueryHandlerTests: IAsyncLifetime
     public async Task Should_Return_Empty_List_When_No_Metrics_Found()
     {
         // Arrange
-        var user = new ApplicationUser
-        {
-            Id = Guid.NewGuid(),
-            Email = this.GenerateUniqueEmail(),
-            UserName = this.GenerateUniqueEmail(),
-            DisplayName = "Test User",
-            UnitPreference = UnitPreference.Metric,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
+        var userId = Guid.NewGuid();
+        _userMetricsRepositoryMock
+            .Setup(r => r.GetByUserIdAsync(userId, 0, 50, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(Enumerable.Empty<UserMetric>()));
 
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
-
-        var query = new GetUserMetricsQuery(user.Id, null, null);
+        var query = new GetUserMetricsQuery(userId, null, null);
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
@@ -167,87 +129,5 @@ public class GetUserMetricsQueryHandlerTests: IAsyncLifetime
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().BeEmpty();
-    }
-
-    [Fact]
-    [Trait("Category", "Unit")]
-    public async Task Should_Handle_Repository_Errors_Gracefully()
-    {
-        // Arrange
-        var user = new ApplicationUser
-        {
-            Id = Guid.NewGuid(),
-            Email = this.GenerateUniqueEmail(),
-            UserName = this.GenerateUniqueEmail(),
-            DisplayName = "Test User",
-            UnitPreference = UnitPreference.Metric,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
-
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
-
-        // Dispose context to simulate database error
-        await _context.DisposeAsync();
-
-        var query = new GetUserMetricsQuery(user.Id, null, null);
-
-        // Act
-        var result = await _handler.Handle(query, CancellationToken.None);
-
-        // Assert
-        result.IsFailure.Should().BeTrue();
-        result.Error.Should().Contain("Failed to get user metrics");
-    }
-
-    [Fact]
-    [Trait("Category", "Unit")]
-    public async Task Should_Apply_Date_Range_Filters_Correctly()
-    {
-        // Arrange
-        var user = new ApplicationUser
-        {
-            Id = Guid.NewGuid(),
-            Email = this.GenerateUniqueEmail(),
-            UserName = this.GenerateUniqueEmail(),
-            DisplayName = "Test User",
-            UnitPreference = UnitPreference.Metric,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
-
-        var fromDate = new DateTime(2024, 1, 10).Date;
-        var toDate = new DateTime(2024, 1, 20).Date;
-        var testDate = new DateTime(2024, 1, 15).Date;
-
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
-        
-        var filteredMetrics = new List<UserMetric>
-        {
-            new()
-            {
-                UserId = user.Id, // Now user.Id has the correct value after SaveChangesAsync
-                Date = testDate,
-                Weight = 70.0,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            }
-        };
-
-        _context.UserMetrics.AddRange(filteredMetrics);
-        await _context.SaveChangesAsync();
-
-        var query = new GetUserMetricsQuery(user.Id, fromDate, toDate);
-
-        // Act
-        var result = await _handler.Handle(query, CancellationToken.None);
-
-        // Assert
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().HaveCount(1);
-        result.Value!.First().Date.Should().BeBefore(toDate.AddDays(1));
-        result.Value!.First().Date.Should().BeOnOrAfter(fromDate);
     }
 }

@@ -1,4 +1,4 @@
-namespace dotFitness.Modules.Users.Infrastructure.Settings;
+namespace dotFitness.Modules.Users.Application.Settings;
 
 /// <summary>
 /// Administrator configuration settings for user role assignment

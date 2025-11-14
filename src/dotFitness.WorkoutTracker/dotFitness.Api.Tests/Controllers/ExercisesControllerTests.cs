@@ -81,7 +81,7 @@ public class ExercisesControllerTests
             null, null, true, null, new List<string> { "strength" }, fixedDate, fixedDate);
 
         _mediatorMock
-            .Setup(m => m.Send(It.IsAny<GetExerciseByIdQuery>(), It.IsAny<CancellationToken>()))
+            .Setup(m => m.Send(It.IsAny<GetExerciseByIdQuery>(), It.IsAny<CancellationToken>()))!
             .ReturnsAsync(Result.Success(exercise));
 
         // Act

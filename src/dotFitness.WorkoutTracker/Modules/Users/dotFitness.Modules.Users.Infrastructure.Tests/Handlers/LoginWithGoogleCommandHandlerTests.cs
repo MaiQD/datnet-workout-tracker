@@ -1,14 +1,10 @@
+using dotFitness.Common.Results;
 using dotFitness.Modules.Users.Application.Commands;
 using dotFitness.Modules.Users.Application.DTOs;
 using dotFitness.Modules.Users.Application.Services;
+using dotFitness.Modules.Users.Application.Settings;
 using dotFitness.Modules.Users.Domain.Entities;
-using dotFitness.Modules.Users.Infrastructure.Data;
-using dotFitness.Modules.Users.Infrastructure.Handlers;
-using dotFitness.Modules.Users.Infrastructure.Settings;
-using dotFitness.Modules.Users.Infrastructure.Tests.Extensions;
-using dotFitness.Modules.Users.Infrastructure.Tests.Fixtures;
 using FluentAssertions;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
@@ -16,53 +12,28 @@ using Xunit;
 
 namespace dotFitness.Modules.Users.Infrastructure.Tests.Handlers;
 
-public class LoginWithGoogleCommandHandlerTests : IAsyncLifetime
+public class LoginWithGoogleCommandHandlerTests
 {
-    private readonly UsersUnitTestFixture _fixture = new();
     private readonly Mock<ILogger<LoginWithGoogleCommandHandler>> _loggerMock = new();
     private readonly Mock<IOptions<AdminSettings>> _adminSettingsMock = new();
     private readonly Mock<IGoogleAuthService> _googleAuthServiceMock = new();
+    private readonly Mock<IIdentityService> _identityServiceMock = new();
     private readonly AdminSettings _adminSettings = new()
     {
         AdminEmails = ["admin@dotfitness.com"]
     };
-    private LoginWithGoogleCommandHandler _handler = null!;
-    private UsersDbContext _context = null!;
-    private Mock<UserManager<ApplicationUser>> _userManagerMock = null!;
-    private Mock<SignInManager<ApplicationUser>> _signInManagerMock = null!;
+    private readonly LoginWithGoogleCommandHandler _handler;
 
-    public async Task InitializeAsync()
+    public LoginWithGoogleCommandHandlerTests()
     {
         _adminSettingsMock.Setup(x => x.Value).Returns(_adminSettings);
 
-        // Setup UserManager and SignInManager mocks
-        var userStoreMock = new Mock<IUserStore<ApplicationUser>>();
-        _userManagerMock = new Mock<UserManager<ApplicationUser>>(userStoreMock.Object, null, null, null, null, null, null, null, null);
-
-        var signInManagerUserClaimsFactoryMock = new Mock<IUserClaimsPrincipalFactory<ApplicationUser>>();
-        _signInManagerMock = new Mock<SignInManager<ApplicationUser>>(_userManagerMock.Object,
-            new Mock<Microsoft.AspNetCore.Http.IHttpContextAccessor>().Object,
-            new Mock<IUserClaimsPrincipalFactory<ApplicationUser>>().Object,
-            new Mock<IOptions<IdentityOptions>>().Object,
-            new Mock<ILogger<SignInManager<ApplicationUser>>>().Object,
-            new Mock<Microsoft.AspNetCore.Authentication.IAuthenticationSchemeProvider>().Object,
-            null);
-
         _handler = new LoginWithGoogleCommandHandler(
-            _userManagerMock.Object,
-            _signInManagerMock.Object,
+            _identityServiceMock.Object,
             _googleAuthServiceMock.Object,
+            _adminSettingsMock.Object,
             _loggerMock.Object
         );
-
-        _context = _fixture.CreateInMemoryDbContext<UsersDbContext>();
-        await _context.Database.EnsureCreatedAsync();
-    }
-
-    public async Task DisposeAsync()
-    {
-        await _context.DisposeAsync();
-        await _fixture.DisposeAsync();
     }
 
     [Fact]
@@ -82,9 +53,6 @@ public class LoginWithGoogleCommandHandlerTests : IAsyncLifetime
             UpdatedAt = DateTime.UtcNow
         };
 
-        _context.Users.Add(existingUser);
-        await _context.SaveChangesAsync();
-
         var request = new LoginWithGoogleRequest
         {
             GoogleToken = "valid_google_token_123"
@@ -103,24 +71,24 @@ public class LoginWithGoogleCommandHandlerTests : IAsyncLifetime
             .Setup(x => x.GetUserInfoAsync("valid_google_token_123", It.IsAny<CancellationToken>()))
             .ReturnsAsync(googleUserInfo);
 
-        _userManagerMock
-            .Setup(x => x.FindByEmailAsync(email))
+        _identityServiceMock
+            .Setup(x => x.FindByEmailAsync(email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingUser);
 
-        _userManagerMock
-            .Setup(x => x.GetRolesAsync(existingUser))
-            .ReturnsAsync(new List<string> { "User" });
+        _identityServiceMock
+            .Setup(x => x.GetRolesAsync(existingUser, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success<IEnumerable<string>>(new List<string> { "User" }));
 
-        _signInManagerMock
-            .Setup(x => x.SignInAsync(existingUser, It.IsAny<bool>(), It.IsAny<string>()))
+        _identityServiceMock
+            .Setup(x => x.SignInAsync(existingUser, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        _userManagerMock
-            .Setup(x => x.GenerateUserTokenAsync(existingUser, "Default", "access_token"))
+        _identityServiceMock
+            .Setup(x => x.GenerateUserTokenAsync(existingUser, "access_token", It.IsAny<CancellationToken>()))
             .ReturnsAsync("mock_access_token");
 
-        _userManagerMock
-            .Setup(x => x.GenerateUserTokenAsync(existingUser, "Default", "refresh_token"))
+        _identityServiceMock
+            .Setup(x => x.GenerateUserTokenAsync(existingUser, "refresh_token", It.IsAny<CancellationToken>()))
             .ReturnsAsync("mock_refresh_token");
 
         // Act
@@ -211,32 +179,32 @@ public class LoginWithGoogleCommandHandlerTests : IAsyncLifetime
             .Setup(x => x.GetUserInfoAsync("valid_google_token_123", It.IsAny<CancellationToken>()))
             .ReturnsAsync(googleUserInfo);
 
-        _userManagerMock
-            .Setup(x => x.FindByEmailAsync(email))
+        _identityServiceMock
+            .Setup(x => x.FindByEmailAsync(email, It.IsAny<CancellationToken>()))
             .ReturnsAsync((ApplicationUser?)null);
 
-        _userManagerMock
-            .Setup(x => x.CreateAsync(It.IsAny<ApplicationUser>()))
-            .ReturnsAsync(IdentityResult.Success);
+        _identityServiceMock
+            .Setup(x => x.CreateAsync(It.IsAny<ApplicationUser>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(newUser));
 
-        _userManagerMock
-            .Setup(x => x.AddToRoleAsync(It.IsAny<ApplicationUser>(), "User"))
-            .ReturnsAsync(IdentityResult.Success);
+        _identityServiceMock
+            .Setup(x => x.AddToRoleAsync(It.IsAny<ApplicationUser>(), "User", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success());
 
-        _userManagerMock
-            .Setup(x => x.GetRolesAsync(It.IsAny<ApplicationUser>()))
-            .ReturnsAsync(new List<string> { "User" });
+        _identityServiceMock
+            .Setup(x => x.GetRolesAsync(It.IsAny<ApplicationUser>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success<IEnumerable<string>>(new List<string> { "User" }));
 
-        _signInManagerMock
-            .Setup(x => x.SignInAsync(It.IsAny<ApplicationUser>(), It.IsAny<bool>(), It.IsAny<string>()))
+        _identityServiceMock
+            .Setup(x => x.SignInAsync(It.IsAny<ApplicationUser>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        _userManagerMock
-            .Setup(x => x.GenerateUserTokenAsync(It.IsAny<ApplicationUser>(), "Default", "access_token"))
+        _identityServiceMock
+            .Setup(x => x.GenerateUserTokenAsync(It.IsAny<ApplicationUser>(), "access_token", It.IsAny<CancellationToken>()))
             .ReturnsAsync("mock_access_token");
 
-        _userManagerMock
-            .Setup(x => x.GenerateUserTokenAsync(It.IsAny<ApplicationUser>(), "Default", "refresh_token"))
+        _identityServiceMock
+            .Setup(x => x.GenerateUserTokenAsync(It.IsAny<ApplicationUser>(), "refresh_token", It.IsAny<CancellationToken>()))
             .ReturnsAsync("mock_refresh_token");
 
         // Act
@@ -265,9 +233,6 @@ public class LoginWithGoogleCommandHandlerTests : IAsyncLifetime
             UpdatedAt = DateTime.UtcNow
         };
 
-        _context.Users.Add(adminUser);
-        await _context.SaveChangesAsync();
-
         var request = new LoginWithGoogleRequest
         {
             GoogleToken = "valid_google_token_123"
@@ -286,24 +251,24 @@ public class LoginWithGoogleCommandHandlerTests : IAsyncLifetime
             .Setup(x => x.GetUserInfoAsync("valid_google_token_123", It.IsAny<CancellationToken>()))
             .ReturnsAsync(googleUserInfo);
 
-        _userManagerMock
-            .Setup(x => x.FindByEmailAsync("admin@dotfitness.com"))
+        _identityServiceMock
+            .Setup(x => x.FindByEmailAsync("admin@dotfitness.com", It.IsAny<CancellationToken>()))
             .ReturnsAsync(adminUser);
 
-        _userManagerMock
-            .Setup(x => x.GetRolesAsync(adminUser))
-            .ReturnsAsync(new List<string> { "User", "Admin" });
+        _identityServiceMock
+            .Setup(x => x.GetRolesAsync(adminUser, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success<IEnumerable<string>>(new List<string> { "User", "Admin" }));
 
-        _signInManagerMock
-            .Setup(x => x.SignInAsync(adminUser, It.IsAny<bool>(), It.IsAny<string>()))
+        _identityServiceMock
+            .Setup(x => x.SignInAsync(adminUser, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        _userManagerMock
-            .Setup(x => x.GenerateUserTokenAsync(adminUser, "Default", "access_token"))
+        _identityServiceMock
+            .Setup(x => x.GenerateUserTokenAsync(adminUser, "access_token", It.IsAny<CancellationToken>()))
             .ReturnsAsync("mock_access_token");
 
-        _userManagerMock
-            .Setup(x => x.GenerateUserTokenAsync(adminUser, "Default", "refresh_token"))
+        _identityServiceMock
+            .Setup(x => x.GenerateUserTokenAsync(adminUser, "refresh_token", It.IsAny<CancellationToken>()))
             .ReturnsAsync("mock_refresh_token");
 
         // Act

@@ -9,9 +9,11 @@ using dotFitness.ModuleContracts;
 using dotFitness.Modules.Users.Domain.Entities;
 using dotFitness.Modules.Users.Infrastructure.Services;
 using dotFitness.Modules.Users.Application.Services;
-using dotFitness.Modules.Users.Infrastructure.Settings;
+using dotFitness.Modules.Users.Application.Settings;
 using dotFitness.Modules.Users.Infrastructure.Data;
 using dotFitness.Modules.Users.Infrastructure.HealthChecks;
+using dotFitness.Modules.Users.Infrastructure.Repositories;
+using dotFitness.Modules.Users.Domain.Repositories;
 
 namespace dotFitness.Modules.Users.Infrastructure.Configuration;
 
@@ -83,9 +85,15 @@ public class UsersModuleInstaller : IModuleInstaller
             }
         });
 
+        // Register repositories
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IUserMetricsRepository, UserMetricsRepository>();
+        
         // Register services
         services.AddScoped<IGoogleAuthService, GoogleAuthService>();
         services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IIdentityService, IdentityService>();
+        services.AddScoped<IOutboxPublisher, OutboxPublisher>();
         
         // Register HttpClient for GoogleAuthService
         services.AddHttpClient<IGoogleAuthService, GoogleAuthService>();

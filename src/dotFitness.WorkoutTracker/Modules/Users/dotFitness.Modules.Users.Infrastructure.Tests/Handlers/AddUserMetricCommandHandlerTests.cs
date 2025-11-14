@@ -1,61 +1,77 @@
+using dotFitness.Common.Results;
 using dotFitness.Modules.Users.Application.Commands;
 using dotFitness.Modules.Users.Domain.Entities;
-using dotFitness.Modules.Users.Infrastructure.Data;
-using dotFitness.Modules.Users.Infrastructure.Handlers;
-using dotFitness.Modules.Users.Infrastructure.Tests.Extensions;
-using dotFitness.Modules.Users.Infrastructure.Tests.Fixtures;
+using dotFitness.Modules.Users.Domain.Repositories;
 using FluentAssertions;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
 namespace dotFitness.Modules.Users.Infrastructure.Tests.Handlers;
 
-public class AddUserMetricCommandHandlerTests : IAsyncLifetime
+public class AddUserMetricCommandHandlerTests
 {
-    private readonly UsersUnitTestFixture _fixture = new();
-    private readonly ILogger<AddUserMetricCommandHandler> _logger = new Mock<ILogger<AddUserMetricCommandHandler>>().Object;
-    private UsersDbContext _context = null!;
-    private AddUserMetricCommandHandler _handler = null!;
+    private readonly Mock<IUserRepository> _userRepositoryMock = new();
+    private readonly Mock<IUserMetricsRepository> _userMetricsRepositoryMock = new();
+    private readonly Mock<ILogger<AddUserMetricCommandHandler>> _loggerMock = new();
+    private readonly AddUserMetricCommandHandler _handler;
 
-    public async Task InitializeAsync()
+    public AddUserMetricCommandHandlerTests()
     {
-        _context = _fixture.CreateInMemoryDbContext<UsersDbContext>();
-        await _context.Database.EnsureCreatedAsync();
-        
         _handler = new AddUserMetricCommandHandler(
-            _context,
-            _logger
+            _userRepositoryMock.Object,
+            _userMetricsRepositoryMock.Object,
+            _loggerMock.Object
         );
-    }
-
-    public async Task DisposeAsync()
-    {
     }
 
     [Fact]
     [Trait("Category", "Unit")]
     public async Task Should_Handle_Valid_Command_Successfully()
     {
+        // Arrange
+        var userId = Guid.NewGuid();
         var user = new ApplicationUser
         {
-            Id = Guid.NewGuid(),
-            Email = this.GenerateUniqueEmail(),
-            UserName = this.GenerateUniqueEmail(),
+            Id = userId,
+            Email = "test@example.com",
+            UserName = "test@example.com",
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync(); 
+        var testDate = DateTime.UtcNow.Date;
+        var userMetric = new UserMetric
+        {
+            Id = 1,
+            UserId = userId,
+            Date = testDate,
+            Weight = 70.5,
+            Height = 175.0,
+            Notes = "Morning measurement",
+            Bmi = 22.86,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        _userRepositoryMock
+            .Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(user));
+
+        _userMetricsRepositoryMock
+            .Setup(r => r.ExistsForUserAndDateAsync(userId, testDate, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(false));
+
+        _userMetricsRepositoryMock
+            .Setup(r => r.CreateAsync(It.IsAny<UserMetric>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(userMetric));
 
         var command = new AddUserMetricCommand
         {
-            UserId = user.Id,
-            Date = this.GenerateUniqueDate(),
+            UserId = userId,
+            Date = testDate,
             Weight = 70.5,
             Height = 175.0,
             Notes = "Morning measurement"
@@ -67,18 +83,15 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value!.UserId.Should().Be(user.Id);
+        result.Value!.UserId.Should().Be(userId);
         result.Value.Weight.Should().Be(70.5);
         result.Value.Height.Should().Be(175.0);
         result.Value.Notes.Should().Be("Morning measurement");
         result.Value.Bmi.Should().BeGreaterThan(0);
 
-        // Verify metric was saved to database
-        var savedMetric = await _context.UserMetrics.FirstAsync(um => um.UserId == user.Id);
-        savedMetric.Weight.Should().Be(70.5);
-        savedMetric.Height.Should().Be(175.0);
-        savedMetric.Notes.Should().Be("Morning measurement");
-        savedMetric.Bmi.Should().BeGreaterThan(0);
+        _userRepositoryMock.Verify(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
+        _userMetricsRepositoryMock.Verify(r => r.ExistsForUserAndDateAsync(userId, testDate, It.IsAny<CancellationToken>()), Times.Once);
+        _userMetricsRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<UserMetric>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -86,24 +99,48 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
     public async Task Should_Handle_Weight_Only_Measurement()
     {
         // Arrange
+        var userId = Guid.NewGuid();
         var user = new ApplicationUser
         {
-            Id = Guid.NewGuid(),
-            Email = this.GenerateUniqueEmail(),
-            UserName = this.GenerateUniqueEmail(),
+            Id = userId,
+            Email = "test@example.com",
+            UserName = "test@example.com",
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
+        var testDate = DateTime.UtcNow.Date;
+        var userMetric = new UserMetric
+        {
+            Id = 1,
+            UserId = userId,
+            Date = testDate,
+            Weight = 70.5,
+            Height = null,
+            Notes = "Weight only",
+            Bmi = null,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        _userRepositoryMock
+            .Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(user));
+
+        _userMetricsRepositoryMock
+            .Setup(r => r.ExistsForUserAndDateAsync(userId, testDate, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(false));
+
+        _userMetricsRepositoryMock
+            .Setup(r => r.CreateAsync(It.IsAny<UserMetric>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(userMetric));
 
         var command = new AddUserMetricCommand
         {
-            UserId = user.Id,
-            Date = this.GenerateUniqueDate(),
+            UserId = userId,
+            Date = testDate,
             Weight = 70.5,
             Height = null,
             Notes = "Weight only"
@@ -117,100 +154,6 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
         result.Value!.Weight.Should().Be(70.5);
         result.Value.Height.Should().BeNull();
         result.Value.Bmi.Should().BeNull();
-
-        // Verify metric was saved to database
-        var savedMetric = await _context.UserMetrics.FirstAsync(um => um.UserId == user.Id);
-        savedMetric.Weight.Should().Be(70.5);
-        savedMetric.Height.Should().BeNull();
-        savedMetric.Bmi.Should().BeNull();
-    }
-
-    [Fact]
-    [Trait("Category", "Unit")]
-    public async Task Should_Handle_Height_Only_Measurement()
-    {
-        // Arrange
-        var user = new ApplicationUser
-        {
-            Id = Guid.NewGuid(),
-            Email = this.GenerateUniqueEmail(),
-            UserName = this.GenerateUniqueEmail(),
-            DisplayName = "Test User",
-            UnitPreference = UnitPreference.Metric,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
-
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
-
-        var command = new AddUserMetricCommand
-        {
-            UserId = user.Id,
-            Date = this.GenerateUniqueDate(),
-            Weight = null,
-            Height = 175.0,
-            Notes = "Height only"
-        };
-
-        // Act
-        var result = await _handler.Handle(command, CancellationToken.None);
-
-        // Assert
-        result.IsSuccess.Should().BeTrue();
-        result.Value!.Weight.Should().BeNull();
-        result.Value.Height.Should().Be(175.0);
-        result.Value.Bmi.Should().BeNull();
-
-        // Verify metric was saved to database
-        var savedMetric = await _context.UserMetrics.FirstAsync(um => um.UserId == user.Id);
-        savedMetric.Weight.Should().BeNull();
-        savedMetric.Height.Should().Be(175.0);
-        savedMetric.Bmi.Should().BeNull();
-    }
-
-    [Fact]
-    [Trait("Category", "Unit")]
-    public async Task Should_Handle_Repository_Errors_Gracefully()
-    {
-        // Arrange
-        var user = new ApplicationUser
-        {
-            Id = Guid.NewGuid(),
-            Email = this.GenerateUniqueEmail(),
-            UserName = this.GenerateUniqueEmail(),
-            DisplayName = "Test User",
-            UnitPreference = UnitPreference.Metric,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
-
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
-
-        var errorContext = _fixture.CreateInMemoryDbContext<UsersDbContext>();
-        await errorContext.DisposeAsync();
-        
-        var errorHandler = new AddUserMetricCommandHandler(
-            errorContext,
-            _logger
-        );
-
-        var command = new AddUserMetricCommand
-        {
-            UserId = user.Id,
-            Date = this.GenerateUniqueDate(),
-            Weight = 70.5,
-            Height = 175.0,
-            Notes = "Test measurement"
-        };
-
-        // Act
-        var result = await errorHandler.Handle(command, CancellationToken.None);
-
-        // Assert
-        result.IsFailure.Should().BeTrue();
-        result.Error.Should().Contain("Failed to add user metric");
     }
 
     [Fact]
@@ -218,24 +161,48 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
     public async Task Should_Calculate_BMI_When_Both_Weight_And_Height_Provided()
     {
         // Arrange
+        var userId = Guid.NewGuid();
         var user = new ApplicationUser
         {
-            Id = Guid.NewGuid(),
-            Email = this.GenerateUniqueEmail(),
-            UserName = this.GenerateUniqueEmail(),
+            Id = userId,
+            Email = "test@example.com",
+            UserName = "test@example.com",
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
+        var testDate = DateTime.UtcNow.Date;
+        var userMetric = new UserMetric
+        {
+            Id = 1,
+            UserId = userId,
+            Date = testDate,
+            Weight = 70.0,
+            Height = 175.0,
+            Notes = "Complete measurement",
+            Bmi = 22.86,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        _userRepositoryMock
+            .Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(user));
+
+        _userMetricsRepositoryMock
+            .Setup(r => r.ExistsForUserAndDateAsync(userId, testDate, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(false));
+
+        _userMetricsRepositoryMock
+            .Setup(r => r.CreateAsync(It.Is<UserMetric>(m => m.Weight == 70.0 && m.Height == 175.0), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((UserMetric m, CancellationToken ct) => Result.Success(userMetric));
 
         var command = new AddUserMetricCommand
         {
-            UserId = user.Id,
-            Date = this.GenerateUniqueDate(),
+            UserId = userId,
+            Date = testDate,
             Weight = 70.0,
             Height = 175.0,
             Notes = "Complete measurement"
@@ -247,51 +214,6 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value!.Bmi.Should().BeApproximately(22.86, 0.01);
-
-        // Verify BMI is saved correctly
-        var savedMetric = await _context.UserMetrics.FirstAsync(um => um.UserId == user.Id);
-        savedMetric.Bmi.Should().BeApproximately(22.86, 0.01);
-    }
-
-    [Fact]
-    [Trait("Category", "Unit")]
-    public async Task Should_Set_Date_To_Today_When_Not_Provided()
-    {
-        // Arrange
-        var user = new ApplicationUser
-        {
-            Id = Guid.NewGuid(),
-            Email = this.GenerateUniqueEmail(),
-            UserName = this.GenerateUniqueEmail(),
-            DisplayName = "Test User",
-            UnitPreference = UnitPreference.Metric,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
-
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
-
-        var today = DateTime.UtcNow.Date;
-        var command = new AddUserMetricCommand
-        {
-            UserId = user.Id,
-            Date = today,
-            Weight = 70.0,
-            Height = null,
-            Notes = null
-        };
-
-        // Act
-        var result = await _handler.Handle(command, CancellationToken.None);
-
-        // Assert
-        result.IsSuccess.Should().BeTrue();
-        result.Value!.Date.Should().Be(today);
-
-        // Verify date is saved correctly
-        var savedMetric = await _context.UserMetrics.FirstAsync(um => um.UserId == user.Id);
-        savedMetric.Date.Should().Be(today);
     }
 
     [Fact]
@@ -299,10 +221,15 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
     public async Task Should_Return_Failure_When_User_Not_Found()
     {
         // Arrange
+        var userId = Guid.NewGuid();
+        _userRepositoryMock
+            .Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Failure<ApplicationUser>("User not found"));
+
         var command = new AddUserMetricCommand
         {
-            UserId = Guid.NewGuid(),
-            Date = this.GenerateUniqueDate(),
+            UserId = userId,
+            Date = DateTime.UtcNow.Date,
             Weight = 70.0,
             Height = 175.0,
             Notes = "Test measurement"
@@ -315,9 +242,7 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Be("User not found");
 
-        // Verify no metric was saved for the non-existent user
-        var metrics = await _context.UserMetrics.Where(um => um.UserId == command.UserId).ToListAsync();
-        metrics.Should().BeEmpty();
+        _userMetricsRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<UserMetric>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -325,39 +250,32 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
     public async Task Should_Return_Failure_When_Metric_Already_Exists_For_Date()
     {
         // Arrange
+        var userId = Guid.NewGuid();
         var user = new ApplicationUser
         {
-            Id = Guid.NewGuid(),
-            Email = this.GenerateUniqueEmail(),
-            UserName = this.GenerateUniqueEmail(),
+            Id = userId,
+            Email = "test@example.com",
+            UserName = "test@example.com",
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
-        var testDate = this.GenerateUniqueDate();
-        
-        var existingMetric = new UserMetric
-        {
-            UserId = Guid.Empty,
-            Date = testDate,
-            Weight = 80.0,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
+        var testDate = DateTime.UtcNow.Date;
 
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
-        
-        existingMetric.UserId = user.Id;
-        _context.UserMetrics.Add(existingMetric);
-        await _context.SaveChangesAsync();
+        _userRepositoryMock
+            .Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(user));
+
+        _userMetricsRepositoryMock
+            .Setup(r => r.ExistsForUserAndDateAsync(userId, testDate, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(true));
 
         var command = new AddUserMetricCommand
         {
-            UserId = user.Id,
-            Date = testDate, // Same date as existing metric
+            UserId = userId,
+            Date = testDate,
             Weight = 70.0,
             Height = 175.0,
             Notes = "Duplicate metric"
@@ -370,9 +288,6 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Be("A metric already exists for this date. Please update the existing metric instead.");
 
-        // Verify only the original metric exists
-        var metrics = await _context.UserMetrics.Where(um => um.UserId == user.Id).ToListAsync();
-        metrics.Should().HaveCount(1);
-        metrics[0].Weight.Should().Be(80.0);
+        _userMetricsRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<UserMetric>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }

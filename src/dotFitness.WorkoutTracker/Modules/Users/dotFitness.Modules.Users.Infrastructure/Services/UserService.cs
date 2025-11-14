@@ -1,44 +1,36 @@
 using dotFitness.Common.Results;
 using dotFitness.Modules.Users.Application.Services;
+using dotFitness.Modules.Users.Application.Settings;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.EntityFrameworkCore;
 using dotFitness.Modules.Users.Domain.Entities;
 using dotFitness.Modules.Users.Infrastructure.Data;
-using dotFitness.Modules.Users.Infrastructure.Settings;
 
 namespace dotFitness.Modules.Users.Infrastructure.Services;
 
-public class UserService : IUserService
+public class UserService(
+    UsersDbContext context,
+    IOptions<AdminSettings> adminSettings,
+    ILogger<UserService> logger)
+    : IUserService
 {
-    private readonly UsersDbContext _context;
-    private readonly AdminSettings _adminSettings;
-    private readonly ILogger<UserService> _logger;
-
-    public UserService(
-        UsersDbContext context,
-        IOptions<AdminSettings> adminSettings,
-        ILogger<UserService> logger)
-    {
-        _context = context;
-        _adminSettings = adminSettings.Value;
-        _logger = logger;
-    }
+    private readonly AdminSettings _adminSettings = adminSettings.Value;
 
     public async Task<Result<ApplicationUser>> GetOrCreateUserAsync(GoogleUserInfo googleUserInfo, CancellationToken cancellationToken = default)
     {
         try
         {
             // Use execution strategy to handle retries and transactions together
-            var strategy = _context.Database.CreateExecutionStrategy();
+            var strategy = context.Database.CreateExecutionStrategy();
             return await strategy.ExecuteAsync(async () =>
             {
-                using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+                using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
                 
                 try
                 {
                     // Check if user exists by GoogleId
-                    var existingUser = await _context.Users
+                    var existingUser = await context.Users
                         .FirstOrDefaultAsync(u => u.GoogleId == googleUserInfo.Id, cancellationToken);
                     
                     if (existingUser != null)
@@ -49,23 +41,23 @@ public class UserService : IUserService
                             existingUser.ProfilePicture = googleUserInfo.ProfilePicture;
                             existingUser.UpdatedAt = DateTime.UtcNow;
                             
-                            await _context.SaveChangesAsync(cancellationToken);
-                            _logger.LogInformation("Updated profile picture for user: {Email}", existingUser.Email);
+                            await context.SaveChangesAsync(cancellationToken);
+                            logger.LogInformation("Updated profile picture for user: {Email}", existingUser.Email);
                         }
                         
                         await transaction.CommitAsync(cancellationToken);
-                        _logger.LogInformation("Existing user logged in: {Email}", existingUser.Email);
+                        logger.LogInformation("Existing user logged in: {Email}", existingUser.Email);
                         return Result.Success(existingUser);
                     }
 
                     // Create new user
                     var newUser = CreateNewUser(googleUserInfo);
                     
-                    _context.Users.Add(newUser);
-                    await _context.SaveChangesAsync(cancellationToken);
+                    context.Users.Add(newUser);
+                    await context.SaveChangesAsync(cancellationToken);
                     
                     await transaction.CommitAsync(cancellationToken);
-                    _logger.LogInformation("New user created: {Email}", newUser.Email);
+                    logger.LogInformation("New user created: {Email}", newUser.Email);
                     
                     return Result.Success(newUser);
                 }
@@ -78,7 +70,7 @@ public class UserService : IUserService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to get or create user for email: {Email}", googleUserInfo.Email);
+            logger.LogError(ex, "Failed to get or create user for email: {Email}", googleUserInfo.Email);
             return Result.Failure<ApplicationUser>($"User management failed: {ex.Message}");
         }
     }
@@ -102,7 +94,7 @@ public class UserService : IUserService
         if (_adminSettings.AdminEmails.Contains(googleUserInfo.Email))
         {
             // Note: Role assignment will be handled by UserManager in the handler
-            _logger.LogInformation("Admin user detected: {Email}", user.Email);
+            logger.LogInformation("Admin user detected: {Email}", user.Email);
         }
 
         return user;

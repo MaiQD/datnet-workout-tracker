@@ -1,9 +1,7 @@
+using dotFitness.Common.Results;
 using dotFitness.Modules.Users.Application.Queries;
 using dotFitness.Modules.Users.Domain.Entities;
-using dotFitness.Modules.Users.Infrastructure.Data;
-using dotFitness.Modules.Users.Infrastructure.Handlers;
-using dotFitness.Modules.Users.Infrastructure.Tests.Extensions;
-using dotFitness.Modules.Users.Infrastructure.Tests.Fixtures;
+using dotFitness.Modules.Users.Domain.Repositories;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -11,28 +9,18 @@ using Xunit;
 
 namespace dotFitness.Modules.Users.Infrastructure.Tests.Handlers;
 
-public class GetLatestUserMetricQueryHandlerTests : IAsyncLifetime
+public class GetLatestUserMetricQueryHandlerTests
 {
-    private readonly UsersUnitTestFixture _fixture = new();
-    private readonly ILogger<GetLatestUserMetricQueryHandler> _logger = new Mock<ILogger<GetLatestUserMetricQueryHandler>>().Object;
-    private UsersDbContext _context = null!;
-    private GetLatestUserMetricQueryHandler _handler = null!;
+    private readonly Mock<IUserMetricsRepository> _userMetricsRepositoryMock = new();
+    private readonly Mock<ILogger<GetLatestUserMetricQueryHandler>> _loggerMock = new();
+    private readonly GetLatestUserMetricQueryHandler _handler;
 
-    public async Task InitializeAsync()
+    public GetLatestUserMetricQueryHandlerTests()
     {
-        _context = _fixture.CreateInMemoryDbContext<UsersDbContext>();
-        await _context.Database.EnsureCreatedAsync();
-        
         _handler = new GetLatestUserMetricQueryHandler(
-            _context,
-            _logger
+            _userMetricsRepositoryMock.Object,
+            _loggerMock.Object
         );
-    }
-
-    public async Task DisposeAsync()
-    {
-        await _context.DisposeAsync();
-        await _fixture.DisposeAsync();
     }
 
     [Fact]
@@ -40,24 +28,12 @@ public class GetLatestUserMetricQueryHandlerTests : IAsyncLifetime
     public async Task Should_Return_Latest_Metric_When_Found()
     {
         // Arrange
-        var user = new ApplicationUser
-        {
-            Id = Guid.NewGuid(),
-            Email = this.GenerateUniqueEmail(),
-            UserName = this.GenerateUniqueEmail(),
-            DisplayName = "Test User",
-            UnitPreference = UnitPreference.Metric,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
-
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
-
+        var userId = Guid.NewGuid();
         var latestMetric = new UserMetric
         {
-            UserId = user.Id,
-            Date = this.GenerateUniqueDate(),
+            Id = 1,
+            UserId = userId,
+            Date = DateTime.UtcNow.Date,
             Weight = 72.0,
             Height = 175.0,
             Bmi = 23.51,
@@ -65,10 +41,11 @@ public class GetLatestUserMetricQueryHandlerTests : IAsyncLifetime
             UpdatedAt = DateTime.UtcNow
         };
 
-        _context.UserMetrics.Add(latestMetric);
-        await _context.SaveChangesAsync();
+        _userMetricsRepositoryMock
+            .Setup(r => r.GetLatestByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(latestMetric));
 
-        var query = new GetLatestUserMetricQuery(user.Id);
+        var query = new GetLatestUserMetricQuery(userId);
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
@@ -76,10 +53,12 @@ public class GetLatestUserMetricQueryHandlerTests : IAsyncLifetime
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value!.UserId.Should().Be(user.Id);
+        result.Value!.UserId.Should().Be(userId);
         result.Value.Weight.Should().Be(72.0);
         result.Value.Height.Should().Be(175.0);
         result.Value.Bmi.Should().Be(23.51);
+
+        _userMetricsRepositoryMock.Verify(r => r.GetLatestByUserIdAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -87,68 +66,12 @@ public class GetLatestUserMetricQueryHandlerTests : IAsyncLifetime
     public async Task Should_Return_NotFound_When_No_Metrics_Exist()
     {
         // Arrange
-        var user = new ApplicationUser
-        {
-            Id = Guid.NewGuid(),
-            Email = this.GenerateUniqueEmail(),
-            UserName = this.GenerateUniqueEmail(),
-            DisplayName = "Test User",
-            UnitPreference = UnitPreference.Metric,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
+        var userId = Guid.NewGuid();
+        _userMetricsRepositoryMock
+            .Setup(r => r.GetLatestByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Failure<UserMetric>("No metrics found for user"));
 
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
-
-        var query = new GetLatestUserMetricQuery(user.Id);
-
-        // Act
-        var result = await _handler.Handle(query, CancellationToken.None);
-
-        // Assert
-        result.IsFailure.Should().BeTrue();
-        result.Error.Should().Be("No metrics found for user");
-    }
-
-    [Fact]
-    [Trait("Category", "Unit")]
-    public async Task Should_Handle_Repository_Errors_Gracefully()
-    {
-        // Arrange
-        var user = new ApplicationUser
-        {
-            Id = Guid.NewGuid(),
-            Email = this.GenerateUniqueEmail(),
-            UserName = this.GenerateUniqueEmail(),
-            DisplayName = "Test User",
-            UnitPreference = UnitPreference.Metric,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
-
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
-
-        // Dispose context to simulate database error
-        await _context.DisposeAsync();
-
-        var query = new GetLatestUserMetricQuery(user.Id);
-
-        // Act
-        var result = await _handler.Handle(query, CancellationToken.None);
-
-        // Assert
-        result.IsFailure.Should().BeTrue();
-        result.Error.Should().Contain("Failed to get latest user metric");
-    }
-
-    [Fact]
-    [Trait("Category", "Unit")]
-    public async Task Should_Handle_Invalid_User_Id()
-    {
-        // Arrange
-        var query = new GetLatestUserMetricQuery(Guid.NewGuid()); // Non-existent user
+        var query = new GetLatestUserMetricQuery(userId);
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);

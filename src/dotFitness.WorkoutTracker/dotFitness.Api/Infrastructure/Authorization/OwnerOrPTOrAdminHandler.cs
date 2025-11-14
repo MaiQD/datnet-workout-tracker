@@ -16,7 +16,7 @@ public class OwnerOrPTOrAdminHandler(UsersDbContext context, ISecurityAuditServi
     {
         var httpContext = context1.Resource as HttpContext;
         var currentUserId = context1.User.GetRequiredUserId();
-        var resourceUserId = GetResourceUserIdFromRoute(httpContext);
+        var resourceUserId = GetResourceUserIdFromRoute(httpContext!);
         var ipAddress = httpContext?.Connection.RemoteIpAddress?.ToString();
         var userAgent = httpContext?.Request.Headers.UserAgent.ToString();
 

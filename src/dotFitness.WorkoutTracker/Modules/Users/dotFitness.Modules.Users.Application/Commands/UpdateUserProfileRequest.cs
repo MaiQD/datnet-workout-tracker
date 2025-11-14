@@ -1,6 +1,6 @@
 using dotFitness.Modules.Users.Domain.Entities;
 
-namespace dotFitness.Modules.Users.Application.DTOs;
+namespace dotFitness.Modules.Users.Application.Commands;
 
 public class UpdateUserProfileRequest
 {

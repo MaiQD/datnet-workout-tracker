@@ -1,7 +1,6 @@
 using dotFitness.Modules.Users.Application.Commands;
 using dotFitness.Modules.Users.Domain.Entities;
 using dotFitness.Modules.Users.Infrastructure.Data;
-using dotFitness.Modules.Users.Infrastructure.Handlers;
 using dotFitness.Modules.Users.Infrastructure.Tests.Extensions;
 using dotFitness.Modules.Users.Infrastructure.Tests.Fixtures;
 using FluentAssertions;

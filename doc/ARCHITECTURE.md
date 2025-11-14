@@ -44,8 +44,8 @@ dotFitness implements a **Modular Monolith** architecture that combines the simp
 
 #### 3.2 Layered Concerns
 - Domain: Entities, Value Objects, Domain Events, Repository Interfaces
-- Application: Commands/Queries, Handlers, DTOs, Mappers, Validators
-- Infrastructure: Repository implementations, external services, handlers’ wiring
+- Application: Commands/Queries, Handlers, DTOs, Mappers, Validators, Service Interfaces
+- Infrastructure: Repository implementations, external services, service implementations
 - API: Controllers, filters/middleware, DI setup
 
 #### 3.3 Class Separation Guidelines
@@ -94,12 +94,12 @@ dotFitness.WorkoutTracker/
     │   ├── dotFitness.Modules.Users.Application/
     │   │   ├── Commands/             # Write operations
     │   │   ├── Queries/              # Read operations
+    │   │   ├── Handlers/             # Command/Query processors (Application layer)
     │   │   ├── DTOs/                 # Data transfer objects
     │   │   ├── Mappers/              # Domain ↔ DTO mapping
     │   │   ├── Validators/           # Input validation
-    │   │   └── Services/             # 🆕 Service interfaces (contracts)
+    │   │   └── Services/             # Service interfaces (contracts)
     │   ├── dotFitness.Modules.Users.Infrastructure/
-    │   │   ├── Handlers/             # Command/Query processors
     │   │   ├── Repositories/         # Data access implementations
     │   │   ├── Services/             # Service implementations
     │   │   └── Configuration/        # Module setup
@@ -293,27 +293,31 @@ public class GoogleAuthService : IGoogleAuthService  // Implements Application i
 - **Clean Testing**: Application layer can be tested with mocked services
 - **Proper Separation**: Business logic doesn't depend on technical implementation details
 
-### Infrastructure Layer (`*.Infrastructure`)
+### Application Layer (`*.Application`)
 ```csharp
-// Command/Query handlers
+// Command/Query handlers (Application layer)
 public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Result<UserDto>>
 {
     private readonly IUserRepository _userRepository;
-    private readonly IMediator _mediator;
+    private readonly IOutboxPublisher _outboxPublisher;
 
     public async Task<Result<UserDto>> Handle(CreateUserCommand request, CancellationToken cancellationToken)
     {
         // Business logic implementation
         var user = new User { /* ... */ };
-        await _userRepository.CreateAsync(user);
+        var result = await _userRepository.CreateAsync(user);
+        if (result.IsFailure) return Result.Failure<UserDto>(result.Error);
         
-        // Publish domain event
-        await _mediator.Publish(new UserCreatedEvent { UserId = user.Id });
+        // Publish domain event via outbox
+        await _outboxPublisher.PublishAsync(new UserCreatedEvent { UserId = user.Id });
         
-        return Result<UserDto>.Success(UserMapper.ToDto(user));
+        return Result.Success(UserMapper.ToDto(user));
     }
 }
+```
 
+### Infrastructure Layer (`*.Infrastructure`)
+```csharp
 // Repository implementations
 public class UserRepository : IUserRepository
 {
@@ -484,41 +488,101 @@ public async Task<Result<UserDto>> Handle(CreateUserCommand request)
 - Background processing for event delivery
 - Prevents data inconsistency
 
-#### Design Choice: Direct Collection Access vs Repository Abstraction
+#### Design Choice: Repository Pattern vs DbContext Interface
 
-For the Outbox pattern, we use `IMongoCollection<OutboxMessage>` directly instead of creating an `IOutboxRepository`:
+**Decision: Thin Repository Pattern**
 
+We chose the **thin repository pattern** over a DbContext interface approach for the following reasons:
+
+**Repository Pattern (Chosen Approach):**
 ```csharp
-// Current approach (recommended):
-public class UpdateUserProfileCommandHandler 
+// Application/Handlers/UpdateUserProfileCommandHandler.cs
+public class UpdateUserProfileCommandHandler
 {
-    private readonly IUserRepository _userRepository;           // Domain concept
-    private readonly IMongoCollection<OutboxMessage> _outboxCollection; // Infrastructure pattern
+    private readonly IUserRepository _userRepository;      // Domain interface
+    private readonly IOutboxPublisher _outboxPublisher;    // Application interface
+}
+
+// Infrastructure/Repositories/UserRepository.cs
+public class UserRepository : IUserRepository
+{
+    private readonly UsersDbContext _context;
+    // Thin wrapper - delegates to EF Core, no business logic
 }
 ```
 
-**Why direct collection access?**
+**Why Repository Pattern?**
 
-1. **Outbox is Infrastructure, Not Domain**: The Outbox pattern is a technical concern for reliable event delivery, not a domain concept that needs abstraction.
+1. **Clean Architecture Alignment**: Application layer depends on Domain interfaces, not Infrastructure. This maintains proper dependency inversion.
 
-2. **YAGNI Principle**: Outbox operations are simple INSERTs in command handlers. Creating a repository would be over-abstraction for such basic operations.
+2. **Testability**: Easy to mock repository interfaces in unit tests. Handlers can be tested without database dependencies.
 
-3. **Clear Intent**: Direct collection access makes it obvious this is infrastructure-level event storage, not domain logic.
+3. **Domain Encapsulation**: Repository methods express domain intent (`GetByGoogleIdAsync`, `GetByRoleAsync`) rather than exposing infrastructure concepts.
 
-4. **Performance**: No unnecessary abstraction overhead for simple operations.
+4. **Consistency**: Matches the pattern used in Exercises module (MongoDB repositories), providing architectural consistency across modules.
+
+5. **Future Flexibility**: Can add caching, logging, or swap implementations without changing handlers.
+
+6. **Thin Wrapper Principle**: Repository is a thin wrapper around DbContext - it delegates to EF Core without adding business logic, avoiding over-abstraction.
+
+**DbContext Interface Alternative (Considered but Rejected):**
+
+```csharp
+// Would expose EF Core concepts to Application layer
+public interface IUserDbContext
+{
+    DbSet<ApplicationUser> Users { get; }
+    DatabaseFacade Database { get; }
+}
+```
+
+**Why Not DbContext Interface?**
+
+1. **Leaks Infrastructure**: Application layer would know about `DbSet<T>` and `DatabaseFacade` (EF Core concepts).
+
+2. **Harder to Test**: Mocking `DbSet<T>` is complex compared to mocking repository interfaces.
+
+3. **Less Domain-Focused**: Interface exposes infrastructure details rather than domain operations.
+
+4. **Inconsistent**: Would differ from Exercises module pattern, creating architectural inconsistency.
+
+#### Design Choice: Outbox Pattern Abstraction
+
+For the Outbox pattern, we use different approaches based on the database:
+
+**MongoDB Modules (Exercises):**
+- Direct `IMongoCollection<OutboxMessage>` access (as documented above)
+
+**PostgreSQL Modules (Users):**
+- `IOutboxPublisher` interface in Application layer
+- Implementation in Infrastructure layer
+
+```csharp
+// Application/Services/IOutboxPublisher.cs
+public interface IOutboxPublisher
+{
+    Task PublishAsync<T>(T domainEvent, CancellationToken ct = default) where T : class;
+}
+
+// Application/Handlers/UpdateUserProfileCommandHandler.cs
+public class UpdateUserProfileCommandHandler
+{
+    private readonly IUserRepository _userRepository;      // Domain concept
+    private readonly IOutboxPublisher _outboxPublisher;    // Application abstraction
+}
+```
+
+**Why IOutboxPublisher for PostgreSQL?**
+
+1. **Clean Architecture**: Prevents leaking `UsersDbContext` into Application layer
+2. **Testability**: Easy to mock for handler unit tests
+3. **Consistency**: Maintains same abstraction level as repositories
+4. **Future Flexibility**: Can swap implementation or add features without changing handlers
 
 **When to use Repository Pattern vs Direct Access:**
-- **Repository Pattern**: For domain entities (User, Exercise) with complex queries and business logic
-- **Direct Collection Access**: For infrastructure patterns (Outbox, Inbox) with simple CRUD operations
-
-**Alternative considered**: An `IEventDispatcher` abstraction could provide better testability while maintaining simplicity:
-```csharp
-public interface IEventDispatcher
-{
-    Task DispatchAsync<T>(T domainEvent) where T : class;
-}
-```
-This remains a valid option for future refactoring if enhanced testability is needed.
+- **Repository Pattern**: For domain entities (User, Exercise, UserMetric) with complex queries and business logic
+- **IOutboxPublisher**: For outbox operations in PostgreSQL modules (maintains Clean Architecture)
+- **Direct Collection Access**: For outbox operations in MongoDB modules (simple CRUD, no abstraction needed)
 
 ### 4. **Static Mappers**
 ```csharp

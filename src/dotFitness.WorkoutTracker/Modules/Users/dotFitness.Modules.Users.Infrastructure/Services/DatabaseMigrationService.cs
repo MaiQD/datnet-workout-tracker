@@ -10,38 +10,28 @@ namespace dotFitness.Modules.Users.Infrastructure.Services;
 /// <summary>
 /// Background service that automatically applies EF Core migrations for the Users module
 /// </summary>
-public class DatabaseMigrationService : IHostedService
+public class DatabaseMigrationService(
+    IServiceProvider serviceProvider,
+    ILogger<DatabaseMigrationService> logger,
+    IConfiguration configuration)
+    : IHostedService
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<DatabaseMigrationService> _logger;
-    private readonly IConfiguration _configuration;
-
-    public DatabaseMigrationService(
-        IServiceProvider serviceProvider,
-        ILogger<DatabaseMigrationService> logger,
-        IConfiguration configuration)
-    {
-        _serviceProvider = serviceProvider;
-        _logger = logger;
-        _configuration = configuration;
-    }
-
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         // Check if auto-migration is enabled
-        var autoMigrateEnabled = _configuration.GetValue<bool>("Database:AutoMigrate", defaultValue: true);
+        var autoMigrateEnabled = configuration.GetValue<bool>("Database:AutoMigrate", defaultValue: true);
         
         if (!autoMigrateEnabled)
         {
-            _logger.LogInformation("Auto-migration is disabled for Users module");
+            logger.LogInformation("Auto-migration is disabled for Users module");
             return;
         }
 
-        _logger.LogInformation("Starting Users module database migration service...");
+        logger.LogInformation("Starting Users module database migration service...");
 
         try
         {
-            using var scope = _serviceProvider.CreateScope();
+            using var scope = serviceProvider.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<UsersDbContext>();
 
             // Wait for database to be ready (useful when using Docker/Aspire)
@@ -55,13 +45,13 @@ public class DatabaseMigrationService : IHostedService
                     var canConnect = await context.Database.CanConnectAsync(cancellationToken);
                     if (canConnect)
                     {
-                        _logger.LogInformation("Users module database connection established");
+                        logger.LogInformation("Users module database connection established");
                         break;
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogDebug("Database connection attempt {Attempt}/{MaxAttempts} failed: {Error}", 
+                    logger.LogDebug("Database connection attempt {Attempt}/{MaxAttempts} failed: {Error}", 
                         retryCount + 1, maxRetries, ex.Message);
                 }
 
@@ -80,38 +70,38 @@ public class DatabaseMigrationService : IHostedService
 
             if (pendingMigrationsList.Any())
             {
-                _logger.LogInformation("Found {Count} pending migrations for Users module: {Migrations}", 
+                logger.LogInformation("Found {Count} pending migrations for Users module: {Migrations}", 
                     pendingMigrationsList.Count, 
                     string.Join(", ", pendingMigrationsList));
 
                 // Apply pending migrations
                 await context.Database.MigrateAsync(cancellationToken);
                 
-                _logger.LogInformation("Successfully applied {Count} migrations for Users module", 
+                logger.LogInformation("Successfully applied {Count} migrations for Users module", 
                     pendingMigrationsList.Count);
             }
             else
             {
-                _logger.LogInformation("No pending migrations found for Users module");
+                logger.LogInformation("No pending migrations found for Users module");
             }
 
             // Final verification
             var finalCanConnect = await context.Database.CanConnectAsync(cancellationToken);
             if (finalCanConnect)
             {
-                _logger.LogInformation("Users module database migration service completed successfully");
+                logger.LogInformation("Users module database migration service completed successfully");
             }
             else
             {
-                _logger.LogWarning("Users module database connection verification failed after migration");
+                logger.LogWarning("Users module database connection verification failed after migration");
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to apply migrations for Users module: {ErrorMessage}", ex.Message);
+            logger.LogError(ex, "Failed to apply migrations for Users module: {ErrorMessage}", ex.Message);
             
             // In development, we might want to fail fast, but in production, we might want to continue
-            var failOnMigrationError = _configuration.GetValue<bool>("Database:FailOnMigrationError", defaultValue: true);
+            var failOnMigrationError = configuration.GetValue<bool>("Database:FailOnMigrationError", defaultValue: true);
             if (failOnMigrationError)
             {
                 throw; // Re-throw to fail fast if database migration fails
@@ -121,7 +111,7 @@ public class DatabaseMigrationService : IHostedService
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Stopping Users module database migration service...");
+        logger.LogInformation("Stopping Users module database migration service...");
         return Task.CompletedTask;
     }
 }

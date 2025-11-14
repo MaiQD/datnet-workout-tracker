@@ -62,7 +62,6 @@ public class SecurityAuditService : ISecurityAuditService
         string? userAgent = null)
     {
         var logLevel = LogLevel.Information;
-        var eventType = SecurityEventTypes.ResourceAccessAttempt;
 
         _logger.Log(logLevel,
             "Resource access: User {UserId} performed {Action} on {ResourceType} {ResourceId}. IP: {IpAddress}, UserAgent: {UserAgent}",

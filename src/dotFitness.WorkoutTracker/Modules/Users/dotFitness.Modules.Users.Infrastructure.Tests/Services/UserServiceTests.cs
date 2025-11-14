@@ -1,8 +1,8 @@
 using dotFitness.Modules.Users.Application.Services;
+using dotFitness.Modules.Users.Application.Settings;
 using dotFitness.Modules.Users.Domain.Entities;
 using dotFitness.Modules.Users.Infrastructure.Data;
 using dotFitness.Modules.Users.Infrastructure.Services;
-using dotFitness.Modules.Users.Infrastructure.Settings;
 using dotFitness.Modules.Users.Infrastructure.Tests.Extensions;
 using dotFitness.Modules.Users.Infrastructure.Tests.Fixtures;
 using FluentAssertions;
