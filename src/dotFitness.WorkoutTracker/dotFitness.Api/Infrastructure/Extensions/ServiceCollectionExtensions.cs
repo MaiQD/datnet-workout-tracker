@@ -4,7 +4,7 @@ using FluentValidation.AspNetCore;
 using dotFitness.Api.Infrastructure.Settings;
 using dotFitness.Api.Infrastructure.Swagger;
 using dotFitness.Api.Infrastructure.Services;
-using dotFitness.Bootstrap;
+using dotFitness.Common.Configuration;
 using Microsoft.Extensions.Options;
 
 namespace dotFitness.Api.Infrastructure.Extensions;
@@ -156,7 +156,7 @@ public static class ServiceCollectionExtensions
         
         // Get all module configuration validators for validation
         var serviceProvider = services.BuildServiceProvider();
-        var moduleValidators = serviceProvider.GetServices<dotFitness.SharedKernel.Configuration.IModuleConfigurationValidator>();
+        var moduleValidators = serviceProvider.GetServices<IModuleConfigurationValidator>();
         
         // Validate module configuration using discovered validators
         var configurationValidation = ModuleConfigurationValidator.ValidateModuleConfiguration(configuration, logger, moduleValidators);

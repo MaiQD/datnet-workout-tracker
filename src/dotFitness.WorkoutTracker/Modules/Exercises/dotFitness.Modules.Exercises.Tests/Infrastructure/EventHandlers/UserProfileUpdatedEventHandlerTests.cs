@@ -1,12 +1,12 @@
+using dotFitness.Common.Events;
+using dotFitness.Common.Inbox;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using Moq;
 using dotFitness.Modules.Exercises.Domain.Entities;
 using dotFitness.Modules.Exercises.Infrastructure.EventHandlers;
-using dotFitness.SharedKernel.Events;
-using dotFitness.SharedKernel.Inbox;
-using dotFitness.SharedKernel.Tests.MongoDB;
+using dotFitness.Common.Tests.MongoDB;
 
 namespace dotFitness.Modules.Exercises.Tests.Infrastructure.EventHandlers;
 
@@ -37,8 +37,9 @@ public class UserProfileUpdatedEventHandlerTests : IClassFixture<MongoDbFixture>
     public async Task Should_Handle_UserProfileUpdatedEvent_Successfully()
     {
         // Arrange
+        var userId = Guid.NewGuid();
         var userProfileUpdatedEvent = new UserProfileUpdatedEvent(
-            userId: 123,
+            userId: userId,
             displayName: "Updated User",
             gender: "Male",
             dateOfBirth: new DateTime(1990, 1, 1),
@@ -78,8 +79,9 @@ public class UserProfileUpdatedEventHandlerTests : IClassFixture<MongoDbFixture>
     public async Task Should_Skip_Processing_When_Event_Already_Processed()
     {
         // Arrange
+        var userId = Guid.NewGuid();
         var userProfileUpdatedEvent = new UserProfileUpdatedEvent(
-            userId: 456,
+            userId: userId,
             displayName: "Test User",
             gender: "Female",
             dateOfBirth: new DateTime(1985, 5, 5),
@@ -127,7 +129,7 @@ public class UserProfileUpdatedEventHandlerTests : IClassFixture<MongoDbFixture>
     public async Task Should_Update_Existing_User_Preferences_Projection()
     {
         // Arrange
-        var userId = 789;
+        var userId = Guid.NewGuid();
         var existingPreferences = new UserPreferencesProjection
         {
             UserId = userId,
@@ -172,8 +174,9 @@ public class UserProfileUpdatedEventHandlerTests : IClassFixture<MongoDbFixture>
     public async Task Should_Handle_Errors_And_Mark_Inbox_As_Failed()
     {
         // Arrange
+        var userId = Guid.NewGuid();
         var userProfileUpdatedEvent = new UserProfileUpdatedEvent(
-            userId: 999,
+            userId: userId,
             displayName: "Error User",
             gender: "Male",
             dateOfBirth: new DateTime(1980, 1, 1),
@@ -220,12 +223,13 @@ public class UserProfileUpdatedEventHandlerTests : IClassFixture<MongoDbFixture>
     }
 
     [Theory]
-    [InlineData(100, "John Doe", "Male", "Imperial")]
-    [InlineData(200, "Jane Smith", "Female", "Metric")]
-    [InlineData(300, "Alex Johnson", null, "Imperial")]
-    public async Task Should_Handle_Various_User_Profile_Data(int userId, string displayName, string? gender, string unitPreference)
+    [InlineData("10000000-0000-0000-0000-000000000100", "John Doe", "Male", "Imperial")]
+    [InlineData("20000000-0000-0000-0000-000000000200", "Jane Smith", "Female", "Metric")]
+    [InlineData("30000000-0000-0000-0000-000000000300", "Alex Johnson", null, "Imperial")]
+    public async Task Should_Handle_Various_User_Profile_Data(string userIdStr, string displayName, string? gender, string unitPreference)
     {
         // Arrange
+        var userId = Guid.Parse(userIdStr);
         var userProfileUpdatedEvent = new UserProfileUpdatedEvent(
             userId: userId,
             displayName: displayName,

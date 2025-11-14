@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using Moq;
 using dotFitness.Modules.Users.Application.Commands;
 using dotFitness.Modules.Users.Application.DTOs;
-using dotFitness.Modules.Users.Application.Mappers;
 using dotFitness.Modules.Users.Domain.Entities;
 using dotFitness.Modules.Users.Infrastructure.Data;
 using dotFitness.Modules.Users.Infrastructure.Handlers;
@@ -42,9 +41,11 @@ public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
     public async Task Should_Handle_Valid_Command_Successfully()
     {
         // Arrange
-        var existingUser = new User
+        var existingUser = new ApplicationUser
         {
+            Id = Guid.NewGuid(),
             Email = this.GenerateUniqueEmail(),
+            UserName = this.GenerateUniqueEmail(),
             DisplayName = "Original Name",
             Gender = Gender.Female,
             DateOfBirth = new DateTime(1985, 5, 5),
@@ -99,7 +100,7 @@ public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
     {
         // Arrange
         var command = new UpdateUserProfileCommand(
-            this.GenerateUniqueUserId(), // Non-existent user ID
+            Guid.NewGuid(), // Non-existent user ID
             new UpdateUserProfileRequest
             {
                 DisplayName = "New Name",
@@ -126,9 +127,11 @@ public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
     public async Task Should_Handle_Repository_Update_Errors_Gracefully()
     {
         // Arrange
-        var existingUser = new User
+        var existingUser = new ApplicationUser
         {
+            Id = Guid.NewGuid(),
             Email = this.GenerateUniqueEmail(),
+            UserName = this.GenerateUniqueEmail(),
             DisplayName = "Original Name",
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
@@ -164,7 +167,7 @@ public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
     public async Task Should_Update_Only_Provided_Fields()
     {
         // Arrange
-        var existingUser = new User
+        var existingUser = new ApplicationUser()
         {
             Email = this.GenerateUniqueEmail(),
             DisplayName = "Original Name",
@@ -215,9 +218,11 @@ public class UpdateUserProfileCommandHandlerTests : IAsyncLifetime
     public async Task Should_Not_Update_Display_Name_When_Invalid(string? invalidDisplayName)
     {
         // Arrange
-        var existingUser = new User
+        var existingUser = new ApplicationUser
         {
+            Id = Guid.NewGuid(),
             Email = this.GenerateUniqueEmail(),
+            UserName = this.GenerateUniqueEmail(),
             DisplayName = "Original Name",
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow

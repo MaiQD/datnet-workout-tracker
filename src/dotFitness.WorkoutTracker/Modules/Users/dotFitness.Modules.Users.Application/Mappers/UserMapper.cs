@@ -7,13 +7,15 @@ namespace dotFitness.Modules.Users.Application.Mappers;
 [Mapper]
 public static partial class UserMapper
 {
-    [MapperIgnoreSource(nameof(User.IsAdmin))]
-    [MapperIgnoreSource(nameof(User.IsOnboarded))]
-    [MapperIgnoreSource(nameof(User.OnboardingCompletedAt))]
-    [MapperIgnoreSource(nameof(User.AvailableEquipmentIds))]
-    [MapperIgnoreSource(nameof(User.FocusMuscleGroupIds))]
-    public static partial UserDto ToDto(User user);
-    public static partial IEnumerable<UserDto> ToDto(IEnumerable<User> users);
+    [MapperIgnoreSource(nameof(ApplicationUser.IsOnboarded))]
+    [MapperIgnoreSource(nameof(ApplicationUser.OnboardingCompletedAt))]
+    [MapperIgnoreSource(nameof(ApplicationUser.AvailableEquipmentIds))]
+    [MapperIgnoreSource(nameof(ApplicationUser.FocusMuscleGroupIds))]
+    [MapperIgnoreSource(nameof(ApplicationUser.AssignedPtId))]
+    [MapperIgnoreSource(nameof(ApplicationUser.AssignedPt))]
+    [MapperIgnoreSource(nameof(ApplicationUser.Clients))]
+    public static partial UserDto ToDto(ApplicationUser user);
+    public static partial IEnumerable<UserDto> ToDto(IEnumerable<ApplicationUser> users);
     
     // Custom mapping for enum conversions
     private static string MapLoginMethod(LoginMethod loginMethod) => loginMethod.ToString();

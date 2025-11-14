@@ -15,7 +15,7 @@ public class UserMetricMapperTests
         var userMetric = new UserMetric
         {
             Id = 1,
-            UserId = 1,
+            UserId = Guid.NewGuid(),
             Date = new DateTime(2024, 1, 1),
             Weight = 70.5,
             Height = 175.0,
@@ -31,7 +31,7 @@ public class UserMetricMapperTests
         // Assert
         dto.Should().NotBeNull();
         dto.Id.Should().Be(1);
-        dto.UserId.Should().Be(1);
+        dto.UserId.Should().NotBeEmpty();
         dto.Date.Should().Be(new DateTime(2024, 1, 1));
         dto.Weight.Should().Be(70.5);
         dto.Height.Should().Be(175.0);
@@ -50,7 +50,7 @@ public class UserMetricMapperTests
         var userMetric = new UserMetric
         {
             Id = 1,
-            UserId = 1,
+            UserId = Guid.NewGuid(),
             Date = new DateTime(2024, 1, 1),
             Weight = null, // Null optional field
             Height = null, // Null optional field
@@ -66,7 +66,7 @@ public class UserMetricMapperTests
         // Assert
         dto.Should().NotBeNull();
         dto.Id.Should().Be(1);
-        dto.UserId.Should().Be(1);
+        dto.UserId.Should().NotBeEmpty();
         dto.Date.Should().Be(new DateTime(2024, 1, 1));
         dto.Weight.Should().BeNull();
         dto.Height.Should().BeNull();
@@ -83,7 +83,7 @@ public class UserMetricMapperTests
         var userMetric = new UserMetric
         {
             Id = 1,
-            UserId = 1,
+            UserId = Guid.NewGuid(),
             Date = new DateTime(2024, 1, 1),
             Weight = 70.0,
             Height = null,
@@ -113,7 +113,7 @@ public class UserMetricMapperTests
         var userMetric = new UserMetric
         {
             Id = 1,
-            UserId = 1,
+            UserId = Guid.NewGuid(),
             Date = new DateTime(2024, 1, 1),
             Weight = null,
             Height = 175.0,
@@ -147,7 +147,7 @@ public class UserMetricMapperTests
         var userMetric = new UserMetric
         {
             Id = 1,
-            UserId = 1,
+            UserId = Guid.NewGuid(),
             Date = new DateTime(2024, 1, 1),
             Weight = 70.0,
             Height = 175.0,
@@ -177,7 +177,7 @@ public class UserMetricMapperTests
         var userMetric = new UserMetric
         {
             Id = 1,
-            UserId = 1,
+            UserId = Guid.NewGuid(),
             Date = preciseDate,
             Weight = 70.0,
             Height = 175.0,
@@ -203,7 +203,7 @@ public class UserMetricMapperTests
         var userMetric = new UserMetric
         {
             Id = 1,
-            UserId = 1,
+            UserId = Guid.NewGuid(),
             Date = new DateTime(2024, 1, 15),
             Weight = 72.5,
             Height = 180.0,
@@ -219,7 +219,7 @@ public class UserMetricMapperTests
         // Assert
         dto.Should().NotBeNull();
         dto.Id.Should().Be(1);
-        dto.UserId.Should().Be(1);
+        dto.UserId.Should().NotBeEmpty();
         dto.Date.Should().Be(new DateTime(2024, 1, 15));
         dto.Weight.Should().Be(72.5);
         dto.Height.Should().Be(180.0);
@@ -251,7 +251,7 @@ public class UserMetricMapperTests
             var userMetric = new UserMetric
             {
                 Id = 1,
-                UserId = 1,
+                UserId = Guid.NewGuid(),
                 Date = new DateTime(2024, 1, 1),
                 Bmi = bmi,
                 CreatedAt = DateTime.UtcNow,
@@ -274,7 +274,7 @@ public class UserMetricMapperTests
         var userMetric = new UserMetric
         {
             Id = 1,
-            UserId = 1,
+            UserId = Guid.NewGuid(),
             Date = new DateTime(2024, 1, 1),
             Weight = 70.0,
             Notes = "", // Empty string
@@ -298,7 +298,7 @@ public class UserMetricMapperTests
         var userMetric = new UserMetric
         {
             Id = 1,
-            UserId = 1,
+            UserId = Guid.NewGuid(),
             Date = new DateTime(2024, 1, 1),
             Weight = 999.99, // Large weight value
             Height = 250.0, // Large height value

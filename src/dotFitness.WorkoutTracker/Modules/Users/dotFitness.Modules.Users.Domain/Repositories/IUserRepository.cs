@@ -1,19 +1,19 @@
+using dotFitness.Common.Results;
 using dotFitness.Modules.Users.Domain.Entities;
-using dotFitness.SharedKernel.Results;
 
 namespace dotFitness.Modules.Users.Domain.Repositories;
 
 public interface IUserRepository
 {
-    Task<Result<User>> GetByIdAsync(int id, CancellationToken cancellationToken = default);
-    Task<Result<User>> GetByEmailAsync(string email, CancellationToken cancellationToken = default);
-    Task<Result<User>> GetByGoogleIdAsync(string googleId, CancellationToken cancellationToken = default);
-    Task<Result<User>> CreateAsync(User user, CancellationToken cancellationToken = default);
-    Task<Result<User>> UpdateAsync(User user, CancellationToken cancellationToken = default);
-    Task<Result> DeleteAsync(int id, CancellationToken cancellationToken = default);
-    Task<Result<bool>> ExistsAsync(int id, CancellationToken cancellationToken = default);
+    Task<Result<ApplicationUser>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<Result<ApplicationUser>> GetByEmailAsync(string email, CancellationToken cancellationToken = default);
+    Task<Result<ApplicationUser>> GetByGoogleIdAsync(string googleId, CancellationToken cancellationToken = default);
+    Task<Result<ApplicationUser>> CreateAsync(ApplicationUser user, CancellationToken cancellationToken = default);
+    Task<Result<ApplicationUser>> UpdateAsync(ApplicationUser user, CancellationToken cancellationToken = default);
+    Task<Result> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<Result<bool>> ExistsAsync(Guid id, CancellationToken cancellationToken = default);
     Task<Result<bool>> EmailExistsAsync(string email, CancellationToken cancellationToken = default);
-    Task<Result<IEnumerable<User>>> GetAllAsync(int skip = 0, int take = 50, CancellationToken cancellationToken = default);
+    Task<Result<IEnumerable<ApplicationUser>>> GetAllAsync(int skip = 0, int take = 50, CancellationToken cancellationToken = default);
     Task<Result<long>> GetCountAsync(CancellationToken cancellationToken = default);
-    Task<Result<IEnumerable<User>>> GetByRoleAsync(string role, CancellationToken cancellationToken = default);
+    Task<Result<IEnumerable<ApplicationUser>>> GetByRoleAsync(string role, CancellationToken cancellationToken = default);
 }

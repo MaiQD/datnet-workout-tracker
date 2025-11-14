@@ -14,6 +14,7 @@
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
     <PackageReference Include="Moq" />
     <PackageReference Include="FluentAssertions" />
     <PackageReference Include="MediatR" />
@@ -27,7 +28,7 @@
     <ProjectReference Include="..\dotFitness.Api\dotFitness.Api.csproj" />
     <ProjectReference Include="..\Modules\Exercises\dotFitness.Modules.Exercises.Application\dotFitness.Modules.Exercises.Application.csproj" />
     <ProjectReference Include="..\Modules\Users\dotFitness.Modules.Users.Application\dotFitness.Modules.Users.Application.csproj" />
-    <ProjectReference Include="..\dotFitness.SharedKernel\dotFitness.SharedKernel.csproj" />
+    <ProjectReference Include="..\dotFitness.Common\dotFitness.Common.csproj" />
   </ItemGroup>
 
 </Project>

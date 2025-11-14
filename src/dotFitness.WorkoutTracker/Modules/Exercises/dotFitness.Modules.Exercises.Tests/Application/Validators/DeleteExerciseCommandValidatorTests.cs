@@ -12,7 +12,7 @@ public class DeleteExerciseCommandValidatorTests
     [Trait("Category", "Unit")]
     public void Should_Pass_For_Valid_Command()
     {
-        var command = new DeleteExerciseCommand(ExerciseId: "ex1", UserId: 1);
+        var command = new DeleteExerciseCommand(ExerciseId: "ex1", UserId: Guid.NewGuid());
         var result = _validator.TestValidate(command);
         result.ShouldNotHaveAnyValidationErrors();
     }
@@ -21,7 +21,7 @@ public class DeleteExerciseCommandValidatorTests
     [Trait("Category", "Unit")]
     public void Should_Fail_When_ExerciseId_Missing()
     {
-        var command = new DeleteExerciseCommand(ExerciseId: "", UserId: 1);
+        var command = new DeleteExerciseCommand(ExerciseId: "", UserId: Guid.NewGuid());
         var result = _validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.ExerciseId)
             .WithErrorMessage("Exercise ID is required");
@@ -31,7 +31,7 @@ public class DeleteExerciseCommandValidatorTests
     [Trait("Category", "Unit")]
     public void Should_Fail_When_UserId_Missing()
     {
-        var command = new DeleteExerciseCommand(ExerciseId: "ex1", UserId: 0);
+        var command = new DeleteExerciseCommand(ExerciseId: "ex1", UserId: Guid.Empty);
         var result = _validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.UserId)
             .WithErrorMessage("User ID is required");

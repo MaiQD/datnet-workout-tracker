@@ -4,9 +4,9 @@ using Moq;
 using MediatR;
 using FluentAssertions;
 using dotFitness.Api.Controllers;
+using dotFitness.Common.Results;
 using dotFitness.Modules.Users.Application.Commands;
 using dotFitness.Modules.Users.Application.DTOs;
-using dotFitness.SharedKernel.Results;
 
 namespace dotFitness.Api.Tests.Controllers;
 
@@ -31,11 +31,12 @@ public class AuthControllerTests
         var fixedDate = new DateTime(2024, 1, 15, 10, 30, 0, DateTimeKind.Utc);
         var loginResponse = new LoginResponseDto
         {
-            Token = "jwt-token",
-            UserId = 1,
+            AccessToken = "jwt-token",
+            RefreshToken = "jwt-refresh-token",
+            UserId = Guid.NewGuid(),
             Email = "test@example.com",
             DisplayName = "Test User",
-            ExpiresAt = fixedDate.AddHours(1)
+            ExpiresIn = 60
         };
 
         _mediatorMock

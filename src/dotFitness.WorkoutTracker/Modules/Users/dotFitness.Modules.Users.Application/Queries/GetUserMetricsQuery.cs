@@ -1,7 +1,7 @@
 using MediatR;
 using dotFitness.Modules.Users.Application.DTOs;
-using dotFitness.SharedKernel.Results;
 using System.ComponentModel.DataAnnotations;
+using dotFitness.Common.Results;
 
 namespace dotFitness.Modules.Users.Application.Queries;
 
@@ -12,14 +12,14 @@ public class GetUserMetricsQuery : IRequest<Result<IEnumerable<UserMetricDto>>>
         
     }
 
-    public GetUserMetricsQuery(int userId, DateTime? fromDate, DateTime? toDate)
+    public GetUserMetricsQuery(Guid userId, DateTime? fromDate, DateTime? toDate)
     {
         UserId = userId;
         StartDate = fromDate;
         EndDate = toDate;
     }
     [Required]
-    public int UserId { get; set; }
+    public Guid UserId { get; set; }
     
     [Range(0, int.MaxValue)]
     public int Skip { get; set; } = 0;

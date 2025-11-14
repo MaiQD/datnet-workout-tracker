@@ -1,4 +1,4 @@
-using dotFitness.SharedKernel.Tests.PostgreSQL;
+using dotFitness.Common.Tests.PostgreSQL;
 
 namespace dotFitness.Modules.Users.Tests.Infrastructure.Extensions;
 

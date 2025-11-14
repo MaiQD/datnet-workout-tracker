@@ -1,6 +1,6 @@
+using dotFitness.Common.Inbox;
 using MongoDB.Driver;
 using dotFitness.Modules.Exercises.Domain.Entities;
-using dotFitness.SharedKernel.Inbox;
 
 namespace dotFitness.Modules.Exercises.Infrastructure.Configuration;
 

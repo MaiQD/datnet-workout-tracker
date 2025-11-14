@@ -1,4 +1,4 @@
-using dotFitness.SharedKernel.Configuration;
+using dotFitness.Common.Configuration;
 
 namespace dotFitness.Api.Infrastructure;
 

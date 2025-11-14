@@ -1,3 +1,6 @@
+using dotFitness.Common.Configuration;
+using dotFitness.Common.Events;
+using dotFitness.Common.Inbox;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
@@ -7,8 +10,6 @@ using dotFitness.Modules.Exercises.Domain.Repositories;
 using dotFitness.Modules.Exercises.Infrastructure.Repositories;
 using dotFitness.Modules.Exercises.Infrastructure.HealthChecks;
 using dotFitness.Modules.Exercises.Infrastructure.EventHandlers;
-using dotFitness.SharedKernel.Inbox;
-using dotFitness.SharedKernel.Events;
 
 namespace dotFitness.Modules.Exercises.Infrastructure.Configuration;
 
@@ -70,7 +71,7 @@ public class ExercisesModuleInstaller : IModuleInstaller
             .AddCheck<ExercisesModuleHealthCheck>("exercises-module", tags: ["module", "exercises", "live"]);
 
         // Register Exercises module configuration validator
-        services.AddScoped<dotFitness.SharedKernel.Configuration.IModuleConfigurationValidator, ExercisesConfigurationValidator>();
+        services.AddScoped<IModuleConfigurationValidator, ExercisesConfigurationValidator>();
     }
 
     public void ConfigureIndexes(IMongoDatabase database)

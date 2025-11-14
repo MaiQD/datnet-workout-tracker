@@ -1,6 +1,6 @@
+using dotFitness.Common.Results;
 using dotFitness.Modules.Exercises.Domain.Entities;
 using dotFitness.Modules.Exercises.Domain.Repositories;
-using dotFitness.SharedKernel.Results;
 using MongoDB.Driver;
 
 namespace dotFitness.Modules.Exercises.Infrastructure.Repositories;
@@ -14,7 +14,7 @@ public class UserPreferencesProjectionRepository : IUserPreferencesProjectionRep
         _collection = database.GetCollection<UserPreferencesProjection>("userPreferencesProjections");
     }
 
-    public async Task<Result<UserPreferencesProjection?>> GetByUserIdAsync(int userId,
+    public async Task<Result<UserPreferencesProjection?>> GetByUserIdAsync(Guid userId,
         CancellationToken cancellationToken = default)
     {
         try

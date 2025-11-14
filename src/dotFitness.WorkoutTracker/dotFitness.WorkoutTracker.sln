@@ -5,7 +5,7 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotFitness.Api", "dotFitness.Api\dotFitness.Api.csproj", "{FCCD531C-E433-48A1-9E3F-900CDDFEB14C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotFitness.SharedKernel", "dotFitness.SharedKernel\dotFitness.SharedKernel.csproj", "{93F75A53-C781-41D1-A7C6-399BB5DE21C9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotFitness.Common", "dotFitness.Common\dotFitness.Common.csproj", "{93F75A53-C781-41D1-A7C6-399BB5DE21C9}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Modules", "Modules", "{F78FF002-6272-47DD-AACE-5081AAF688D6}"
 EndProject
@@ -29,9 +29,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotFitness.Modules.Exercise
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotFitness.Modules.Exercises.Tests", "Modules\Exercises\dotFitness.Modules.Exercises.Tests\dotFitness.Modules.Exercises.Tests.csproj", "{EB0218FD-88CE-43AA-B172-85EFD4D25917}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotFitness.SharedKernel.Tests", "dotFitness.SharedKernel.Tests\dotFitness.SharedKernel.Tests.csproj", "{2837B3EE-381F-4FC5-8C69-FD5513BD40F4}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotFitness.Bootstrap", "dotFitness.Bootstrap\dotFitness.Bootstrap.csproj", "{4D4EE0CA-137C-4ACA-91DF-54D611A1F6D8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotFitness.Common.Tests", "dotFitness.Common.Tests\dotFitness.Common.Tests.csproj", "{2837B3EE-381F-4FC5-8C69-FD5513BD40F4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotFitness.ModuleContracts", "dotFitness.ModuleContracts\dotFitness.ModuleContracts.csproj", "{D546E85B-1DD9-45FA-AD31-74497A46D3CC}"
 EndProject
@@ -40,6 +38,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotFitness.Aspire.ServiceDefaults", "dotFitness.Aspire.ServiceDefaults\dotFitness.Aspire.ServiceDefaults.csproj", "{89948BD5-8D7E-4DA8-BAC5-3D4B992C31A6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotFitness.Api.Tests", "dotFitness.Api.Tests\dotFitness.Api.Tests.csproj", "{0EEA619B-0323-4E6F-A936-49E97686259C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{FBCA8E28-1441-482B-893D-587C463D5BD1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -183,18 +183,6 @@ Global
 		{2837B3EE-381F-4FC5-8C69-FD5513BD40F4}.Release|x64.Build.0 = Release|Any CPU
 		{2837B3EE-381F-4FC5-8C69-FD5513BD40F4}.Release|x86.ActiveCfg = Release|Any CPU
 		{2837B3EE-381F-4FC5-8C69-FD5513BD40F4}.Release|x86.Build.0 = Release|Any CPU
-		{4D4EE0CA-137C-4ACA-91DF-54D611A1F6D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4D4EE0CA-137C-4ACA-91DF-54D611A1F6D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4D4EE0CA-137C-4ACA-91DF-54D611A1F6D8}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{4D4EE0CA-137C-4ACA-91DF-54D611A1F6D8}.Debug|x64.Build.0 = Debug|Any CPU
-		{4D4EE0CA-137C-4ACA-91DF-54D611A1F6D8}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{4D4EE0CA-137C-4ACA-91DF-54D611A1F6D8}.Debug|x86.Build.0 = Debug|Any CPU
-		{4D4EE0CA-137C-4ACA-91DF-54D611A1F6D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4D4EE0CA-137C-4ACA-91DF-54D611A1F6D8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4D4EE0CA-137C-4ACA-91DF-54D611A1F6D8}.Release|x64.ActiveCfg = Release|Any CPU
-		{4D4EE0CA-137C-4ACA-91DF-54D611A1F6D8}.Release|x64.Build.0 = Release|Any CPU
-		{4D4EE0CA-137C-4ACA-91DF-54D611A1F6D8}.Release|x86.ActiveCfg = Release|Any CPU
-		{4D4EE0CA-137C-4ACA-91DF-54D611A1F6D8}.Release|x86.Build.0 = Release|Any CPU
 		{D546E85B-1DD9-45FA-AD31-74497A46D3CC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D546E85B-1DD9-45FA-AD31-74497A46D3CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D546E85B-1DD9-45FA-AD31-74497A46D3CC}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -258,5 +246,6 @@ Global
 		{798E0F95-F4A0-48B8-9155-F454856A79FB} = {D9186E60-88DD-48E4-8508-FCE2FEFF32AF}
 		{16571D40-6414-4EC1-B2DD-052B806035C3} = {D9186E60-88DD-48E4-8508-FCE2FEFF32AF}
 		{EB0218FD-88CE-43AA-B172-85EFD4D25917} = {D9186E60-88DD-48E4-8508-FCE2FEFF32AF}
+		{93F75A53-C781-41D1-A7C6-399BB5DE21C9} = {FBCA8E28-1441-482B-893D-587C463D5BD1}
 	EndGlobalSection
 EndGlobal

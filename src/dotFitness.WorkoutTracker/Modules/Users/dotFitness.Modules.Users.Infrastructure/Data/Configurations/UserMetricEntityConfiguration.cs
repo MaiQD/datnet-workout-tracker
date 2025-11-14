@@ -22,10 +22,10 @@ public class UserMetricEntityConfiguration : IEntityTypeConfiguration<UserMetric
             .ValueGeneratedOnAdd()
             .IsRequired();
 
-        // User ID foreign key
+        // User ID foreign key - changed to Guid
         builder.Property(um => um.UserId)
             .HasColumnName("UserId")
-            .HasColumnType("integer")
+            .HasColumnType("uuid")
             .IsRequired();
 
         // Create index on UserId for performance

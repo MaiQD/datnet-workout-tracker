@@ -1,5 +1,3 @@
-using dotFitness.Bootstrap;
-
 namespace dotFitness.Api.Infrastructure;
 
 /// <summary>

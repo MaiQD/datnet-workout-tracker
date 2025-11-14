@@ -14,7 +14,7 @@ public class CreateExerciseCommandValidatorTests
     public void Should_Pass_Validation_For_Valid_Command()
     {
         var command = new CreateExerciseCommand(
-            UserId: 1,
+            UserId: Guid.NewGuid(),
             Name: "Push Up",
             Description: "desc",
             MuscleGroups: ["Chest"],
@@ -35,7 +35,7 @@ public class CreateExerciseCommandValidatorTests
     public void Should_Fail_When_UserId_Missing()
     {
         var command = new CreateExerciseCommand(
-            UserId: 0,
+            UserId: Guid.Empty,
             Name: "Push Up",
             Description: null,
             MuscleGroups: ["Chest"],
@@ -57,7 +57,7 @@ public class CreateExerciseCommandValidatorTests
     public void Should_Fail_When_Name_Empty()
     {
         var command = new CreateExerciseCommand(
-            UserId: 1,
+            UserId: Guid.NewGuid(),
             Name: "",
             Description: null,
             MuscleGroups: ["Chest"],
@@ -78,7 +78,7 @@ public class CreateExerciseCommandValidatorTests
     public void Should_Fail_When_MuscleGroups_Empty()
     {
         var command = new CreateExerciseCommand(
-            UserId: 1,
+            UserId: Guid.NewGuid(),
             Name: "Push Up",
             Description: null,
             MuscleGroups: [],
@@ -100,7 +100,7 @@ public class CreateExerciseCommandValidatorTests
     public void Should_Fail_When_Instruction_Contains_Empty()
     {
         var command = new CreateExerciseCommand(
-            UserId: 1,
+            UserId: Guid.NewGuid(),
             Name: "Push Up",
             Description: null,
             MuscleGroups: ["Chest"],
@@ -122,7 +122,7 @@ public class CreateExerciseCommandValidatorTests
     public void Should_Fail_When_VideoUrl_Invalid()
     {
         var command = new CreateExerciseCommand(
-            UserId: 1,
+            UserId: Guid.NewGuid(),
             Name: "Push Up",
             Description: null,
             MuscleGroups: ["Chest"],

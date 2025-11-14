@@ -7,8 +7,8 @@ using dotFitness.Api.Controllers;
 using dotFitness.Modules.Users.Application.Commands;
 using dotFitness.Modules.Users.Application.DTOs;
 using dotFitness.Modules.Users.Application.Queries;
-using dotFitness.SharedKernel.Results;
 using System.Security.Claims;
+using dotFitness.Common.Results;
 
 namespace dotFitness.Api.Tests.Controllers;
 
@@ -25,9 +25,11 @@ public class UsersControllerTests
         _controller = new UsersController(_mediatorMock.Object, _loggerMock.Object);
         
         // Setup user claims
+        var userId = Guid.NewGuid();
         var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.NameIdentifier, "1")
+            new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+            new Claim(ClaimTypes.Role, "User")
         };
         var identity = new ClaimsIdentity(claims, "test");
         var principal = new ClaimsPrincipal(identity);
@@ -47,7 +49,7 @@ public class UsersControllerTests
         // Arrange
         var userDto = new UserDto
         {
-            Id = 1,
+            Id = Guid.NewGuid(),
             Email = "test@example.com",
             DisplayName = "Test User"
         };
@@ -91,7 +93,7 @@ public class UsersControllerTests
         
         var userDto = new UserDto
         {
-            Id = 1,
+            Id = Guid.NewGuid(),
             Email = "test@example.com",
             DisplayName = "Updated Name"
         };
@@ -119,7 +121,7 @@ public class UsersControllerTests
             new UserMetricDto
             {
                 Id = 1,
-                UserId = 1,
+                UserId = Guid.NewGuid(),
                 Date = fixedDate,
                 Weight = 70.5,
                 Height = 175.0,

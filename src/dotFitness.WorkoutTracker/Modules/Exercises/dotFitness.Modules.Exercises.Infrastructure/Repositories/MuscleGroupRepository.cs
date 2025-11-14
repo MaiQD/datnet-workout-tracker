@@ -1,8 +1,8 @@
+using dotFitness.Common.Results;
 using MongoDB.Driver;
 using Microsoft.Extensions.Logging;
 using dotFitness.Modules.Exercises.Domain.Entities;
 using dotFitness.Modules.Exercises.Domain.Repositories;
-using dotFitness.SharedKernel.Results;
 
 namespace dotFitness.Modules.Exercises.Infrastructure.Repositories;
 
@@ -46,7 +46,7 @@ public class MuscleGroupRepository : IMuscleGroupRepository
         }
     }
 
-    public async Task<Result<IEnumerable<MuscleGroup>>> GetByUserIdAsync(int userId, CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<MuscleGroup>>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -80,7 +80,7 @@ public class MuscleGroupRepository : IMuscleGroupRepository
         }
     }
 
-    public async Task<Result<IEnumerable<MuscleGroup>>> GetAllForUserAsync(int userId,
+    public async Task<Result<IEnumerable<MuscleGroup>>> GetAllForUserAsync(Guid userId,
         CancellationToken cancellationToken = default)
     {
         try
@@ -167,7 +167,7 @@ public class MuscleGroupRepository : IMuscleGroupRepository
         }
     }
 
-    public async Task<Result<MuscleGroup?>> GetByNameAsync(string name, int? userId = null,
+    public async Task<Result<MuscleGroup?>> GetByNameAsync(string name, Guid? userId = null,
         CancellationToken cancellationToken = default)
     {
         try
@@ -203,7 +203,7 @@ public class MuscleGroupRepository : IMuscleGroupRepository
         }
     }
 
-    public async Task<Result<bool>> UserOwnsMuscleGroupAsync(string muscleGroupId, int userId,
+    public async Task<Result<bool>> UserOwnsMuscleGroupAsync(string muscleGroupId, Guid userId,
         CancellationToken cancellationToken = default)
     {
         try

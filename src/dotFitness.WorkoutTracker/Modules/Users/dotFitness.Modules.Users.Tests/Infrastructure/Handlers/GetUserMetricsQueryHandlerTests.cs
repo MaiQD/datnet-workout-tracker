@@ -1,7 +1,6 @@
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
-using dotFitness.Modules.Users.Application.Mappers;
 using dotFitness.Modules.Users.Application.Queries;
 using dotFitness.Modules.Users.Domain.Entities;
 using dotFitness.Modules.Users.Infrastructure.Data;
@@ -40,9 +39,11 @@ public class GetUserMetricsQueryHandlerTests: IAsyncLifetime
     public async Task Should_Return_All_Metrics_When_No_Date_Range_Specified()
     {
         // Arrange
-        var user = new User
+        var user = new ApplicationUser
         {
+            Id = Guid.NewGuid(),
             Email = this.GenerateUniqueEmail(),
+            UserName = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
@@ -93,9 +94,11 @@ public class GetUserMetricsQueryHandlerTests: IAsyncLifetime
     public async Task Should_Return_Metrics_Within_Date_Range_When_Specified()
     {
         // Arrange
-        var user = new User
+        var user = new ApplicationUser
         {
+            Id = Guid.NewGuid(),
             Email = this.GenerateUniqueEmail(),
+            UserName = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
@@ -141,9 +144,11 @@ public class GetUserMetricsQueryHandlerTests: IAsyncLifetime
     public async Task Should_Return_Empty_List_When_No_Metrics_Found()
     {
         // Arrange
-        var user = new User
+        var user = new ApplicationUser
         {
+            Id = Guid.NewGuid(),
             Email = this.GenerateUniqueEmail(),
+            UserName = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
@@ -168,9 +173,11 @@ public class GetUserMetricsQueryHandlerTests: IAsyncLifetime
     public async Task Should_Handle_Repository_Errors_Gracefully()
     {
         // Arrange
-        var user = new User
+        var user = new ApplicationUser
         {
+            Id = Guid.NewGuid(),
             Email = this.GenerateUniqueEmail(),
+            UserName = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
@@ -198,9 +205,11 @@ public class GetUserMetricsQueryHandlerTests: IAsyncLifetime
     public async Task Should_Apply_Date_Range_Filters_Correctly()
     {
         // Arrange
-        var user = new User
+        var user = new ApplicationUser
         {
+            Id = Guid.NewGuid(),
             Email = this.GenerateUniqueEmail(),
+            UserName = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,

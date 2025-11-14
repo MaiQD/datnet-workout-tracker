@@ -1,11 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\dotFitness.SharedKernel\dotFitness.SharedKernel.csproj" />
+    <ProjectReference Include="..\..\..\dotFitness.Common\dotFitness.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="MongoDB.Bson" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Microsoft.Extensions.Identity.Stores"/>
   </ItemGroup>
 
   <PropertyGroup>

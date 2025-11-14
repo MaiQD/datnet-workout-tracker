@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using MediatR;
 using dotFitness.Api.Infrastructure.Extensions;
+using dotFitness.Common.Authorization;
 using dotFitness.Modules.Exercises.Application.Commands;
 using dotFitness.Modules.Exercises.Application.Queries;
 using dotFitness.Modules.Exercises.Application.DTOs;
@@ -33,6 +34,7 @@ public class ExercisesController : ControllerBase
     /// <param name="difficulty">Optional difficulty level to filter by</param>
     /// <returns>List of exercises</returns>
     [HttpGet]
+    [Authorize(Policy = AuthorizationPolicies.UserOnly)]
     [ProducesResponseType(typeof(IEnumerable<ExerciseDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -70,6 +72,7 @@ public class ExercisesController : ControllerBase
     /// <param name="id">The exercise ID</param>
     /// <returns>Exercise details</returns>
     [HttpGet("{id}")]
+    [Authorize(Policy = AuthorizationPolicies.ResourceOwner)]
     [ProducesResponseType(typeof(ExerciseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -157,6 +160,7 @@ public class ExercisesController : ControllerBase
     /// <param name="request">The exercise update request</param>
     /// <returns>Updated exercise</returns>
     [HttpPut("{id}")]
+    [Authorize(Policy = AuthorizationPolicies.ResourceOwner)]
     [ProducesResponseType(typeof(ExerciseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -214,6 +218,7 @@ public class ExercisesController : ControllerBase
     /// <param name="id">The exercise ID</param>
     /// <returns>No content on success</returns>
     [HttpDelete("{id}")]
+    [Authorize(Policy = AuthorizationPolicies.ResourceOwner)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]

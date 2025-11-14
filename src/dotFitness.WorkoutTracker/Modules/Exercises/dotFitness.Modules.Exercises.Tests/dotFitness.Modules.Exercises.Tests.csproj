@@ -33,8 +33,8 @@
     <ProjectReference Include="..\dotFitness.Modules.Exercises.Application\dotFitness.Modules.Exercises.Application.csproj" />
     <ProjectReference Include="..\dotFitness.Modules.Exercises.Domain\dotFitness.Modules.Exercises.Domain.csproj" />
     <ProjectReference Include="..\dotFitness.Modules.Exercises.Infrastructure\dotFitness.Modules.Exercises.Infrastructure.csproj" />
-    <ProjectReference Include="..\..\..\dotFitness.SharedKernel\dotFitness.SharedKernel.csproj" />
-    <ProjectReference Include="..\..\..\dotFitness.SharedKernel.Tests\dotFitness.SharedKernel.Tests.csproj" />
+    <ProjectReference Include="..\..\..\dotFitness.Common\dotFitness.Common.csproj" />
+    <ProjectReference Include="..\..\..\dotFitness.Common.Tests\dotFitness.Common.Tests.csproj" />
   </ItemGroup>
 
 </Project>

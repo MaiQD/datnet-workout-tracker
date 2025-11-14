@@ -1,7 +1,9 @@
 using Serilog;
 using dotFitness.Api.Infrastructure;
+using dotFitness.Api.Infrastructure.Configuration;
 using dotFitness.Api.Infrastructure.Extensions;
 using dotFitness.Api.Infrastructure.Settings;
+using dotFitness.Aspire.ServiceDefaults;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -33,6 +35,7 @@ var microsoftLogger = loggerFactory.CreateLogger("ModuleRegistry");
 
 // Add module services
 builder.Services.AddModuleServices(builder.Configuration, microsoftLogger);
+builder.Services.AddApiAuthorization(); // Add API-level authorization policies
 
 builder.AddServiceDefaults();
 
@@ -42,6 +45,10 @@ var app = builder.Build();
 await MongoDbIndexConfigurator.ConfigureIndexesAsync(app.Services);
 // Seed MongoDB data
 await MongoDbSeeder.ConfigureSeedsAsync(app.Services);
+
+// Map Identity API endpoints (includes /login, /refresh, /register, etc.)
+app.MapGroup("/api/v1/auth")
+    .MapIdentityApi<dotFitness.Modules.Users.Domain.Entities.ApplicationUser>();
 
 // Configure the application pipeline
 app.UseGlobalErrorHandler()

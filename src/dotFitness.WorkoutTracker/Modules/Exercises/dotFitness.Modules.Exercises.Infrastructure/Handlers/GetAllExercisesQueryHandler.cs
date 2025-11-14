@@ -1,10 +1,10 @@
+using dotFitness.Common.Results;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using dotFitness.Modules.Exercises.Application.DTOs;
 using dotFitness.Modules.Exercises.Application.Mappers;
 using dotFitness.Modules.Exercises.Application.Queries;
 using dotFitness.Modules.Exercises.Domain.Repositories;
-using dotFitness.SharedKernel.Results;
 
 namespace dotFitness.Modules.Exercises.Infrastructure.Handlers;
 

@@ -1,5 +1,4 @@
 using dotFitness.Modules.Users.Application.Commands;
-using dotFitness.Modules.Users.Application.Mappers;
 using dotFitness.Modules.Users.Domain.Entities;
 using dotFitness.Modules.Users.Infrastructure.Data;
 using dotFitness.Modules.Users.Infrastructure.Handlers;
@@ -42,9 +41,11 @@ public class AddUserMetricCommandHandlerIntegrationTests(UsersPostgresSqlFixture
     {
         // Arrange
         var (context, handler) = await CreateHandlerAsync();
-        var user = new User
+        var user = new ApplicationUser
         {
+            Id = Guid.NewGuid(),
             Email = this.GenerateUniqueEmail(),
+            UserName = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
@@ -94,7 +95,7 @@ public class AddUserMetricCommandHandlerIntegrationTests(UsersPostgresSqlFixture
         var (context, handler) = await CreateHandlerAsync();
         var command = new AddUserMetricCommand
         {
-            UserId = this.GenerateUniqueUserId(), // Non-existent user
+            UserId = Guid.NewGuid(), // Non-existent user
             Date = this.GenerateUniqueDate(),
             Weight = 75.5,
             Height = 180.0,
@@ -122,9 +123,11 @@ public class AddUserMetricCommandHandlerIntegrationTests(UsersPostgresSqlFixture
     {
         // Arrange
         var (context, handler) = await CreateHandlerAsync();
-        var user = new User
+        var user = new ApplicationUser
         {
+            Id = Guid.NewGuid(),
             Email = this.GenerateUniqueEmail(),
+            UserName = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
@@ -178,9 +181,11 @@ public class AddUserMetricCommandHandlerIntegrationTests(UsersPostgresSqlFixture
     {
         // Arrange
         var (context, handler) = await CreateHandlerAsync();
-        var user = new User
+        var user = new ApplicationUser
         {
+            Id = Guid.NewGuid(),
             Email = this.GenerateUniqueEmail(),
+            UserName = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
@@ -223,9 +228,11 @@ public class AddUserMetricCommandHandlerIntegrationTests(UsersPostgresSqlFixture
     {
         // Arrange
         var (context, handler) = await CreateHandlerAsync();
-        var user = new User
+        var user = new ApplicationUser
         {
+            Id = Guid.NewGuid(),
             Email = this.GenerateUniqueEmail(),
+            UserName = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,

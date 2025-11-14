@@ -15,7 +15,7 @@ public class UpdateExerciseCommandValidatorTests
     {
         var command = new UpdateExerciseCommand(
             ExerciseId: "ex1",
-            UserId: 1,
+            UserId: Guid.NewGuid(),
             Name: "Push Up",
             Description: "desc",
             MuscleGroups: ["Chest"],
@@ -37,7 +37,7 @@ public class UpdateExerciseCommandValidatorTests
     {
         var command = new UpdateExerciseCommand(
             ExerciseId: "",
-            UserId: 1,
+            UserId: Guid.NewGuid(),
             Name: "Push Up",
             Description: null,
             MuscleGroups: ["Chest"],

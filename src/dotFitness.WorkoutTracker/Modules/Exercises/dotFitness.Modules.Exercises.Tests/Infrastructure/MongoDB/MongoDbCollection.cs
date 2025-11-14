@@ -1,4 +1,4 @@
-using dotFitness.SharedKernel.Tests.MongoDB;
+using dotFitness.Common.Tests.MongoDB;
 
 namespace dotFitness.Modules.Exercises.Tests.Infrastructure.MongoDB;
 

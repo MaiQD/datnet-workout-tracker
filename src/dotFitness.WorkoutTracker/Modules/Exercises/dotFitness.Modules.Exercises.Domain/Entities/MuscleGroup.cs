@@ -1,6 +1,6 @@
+using dotFitness.Common.Interfaces;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
-using dotFitness.SharedKernel.Interfaces;
 
 namespace dotFitness.Modules.Exercises.Domain.Entities;
 
@@ -32,7 +32,7 @@ public class MuscleGroup : IEntity<string>
     public bool IsGlobal { get; set; } = false;
 
     [BsonElement("userId")]
-    public int? UserId { get; set; } // null for global muscle groups
+    public Guid? UserId { get; set; } // null for global muscle groups
 
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

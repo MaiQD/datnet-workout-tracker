@@ -1,3 +1,4 @@
+using dotFitness.Common.Results;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -18,7 +19,7 @@ public class CreateExerciseCommandHandlerTests
     public async Task Should_Create_Exercise_And_Return_Dto()
     {
         var cmd = new CreateExerciseCommand(
-            UserId: 1,
+            UserId: Guid.NewGuid(),
             Name: "Push Up",
             Description: "desc",
             MuscleGroups: ["Chest"],
@@ -31,7 +32,7 @@ public class CreateExerciseCommandHandlerTests
         );
 
         _repo.Setup(r => r.CreateAsync(It.IsAny<Exercise>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Exercise e, CancellationToken _) => dotFitness.SharedKernel.Results.Result.Success(e));
+            .ReturnsAsync((Exercise e, CancellationToken _) => Result.Success(e));
 
         var handler = new CreateExerciseCommandHandler(_repo.Object, _logger.Object);
 
@@ -46,7 +47,7 @@ public class CreateExerciseCommandHandlerTests
     public async Task Should_Propagate_Failure_From_Repository()
     {
         var cmd = new CreateExerciseCommand(
-            UserId: 1,
+            UserId: Guid.NewGuid(),
             Name: "Push Up",
             Description: null,
             MuscleGroups: ["Chest"],
@@ -59,7 +60,7 @@ public class CreateExerciseCommandHandlerTests
         );
 
         _repo.Setup(r => r.CreateAsync(It.IsAny<Exercise>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(dotFitness.SharedKernel.Results.Result.Failure<Exercise>("err"));
+            .ReturnsAsync(Result.Failure<Exercise>("err"));
 
         var handler = new CreateExerciseCommandHandler(_repo.Object, _logger.Object);
         var result = await handler.Handle(cmd, CancellationToken.None);

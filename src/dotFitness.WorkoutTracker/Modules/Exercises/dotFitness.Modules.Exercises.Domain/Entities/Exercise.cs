@@ -1,6 +1,6 @@
+using dotFitness.Common.Interfaces;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
-using dotFitness.SharedKernel.Interfaces;
 
 namespace dotFitness.Modules.Exercises.Domain.Entities;
 
@@ -40,7 +40,7 @@ public class Exercise : IEntity<string>
     public bool IsGlobal { get; set; } = false;
 
     [BsonElement("userId")]
-    public int? UserId { get; set; } // null for global exercises
+    public Guid? UserId { get; set; } // null for global exercises
 
     [BsonElement("tags")]
     public List<string> Tags { get; set; } = [];

@@ -1,3 +1,4 @@
+using dotFitness.Common.Results;
 using dotFitness.Modules.Users.Application.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -5,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 using dotFitness.Modules.Users.Domain.Entities;
 using dotFitness.Modules.Users.Infrastructure.Data;
 using dotFitness.Modules.Users.Infrastructure.Settings;
-using dotFitness.SharedKernel.Results;
 
 namespace dotFitness.Modules.Users.Infrastructure.Services;
 
@@ -25,7 +25,7 @@ public class UserService : IUserService
         _logger = logger;
     }
 
-    public async Task<Result<User>> GetOrCreateUserAsync(GoogleUserInfo googleUserInfo, CancellationToken cancellationToken = default)
+    public async Task<Result<ApplicationUser>> GetOrCreateUserAsync(GoogleUserInfo googleUserInfo, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -79,20 +79,21 @@ public class UserService : IUserService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to get or create user for email: {Email}", googleUserInfo.Email);
-            return Result.Failure<User>($"User management failed: {ex.Message}");
+            return Result.Failure<ApplicationUser>($"User management failed: {ex.Message}");
         }
     }
 
-    private User CreateNewUser(GoogleUserInfo googleUserInfo)
+    private ApplicationUser CreateNewUser(GoogleUserInfo googleUserInfo)
     {
-        var user = new User
+        var user = new ApplicationUser
         {
             GoogleId = googleUserInfo.Id,
             Email = googleUserInfo.Email,
+            UserName = googleUserInfo.Email,
             DisplayName = googleUserInfo.Name,
             ProfilePicture = googleUserInfo.ProfilePicture,
             LoginMethod = LoginMethod.Google,
-            Roles = ["User"],
+            EmailConfirmed = true,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -100,8 +101,8 @@ public class UserService : IUserService
         // Check if user should be admin
         if (_adminSettings.AdminEmails.Contains(googleUserInfo.Email))
         {
-            user.Roles.Add("Admin");
-            _logger.LogInformation("Admin user created: {Email}", user.Email);
+            // Note: Role assignment will be handled by UserManager in the handler
+            _logger.LogInformation("Admin user detected: {Email}", user.Email);
         }
 
         return user;

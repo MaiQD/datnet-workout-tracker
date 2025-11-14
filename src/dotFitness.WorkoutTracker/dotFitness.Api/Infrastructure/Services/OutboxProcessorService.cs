@@ -2,10 +2,10 @@ using MongoDB.Driver;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
-using dotFitness.SharedKernel.Outbox;
-using dotFitness.SharedKernel.Events;
 using dotFitness.Modules.Users.Infrastructure.Data;
 using dotFitness.Api.Infrastructure.Settings;
+using dotFitness.Common.Events;
+using dotFitness.Common.Outbox;
 
 namespace dotFitness.Api.Infrastructure.Services;
 

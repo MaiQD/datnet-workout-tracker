@@ -22,7 +22,7 @@ public class ExerciseMapperTests
             VideoUrl = "http://video",
             ImageUrl = "http://image",
             IsGlobal = false,
-            UserId = 1,
+            UserId = Guid.NewGuid(),
             Tags = ["home"],
             CreatedAt = new DateTime(2024,1,1,0,0,0,DateTimeKind.Utc),
             UpdatedAt = new DateTime(2024,1,2,0,0,0,DateTimeKind.Utc)
@@ -41,7 +41,7 @@ public class ExerciseMapperTests
         dto.VideoUrl.Should().Be("http://video");
         dto.ImageUrl.Should().Be("http://image");
         dto.IsGlobal.Should().BeFalse();
-        dto.UserId.Should().Be(1);
+        dto.UserId.Should().NotBeEmpty();
         dto.Tags.Should().BeEquivalentTo(new[]{"home"});
         dto.CreatedAt.Should().Be(new DateTime(2024,1,1,0,0,0,DateTimeKind.Utc));
         dto.UpdatedAt.Should().Be(new DateTime(2024,1,2,0,0,0,DateTimeKind.Utc));

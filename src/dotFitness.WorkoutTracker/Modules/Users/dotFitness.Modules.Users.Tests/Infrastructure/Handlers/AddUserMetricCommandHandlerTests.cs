@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using dotFitness.Modules.Users.Application.Commands;
-using dotFitness.Modules.Users.Application.Mappers;
 using dotFitness.Modules.Users.Domain.Entities;
 using dotFitness.Modules.Users.Infrastructure.Data;
 using dotFitness.Modules.Users.Infrastructure.Handlers;
@@ -38,9 +37,11 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
     [Trait("Category", "Unit")]
     public async Task Should_Handle_Valid_Command_Successfully()
     {
-        var user = new User
+        var user = new ApplicationUser
         {
+            Id = Guid.NewGuid(),
             Email = this.GenerateUniqueEmail(),
+            UserName = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
@@ -84,9 +85,11 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
     public async Task Should_Handle_Weight_Only_Measurement()
     {
         // Arrange
-        var user = new User
+        var user = new ApplicationUser
         {
+            Id = Guid.NewGuid(),
             Email = this.GenerateUniqueEmail(),
+            UserName = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
@@ -126,9 +129,11 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
     public async Task Should_Handle_Height_Only_Measurement()
     {
         // Arrange
-        var user = new User
+        var user = new ApplicationUser
         {
+            Id = Guid.NewGuid(),
             Email = this.GenerateUniqueEmail(),
+            UserName = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
@@ -168,9 +173,11 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
     public async Task Should_Handle_Repository_Errors_Gracefully()
     {
         // Arrange
-        var user = new User
+        var user = new ApplicationUser
         {
+            Id = Guid.NewGuid(),
             Email = this.GenerateUniqueEmail(),
+            UserName = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
@@ -210,9 +217,11 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
     public async Task Should_Calculate_BMI_When_Both_Weight_And_Height_Provided()
     {
         // Arrange
-        var user = new User
+        var user = new ApplicationUser
         {
+            Id = Guid.NewGuid(),
             Email = this.GenerateUniqueEmail(),
+            UserName = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
@@ -248,9 +257,11 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
     public async Task Should_Set_Date_To_Today_When_Not_Provided()
     {
         // Arrange
-        var user = new User
+        var user = new ApplicationUser
         {
+            Id = Guid.NewGuid(),
             Email = this.GenerateUniqueEmail(),
+            UserName = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
@@ -289,7 +300,7 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
         // Arrange
         var command = new AddUserMetricCommand
         {
-            UserId = this.GenerateUniqueUserId(),
+            UserId = Guid.NewGuid(),
             Date = this.GenerateUniqueDate(),
             Weight = 70.0,
             Height = 175.0,
@@ -313,9 +324,11 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
     public async Task Should_Return_Failure_When_Metric_Already_Exists_For_Date()
     {
         // Arrange
-        var user = new User
+        var user = new ApplicationUser
         {
+            Id = Guid.NewGuid(),
             Email = this.GenerateUniqueEmail(),
+            UserName = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
@@ -326,7 +339,7 @@ public class AddUserMetricCommandHandlerTests : IAsyncLifetime
         
         var existingMetric = new UserMetric
         {
-            UserId = 0,
+            UserId = Guid.Empty,
             Date = testDate,
             Weight = 80.0,
             CreatedAt = DateTime.UtcNow,

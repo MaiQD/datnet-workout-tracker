@@ -1,6 +1,5 @@
+using dotFitness.Common.Outbox;
 using MongoDB.Driver;
-using dotFitness.SharedKernel.Outbox;
-using dotFitness.Bootstrap;
 
 namespace dotFitness.Api.Infrastructure;
 

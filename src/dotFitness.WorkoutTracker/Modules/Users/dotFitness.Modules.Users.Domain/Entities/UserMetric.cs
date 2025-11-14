@@ -1,4 +1,4 @@
-using dotFitness.SharedKernel.Interfaces;
+using dotFitness.Common.Interfaces;
 using UnitsNet;
 
 namespace dotFitness.Modules.Users.Domain.Entities;
@@ -6,7 +6,7 @@ namespace dotFitness.Modules.Users.Domain.Entities;
 public class UserMetric : IEntity
 {
     public int Id { get; set; }
-    public int UserId { get; set; }
+    public Guid UserId { get; set; } // Changed to Guid to match ApplicationUser.Id
 
     public DateTime Date { get; set; } = DateTime.UtcNow.Date; // Store as date only
     public double? Weight { get; set; } // in kg or lbs depending on user preference

@@ -1,3 +1,4 @@
+using dotFitness.Common.Results;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -17,13 +18,13 @@ public class GetAllMuscleGroupsQueryHandlerTests
     [Trait("Category", "Unit")]
     public async Task Should_Return_MuscleGroups_List()
     {
-        _repo.Setup(r => r.GetAllForUserAsync(1, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(dotFitness.SharedKernel.Results.Result.Success<IEnumerable<MuscleGroup>>([
+        _repo.Setup(r => r.GetAllForUserAsync(Guid.NewGuid(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success<IEnumerable<MuscleGroup>>([
                 new MuscleGroup { Id = "mg1", Name = "Chest" }
             ]));
 
         var handler = new GetAllMuscleGroupsQueryHandler(_repo.Object, _logger.Object);
-        var result = await handler.Handle(new GetAllMuscleGroupsQuery(1), CancellationToken.None);
+        var result = await handler.Handle(new GetAllMuscleGroupsQuery(Guid.NewGuid()), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value!.Should().ContainSingle(m => m.Id == "mg1");
@@ -33,11 +34,12 @@ public class GetAllMuscleGroupsQueryHandlerTests
     [Trait("Category", "Unit")]
     public async Task Should_Propagate_Failure()
     {
-        _repo.Setup(r => r.GetAllForUserAsync(1, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(dotFitness.SharedKernel.Results.Result.Failure<IEnumerable<MuscleGroup>>("err"));
+        var userId = Guid.NewGuid();
+        _repo.Setup(r => r.GetAllForUserAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Failure<IEnumerable<MuscleGroup>>("err"));
 
         var handler = new GetAllMuscleGroupsQueryHandler(_repo.Object, _logger.Object);
-        var result = await handler.Handle(new GetAllMuscleGroupsQuery(1), CancellationToken.None);
+        var result = await handler.Handle(new GetAllMuscleGroupsQuery(userId), CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Be("err");

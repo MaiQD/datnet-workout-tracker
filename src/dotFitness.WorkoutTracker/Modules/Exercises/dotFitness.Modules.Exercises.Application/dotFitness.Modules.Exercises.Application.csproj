@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
-    <ProjectReference Include="..\..\..\dotFitness.SharedKernel\dotFitness.SharedKernel.csproj" />
+    <ProjectReference Include="..\..\..\dotFitness.Common\dotFitness.Common.csproj" />
     <ProjectReference Include="..\dotFitness.Modules.Exercises.Domain\dotFitness.Modules.Exercises.Domain.csproj" />
   </ItemGroup>
 

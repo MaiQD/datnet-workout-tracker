@@ -1,4 +1,4 @@
-using dotFitness.SharedKernel.Configuration;
+using dotFitness.Common.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 

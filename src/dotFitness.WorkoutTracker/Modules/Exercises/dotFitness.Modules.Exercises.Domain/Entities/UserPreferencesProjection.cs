@@ -10,7 +10,7 @@ public class UserPreferencesProjection
     public string Id { get; set; } = ObjectId.GenerateNewId().ToString();
 
     [BsonElement("userId")]
-    public int UserId { get; set; }
+    public Guid UserId { get; set; }
 
     [BsonElement("focusMuscleGroupIds")]
     [BsonRepresentation(BsonType.ObjectId)]

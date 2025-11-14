@@ -1,9 +1,9 @@
+using dotFitness.Common.Results;
 using dotFitness.Modules.Users.Application.DTOs;
-using dotFitness.SharedKernel.Results;
 using MediatR;
 
 namespace dotFitness.Modules.Users.Application.Commands;
 
 public record UpdateUserProfileCommand(
-    int UserId,
+    Guid UserId,
     UpdateUserProfileRequest Request) : IRequest<Result<UserDto>>;

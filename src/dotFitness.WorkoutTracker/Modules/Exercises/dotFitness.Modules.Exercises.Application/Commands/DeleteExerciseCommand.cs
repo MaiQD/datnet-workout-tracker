@@ -1,9 +1,9 @@
-using dotFitness.SharedKernel.Results;
+using dotFitness.Common.Results;
 using MediatR;
 
 namespace dotFitness.Modules.Exercises.Application.Commands;
 
 public record DeleteExerciseCommand(
     string ExerciseId,
-    int UserId
+    Guid UserId
 ) : IRequest<Result>;

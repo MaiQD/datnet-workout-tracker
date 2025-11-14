@@ -1,9 +1,9 @@
+using dotFitness.Common.Results;
 using dotFitness.Modules.Exercises.Application.DTOs;
-using dotFitness.SharedKernel.Results;
 using MediatR;
 
 namespace dotFitness.Modules.Exercises.Application.Queries;
 
 public record GetAllMuscleGroupsQuery(
-    int UserId
+    Guid UserId
 ) : IRequest<Result<IEnumerable<MuscleGroupDto>>>;

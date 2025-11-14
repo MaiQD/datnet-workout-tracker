@@ -2,8 +2,8 @@ namespace dotFitness.Modules.Users.Tests.Infrastructure.Extensions;
 
 public static class TestDataExtensions
 {
-    private static readonly Random _random = new();
-    private static readonly HashSet<string> _usedEmails = new();
+    private static readonly Random Random = new();
+    private static readonly HashSet<string> UsedEmails = new();
     private static int _dateCounter = 0;
     
     /// <summary>
@@ -15,7 +15,7 @@ public static class TestDataExtensions
         do
         {
             email = $"test{Guid.NewGuid():N}@example.com";
-        } while (!_usedEmails.Add(email));
+        } while (!UsedEmails.Add(email));
         
         return email;
     }
@@ -36,7 +36,7 @@ public static class TestDataExtensions
     /// </summary>
     public static int GenerateUniqueUserId(this object testInstance)
     {
-        return _random.Next(10000, 99999); // High range to avoid conflicts with real user IDs
+        return Random.Next(10000, 99999); // High range to avoid conflicts with real user IDs
     }
     
     /// <summary>
@@ -44,7 +44,7 @@ public static class TestDataExtensions
     /// </summary>
     public static void ClearTestData(this object testInstance)
     {
-        _usedEmails.Clear();
+        UsedEmails.Clear();
         Interlocked.Exchange(ref _dateCounter, 0);
     }
 }

@@ -1,3 +1,4 @@
+using dotFitness.Common.Results;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -17,14 +18,15 @@ public class DeleteExerciseCommandHandlerTests
     [Trait("Category", "Unit")]
     public async Task Should_Delete_When_User_Owns_Exercise()
     {
-        var existing = new Exercise { Id = "ex1", UserId = 1 };
+        var userId = Guid.NewGuid();
+        var existing = new Exercise { Id = "ex1", UserId = userId };
         _repo.Setup(r => r.GetByIdAsync("ex1", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(dotFitness.SharedKernel.Results.Result.Success<Exercise?>(existing));
+            .ReturnsAsync(Result.Success<Exercise?>(existing));
         _repo.Setup(r => r.DeleteAsync("ex1", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(dotFitness.SharedKernel.Results.Result.Success());
+            .ReturnsAsync(Result.Success());
 
         var handler = new DeleteExerciseCommandHandler(_repo.Object, _logger.Object);
-        var result = await handler.Handle(new DeleteExerciseCommand("ex1", 1), CancellationToken.None);
+        var result = await handler.Handle(new DeleteExerciseCommand("ex1", userId), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
     }
@@ -34,10 +36,10 @@ public class DeleteExerciseCommandHandlerTests
     public async Task Should_Return_Failure_When_Not_Found()
     {
         _repo.Setup(r => r.GetByIdAsync("ex1", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(dotFitness.SharedKernel.Results.Result.Success<Exercise?>(null));
+            .ReturnsAsync(Result.Success<Exercise?>(null));
 
         var handler = new DeleteExerciseCommandHandler(_repo.Object, _logger.Object);
-        var result = await handler.Handle(new DeleteExerciseCommand("ex1", 1), CancellationToken.None);
+        var result = await handler.Handle(new DeleteExerciseCommand("ex1", Guid.NewGuid()), CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Be("Exercise not found");
@@ -47,12 +49,14 @@ public class DeleteExerciseCommandHandlerTests
     [Trait("Category", "Unit")]
     public async Task Should_Return_Failure_When_User_Not_Owner()
     {
-        var existing = new Exercise { Id = "ex1", UserId = -1, IsGlobal = false };
+        var userId = Guid.NewGuid();
+        var otherUserId = Guid.NewGuid();
+        var existing = new Exercise { Id = "ex1", UserId = otherUserId, IsGlobal = false };
         _repo.Setup(r => r.GetByIdAsync("ex1", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(dotFitness.SharedKernel.Results.Result.Success<Exercise?>(existing));
+            .ReturnsAsync(Result.Success<Exercise?>(existing));
 
         var handler = new DeleteExerciseCommandHandler(_repo.Object, _logger.Object);
-        var result = await handler.Handle(new DeleteExerciseCommand("ex1", 1), CancellationToken.None);
+        var result = await handler.Handle(new DeleteExerciseCommand("ex1", userId), CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Be("You don't have permission to delete this exercise");

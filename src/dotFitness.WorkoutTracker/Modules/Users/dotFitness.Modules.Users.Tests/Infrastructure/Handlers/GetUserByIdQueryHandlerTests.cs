@@ -1,7 +1,6 @@
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
-using dotFitness.Modules.Users.Application.Mappers;
 using dotFitness.Modules.Users.Application.Queries;
 using dotFitness.Modules.Users.Domain.Entities;
 using dotFitness.Modules.Users.Infrastructure.Data;
@@ -40,9 +39,11 @@ public class GetUserByIdQueryHandlerTests : IAsyncLifetime
     public async Task Should_Return_User_When_Found()
     {
         // Arrange
-        var user = new User
+        var user = new ApplicationUser
         {
+            Id = Guid.NewGuid(),
             Email = this.GenerateUniqueEmail(),
+            UserName = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             Gender = Gender.Male,
             UnitPreference = UnitPreference.Metric,
@@ -71,7 +72,7 @@ public class GetUserByIdQueryHandlerTests : IAsyncLifetime
     public async Task Should_Return_NotFound_When_User_DoesNot_Exist()
     {
         // Arrange
-        var query = new GetUserByIdQuery(this.GenerateUniqueUserId()); // Non-existent user
+        var query = new GetUserByIdQuery(Guid.NewGuid()); // Non-existent user
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
@@ -86,9 +87,11 @@ public class GetUserByIdQueryHandlerTests : IAsyncLifetime
     public async Task Should_Handle_Repository_Errors_Gracefully()
     {
         // Arrange
-        var user = new User
+        var user = new ApplicationUser
         {
+            Id = Guid.NewGuid(),
             Email = this.GenerateUniqueEmail(),
+            UserName = this.GenerateUniqueEmail(),
             DisplayName = "Test User",
             UnitPreference = UnitPreference.Metric,
             CreatedAt = DateTime.UtcNow,
@@ -116,7 +119,7 @@ public class GetUserByIdQueryHandlerTests : IAsyncLifetime
     public async Task Should_Handle_Invalid_User_Id()
     {
         // Arrange
-        var query = new GetUserByIdQuery(0); // Invalid user ID
+        var query = new GetUserByIdQuery(Guid.Empty); // Invalid user ID
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);

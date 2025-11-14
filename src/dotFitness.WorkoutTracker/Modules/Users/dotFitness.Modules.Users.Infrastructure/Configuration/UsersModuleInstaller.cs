@@ -1,19 +1,17 @@
+using dotFitness.Common.Authorization;
+using dotFitness.Common.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using MongoDB.Driver;
-using System.Text;
 using dotFitness.ModuleContracts;
 using dotFitness.Modules.Users.Domain.Entities;
 using dotFitness.Modules.Users.Infrastructure.Services;
-using dotFitness.Modules.Users.Application.Mappers;
 using dotFitness.Modules.Users.Application.Services;
 using dotFitness.Modules.Users.Infrastructure.Settings;
 using dotFitness.Modules.Users.Infrastructure.Data;
 using dotFitness.Modules.Users.Infrastructure.HealthChecks;
-using dotFitness.SharedKernel.Inbox;
 
 namespace dotFitness.Modules.Users.Infrastructure.Configuration;
 
@@ -25,30 +23,34 @@ public class UsersModuleInstaller : IModuleInstaller
     public void InstallServices(IServiceCollection services, IConfiguration configuration)
     {
         // Configure User Module Settings
-        services.Configure<JwtSettings>(configuration.GetSection("JwtSettings"));
         services.Configure<AdminSettings>(configuration.GetSection("AdminSettings"));
 
-        // Configure JWT Authentication (since it's primarily used for user authentication)
-        var jwtSettings = configuration.GetSection("JwtSettings");
-        var secretKey = jwtSettings["SecretKey"];
+        // Add Identity
+        services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
+        {
+            options.SignIn.RequireConfirmedAccount = false;
+            options.User.RequireUniqueEmail = true;
+            options.Password.RequireDigit = false; // OAuth users don't set passwords
+            options.Password.RequiredLength = 6;
+            options.Password.RequireNonAlphanumeric = false;
+            options.Password.RequireUppercase = false;
+        })
+        .AddEntityFrameworkStores<UsersDbContext>()
+        .AddDefaultTokenProviders()
+        .AddApiEndpoints(); // Adds /register, /login, /refresh endpoints
 
-        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(options =>
-            {
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
-                    ValidIssuer = jwtSettings["Issuer"],
-                    ValidAudience = jwtSettings["Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey!)),
-                    ClockSkew = TimeSpan.Zero
-                };
-            });
+        // Keep JWT bearer authentication for API token validation
+        services.AddAuthentication()
+            .AddBearerToken(IdentityConstants.BearerScheme);
 
-        services.AddAuthorization();
+        // Configure authorization policies using constants
+        services.AddAuthorizationBuilder()
+            .AddPolicy(AuthorizationPolicies.AdminOnly, policy => 
+                policy.RequireRole(Roles.Admin))
+            .AddPolicy(AuthorizationPolicies.PtOnly, policy => 
+                policy.RequireRole(Roles.Pt))
+            .AddPolicy(AuthorizationPolicies.UserOnly, policy => 
+                policy.RequireRole(Roles.User));
 
         // Configure PostgreSQL DbContext for Users module
         services.AddDbContext<UsersDbContext>(options =>
@@ -81,44 +83,19 @@ public class UsersModuleInstaller : IModuleInstaller
             }
         });
 
-        // Register MongoDB collections specific to Users module
-        services.AddSingleton(sp =>
-        {
-            var database = sp.GetRequiredService<IMongoDatabase>();
-            return database.GetCollection<User>("users");
-        });
-
-        services.AddSingleton(sp =>
-        {
-            var database = sp.GetRequiredService<IMongoDatabase>();
-            return database.GetCollection<UserMetric>("userMetrics");
-        });
-
-        // Register Inbox collection (shared inboxMessages)
-        services.AddSingleton(sp =>
-        {
-            var database = sp.GetRequiredService<IMongoDatabase>();
-            return database.GetCollection<InboxMessage>("inboxMessages");
-        });
-
-
         // Register services
         services.AddScoped<IGoogleAuthService, GoogleAuthService>();
         services.AddScoped<IUserService, UserService>();
-        services.AddScoped<IJwtService, JwtService>();
         
         // Register HttpClient for GoogleAuthService
         services.AddHttpClient<IGoogleAuthService, GoogleAuthService>();
 
-        // Register MediatR handlers (auto-registered in Bootstrap) - removed
-        // Register validators (auto-registered in Bootstrap) - removed
-        
         // Register Users module health check
         services.AddHealthChecks()
             .AddCheck<UsersModuleHealthCheck>("users-module", tags: ["module", "users", "live"]);
 
         // Register Users module configuration validator
-        services.AddScoped<dotFitness.SharedKernel.Configuration.IModuleConfigurationValidator, UsersConfigurationValidator>();
+        services.AddScoped<IModuleConfigurationValidator, UsersConfigurationValidator>();
 
         // Register database migration service for auto-applying migrations
         services.AddHostedService<DatabaseMigrationService>();
@@ -126,12 +103,13 @@ public class UsersModuleInstaller : IModuleInstaller
 
     public void ConfigureIndexes(IMongoDatabase database)
     {
-        UsersMongoIndexConfigurator.Configure(database);
+        // Users module uses PostgreSQL - no MongoDB indexes to configure
+        // This method is required by IModuleInstaller interface but not used for Users module
     }
 
     public void SeedData(IMongoDatabase database)
     {
-        // TODO: Implement user seeding if needed
-        // For now, users are created through the registration process
+        // Users module uses PostgreSQL - no MongoDB data to seed
+        // This method is required by IModuleInstaller interface but not used for Users module
     }
 }

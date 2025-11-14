@@ -1,14 +1,14 @@
 using dotFitness.Modules.Users.Application.Commands;
 using dotFitness.Modules.Users.Application.DTOs;
 using dotFitness.Modules.Users.Application.Mappers;
-using dotFitness.SharedKernel.Events;
 using dotFitness.Modules.Users.Infrastructure.Data;
 using dotFitness.Modules.Users.Infrastructure.Data.Entities;
-using dotFitness.SharedKernel.Results;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
+using dotFitness.Common.Events;
+using dotFitness.Common.Results;
 
 namespace dotFitness.Modules.Users.Infrastructure.Handlers;
 
@@ -52,12 +52,20 @@ public class UpdateUserProfileCommandHandler : IRequestHandler<UpdateUserProfile
                     var originalDateOfBirth = user.DateOfBirth;
                     var originalUnitPreference = user.UnitPreference;
 
-                    // 2. Update the user profile using the domain method
-                    user.UpdateProfile(
-                        request.Request.DisplayName,
-                        request.Request.Gender,
-                        request.Request.DateOfBirth,
-                        request.Request.UnitPreference);
+                    // 2. Update the user profile properties directly
+                    if (!string.IsNullOrWhiteSpace(request.Request.DisplayName))
+                        user.DisplayName = request.Request.DisplayName;
+                    
+                    if (request.Request.Gender.HasValue)
+                        user.Gender = request.Request.Gender.Value;
+                    
+                    if (request.Request.DateOfBirth.HasValue)
+                        user.DateOfBirth = request.Request.DateOfBirth.Value;
+                    
+                    if (request.Request.UnitPreference.HasValue)
+                        user.UnitPreference = request.Request.UnitPreference.Value;
+                    
+                    user.UpdatedAt = DateTime.UtcNow;
 
                     // Check if any changes were made
                     if (user.DisplayName == originalDisplayName &&

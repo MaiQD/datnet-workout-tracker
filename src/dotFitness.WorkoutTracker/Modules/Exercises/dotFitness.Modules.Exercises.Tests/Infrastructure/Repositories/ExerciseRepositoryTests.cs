@@ -4,7 +4,7 @@ using MongoDB.Driver;
 using Moq;
 using dotFitness.Modules.Exercises.Domain.Entities;
 using dotFitness.Modules.Exercises.Infrastructure.Repositories;
-using dotFitness.SharedKernel.Tests.MongoDB;
+using dotFitness.Common.Tests.MongoDB;
 
 namespace dotFitness.Modules.Exercises.Tests.Infrastructure.Repositories;
 
@@ -32,7 +32,7 @@ public class ExerciseRepositoryTests(MongoDbFixture fixture) : IAsyncLifetime
     [Fact]
     public async Task Should_Create_Exercise_Successfully()
     {
-        var exercise = new Exercise { Name = "Push Up", UserId = 1 };
+        var exercise = new Exercise { Name = "Push Up", UserId = Guid.NewGuid() };
 
         var result = await _repository.CreateAsync(exercise);
 
@@ -44,7 +44,7 @@ public class ExerciseRepositoryTests(MongoDbFixture fixture) : IAsyncLifetime
     [Fact]
     public async Task Should_Retrieve_Exercise_By_Id()
     {
-        var exercise = new Exercise { Name = "Push Up", UserId = 1 };
+        var exercise = new Exercise { Name = "Push Up", UserId = Guid.NewGuid() };
         var created = await _repository.CreateAsync(exercise);
 
         var fetched = await _repository.GetByIdAsync(created.Value!.Id);
@@ -56,7 +56,7 @@ public class ExerciseRepositoryTests(MongoDbFixture fixture) : IAsyncLifetime
     [Fact]
     public async Task Should_Update_Exercise()
     {
-        var exercise = new Exercise { Name = "Push Up", UserId = 1 };
+        var exercise = new Exercise { Name = "Push Up", UserId = Guid.NewGuid() };
         var created = await _repository.CreateAsync(exercise);
 
         var toUpdate = created.Value!;
@@ -70,7 +70,7 @@ public class ExerciseRepositoryTests(MongoDbFixture fixture) : IAsyncLifetime
     [Fact]
     public async Task Should_Delete_Exercise()
     {
-        var exercise = new Exercise { Name = "Push Up", UserId = 1 };
+        var exercise = new Exercise { Name = "Push Up", UserId = Guid.NewGuid() };
         var created = await _repository.CreateAsync(exercise);
 
         var deleted = await _repository.DeleteAsync(created.Value!.Id);
@@ -80,11 +80,12 @@ public class ExerciseRepositoryTests(MongoDbFixture fixture) : IAsyncLifetime
     [Fact]
     public async Task Should_Get_All_For_User_Including_Global()
     {
+        var userId = Guid.NewGuid();
         await _repository.CreateAsync(new Exercise { Name = "Global", IsGlobal = true });
-        await _repository.CreateAsync(new Exercise { Name = "Mine", UserId = 1, IsGlobal = false });
-        await _repository.CreateAsync(new Exercise { Name = "Other", UserId = 2, IsGlobal = false });
+        await _repository.CreateAsync(new Exercise { Name = "Mine", UserId = userId, IsGlobal = false });
+        await _repository.CreateAsync(new Exercise { Name = "Other", UserId = Guid.NewGuid(), IsGlobal = false });
 
-        var all = await _repository.GetAllForUserAsync(1);
+        var all = await _repository.GetAllForUserAsync(userId);
 
         all.IsSuccess.Should().BeTrue();
         all.Value!.Select(x => x.Name).Should().Contain(["Global","Mine"]);
@@ -94,10 +95,10 @@ public class ExerciseRepositoryTests(MongoDbFixture fixture) : IAsyncLifetime
     [Fact]
     public async Task Should_Search_With_Filters()
     {
-        await _repository.CreateAsync(new Exercise { Name = "Chest Press", UserId = 1, MuscleGroups = ["Chest"], Equipment = ["Dumbbell"], Difficulty = ExerciseDifficulty.Beginner });
-        await _repository.CreateAsync(new Exercise { Name = "Squat", UserId = 1, MuscleGroups = ["Legs"], Equipment = ["Barbell"], Difficulty = ExerciseDifficulty.Advanced });
+        await _repository.CreateAsync(new Exercise { Name = "Chest Press", UserId = Guid.NewGuid(), MuscleGroups = ["Chest"], Equipment = ["Dumbbell"], Difficulty = ExerciseDifficulty.Beginner });
+        await _repository.CreateAsync(new Exercise { Name = "Squat", UserId = Guid.NewGuid(), MuscleGroups = ["Legs"], Equipment = ["Barbell"], Difficulty = ExerciseDifficulty.Advanced });
 
-        var result = await _repository.SearchAsync(1, searchTerm: "chest", muscleGroups: ["Chest"], equipment: ["Dumbbell"], difficulty: ExerciseDifficulty.Beginner);
+        var result = await _repository.SearchAsync(Guid.NewGuid(), searchTerm: "chest", muscleGroups: ["Chest"], equipment: ["Dumbbell"], difficulty: ExerciseDifficulty.Beginner);
 
         result.IsSuccess.Should().BeTrue();
         result.Value!.Should().ContainSingle(x => x.Name == "Chest Press");
@@ -107,10 +108,10 @@ public class ExerciseRepositoryTests(MongoDbFixture fixture) : IAsyncLifetime
     public async Task Should_Get_By_User_Id_Only_User_Specific()
     {
         await _repository.CreateAsync(new Exercise { Name = "Global", IsGlobal = true });
-        await _repository.CreateAsync(new Exercise { Name = "Mine", UserId = 1, IsGlobal = false });
-        await _repository.CreateAsync(new Exercise { Name = "Other", UserId = 2, IsGlobal = false });
+        await _repository.CreateAsync(new Exercise { Name = "Mine", UserId = Guid.NewGuid(), IsGlobal = false });
+        await _repository.CreateAsync(new Exercise { Name = "Other", UserId = Guid.NewGuid(), IsGlobal = false });
 
-        var mineOnly = await _repository.GetByUserIdAsync(1);
+        var mineOnly = await _repository.GetByUserIdAsync(Guid.NewGuid());
 
         mineOnly.IsSuccess.Should().BeTrue();
         var names = mineOnly.Value!.Select(x => x.Name).ToList();
@@ -123,7 +124,7 @@ public class ExerciseRepositoryTests(MongoDbFixture fixture) : IAsyncLifetime
     {
         await _repository.CreateAsync(new Exercise { Name = "Global A", IsGlobal = true });
         await _repository.CreateAsync(new Exercise { Name = "Global B", IsGlobal = true });
-        await _repository.CreateAsync(new Exercise { Name = "Mine", UserId = 1, IsGlobal = false });
+        await _repository.CreateAsync(new Exercise { Name = "Mine", UserId = Guid.NewGuid(), IsGlobal = false });
 
         var globals = await _repository.GetGlobalExercisesAsync();
 
@@ -136,7 +137,7 @@ public class ExerciseRepositoryTests(MongoDbFixture fixture) : IAsyncLifetime
     [Fact]
     public async Task Should_ExistsAsync_Work_Correctly()
     {
-        var created = await _repository.CreateAsync(new Exercise { Name = "Push Up", UserId = 1 });
+        var created = await _repository.CreateAsync(new Exercise { Name = "Push Up", UserId = Guid.NewGuid() });
 
         var exists = await _repository.ExistsAsync(created.Value!.Id);
         var notExists = await _repository.ExistsAsync("605c72f5f2b3c23f04d5d9aa");
@@ -149,12 +150,12 @@ public class ExerciseRepositoryTests(MongoDbFixture fixture) : IAsyncLifetime
     public async Task Should_UserOwnsExerciseAsync_Respect_Global_And_Ownership()
     {
         var global = await _repository.CreateAsync(new Exercise { Name = "Global", IsGlobal = true });
-        var mine = await _repository.CreateAsync(new Exercise { Name = "Mine", UserId = 1 });
-        var other = await _repository.CreateAsync(new Exercise { Name = "Other", UserId = 2 });
+        var mine = await _repository.CreateAsync(new Exercise { Name = "Mine", UserId = Guid.NewGuid() });
+        var other = await _repository.CreateAsync(new Exercise { Name = "Other", UserId = Guid.NewGuid() });
 
-        var ownsGlobal = await _repository.UserOwnsExerciseAsync(global.Value!.Id, 1);
-        var ownsMine = await _repository.UserOwnsExerciseAsync(mine.Value!.Id, 1);
-        var ownsOther = await _repository.UserOwnsExerciseAsync(other.Value!.Id, 1);
+        var ownsGlobal = await _repository.UserOwnsExerciseAsync(global.Value!.Id, Guid.NewGuid());
+        var ownsMine = await _repository.UserOwnsExerciseAsync(mine.Value!.Id, Guid.NewGuid());
+        var ownsOther = await _repository.UserOwnsExerciseAsync(other.Value!.Id, Guid.NewGuid());
 
         ownsGlobal.Value.Should().BeTrue(); // global visible to all
         ownsMine.Value.Should().BeTrue();

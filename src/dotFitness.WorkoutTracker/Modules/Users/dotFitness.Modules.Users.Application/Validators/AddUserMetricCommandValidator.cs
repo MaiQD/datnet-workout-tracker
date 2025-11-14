@@ -9,7 +9,6 @@ public class AddUserMetricCommandValidator : AbstractValidator<AddUserMetricComm
     {
         RuleFor(x => x.UserId)
             .NotEmpty()
-            .GreaterThan(0)
             .WithMessage("User ID is required");
 
         RuleFor(x => x.Date)

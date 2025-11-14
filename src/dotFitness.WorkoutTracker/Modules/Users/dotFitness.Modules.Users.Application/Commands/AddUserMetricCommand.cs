@@ -1,7 +1,7 @@
 using MediatR;
 using dotFitness.Modules.Users.Application.DTOs;
-using dotFitness.SharedKernel.Results;
 using System.ComponentModel.DataAnnotations;
+using dotFitness.Common.Results;
 
 namespace dotFitness.Modules.Users.Application.Commands;
 
@@ -11,7 +11,7 @@ public record AddUserMetricCommand : IRequest<Result<UserMetricDto>>
     {
     }
 
-    public AddUserMetricCommand(int UserId, DateTime Date, double? Weight, double? Height, string? Notes)
+    public AddUserMetricCommand(Guid UserId, DateTime Date, double? Weight, double? Height, string? Notes)
     {
         this.UserId = UserId;
         this.Date = Date;
@@ -20,7 +20,7 @@ public record AddUserMetricCommand : IRequest<Result<UserMetricDto>>
         this.Notes = Notes;
     }
 
-    [Required] public int UserId { get; set; }
+    [Required] public Guid UserId { get; set; }
 
     [Required] public DateTime Date { get; init; }
 

@@ -1,15 +1,15 @@
 using MediatR;
 using dotFitness.Modules.Users.Application.DTOs;
-using dotFitness.SharedKernel.Results;
 using System.ComponentModel.DataAnnotations;
+using dotFitness.Common.Results;
 
 namespace dotFitness.Modules.Users.Application.Queries;
 
-public class GetLatestUserMetricQuery(int userId) : IRequest<Result<UserMetricDto>>
+public class GetLatestUserMetricQuery(Guid userId) : IRequest<Result<UserMetricDto>>
 {
-    public GetLatestUserMetricQuery() : this(0)
+    public GetLatestUserMetricQuery() : this(Guid.Empty)
     {
     }
     [Required]
-    public int UserId { get; set; } = userId;
+    public Guid UserId { get; set; } = userId;
 };

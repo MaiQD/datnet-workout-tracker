@@ -24,7 +24,7 @@ public class UpdateUserProfileCommandValidatorTests
         var request =
             new UpdateUserProfileRequest("Valid Name", Gender.Male, new DateTime(1990, 1, 1), UnitPreference.Metric);
         var command = new UpdateUserProfileCommand(
-            UserId: 1,
+            UserId: Guid.NewGuid(),
             Request: request
         );
 
@@ -35,16 +35,13 @@ public class UpdateUserProfileCommandValidatorTests
         result.ShouldNotHaveAnyValidationErrors();
     }
 
-    [Theory]
+    [Fact]
     [Trait("Category", "Unit")]
-    [InlineData(0)]
-    [InlineData(-1)]
-    [InlineData(null)]
-    public void Should_Fail_Validation_For_Missing_User_Id(int? invalidUserId)
+    public void Should_Fail_Validation_For_Empty_User_Id()
     {
         // Arrange
         var command = new UpdateUserProfileCommand(
-            UserId: invalidUserId ?? 0,
+            UserId: Guid.Empty,
             Request: new UpdateUserProfileRequest("Valid Name", Gender.Male, new DateTime(1990, 1, 1),
                 UnitPreference.Metric)
         );
@@ -65,7 +62,7 @@ public class UpdateUserProfileCommandValidatorTests
     {
         // Arrange
         var command = new UpdateUserProfileCommand(
-            UserId: 1,
+            UserId: Guid.NewGuid(),
             Request: new UpdateUserProfileRequest(displayName, null, null, null)
         );
 
@@ -82,7 +79,7 @@ public class UpdateUserProfileCommandValidatorTests
     {
         // Arrange
         var command = new UpdateUserProfileCommand(
-            UserId: 1,
+            UserId: Guid.NewGuid(),
             Request: new UpdateUserProfileRequest("Valid Name", Gender.Male, null, null)
         );
 
@@ -100,7 +97,7 @@ public class UpdateUserProfileCommandValidatorTests
         // Arrange
         var longName = new string('A', 101); // 101 characters
         var command = new UpdateUserProfileCommand(
-            UserId: 1,
+            UserId: Guid.NewGuid(),
             Request: new UpdateUserProfileRequest(longName, null, null, null)
         );
 
@@ -119,7 +116,7 @@ public class UpdateUserProfileCommandValidatorTests
         // Arrange
         var futureDate = DateTime.UtcNow.AddDays(1);
         var command = new UpdateUserProfileCommand(
-            UserId: 1,
+            UserId: Guid.NewGuid(),
             Request: new UpdateUserProfileRequest("Valid Name", null, futureDate, null)
         );
 
@@ -138,7 +135,7 @@ public class UpdateUserProfileCommandValidatorTests
         // Arrange
         var veryOldDate = DateTime.UtcNow.AddYears(-151); // 151 years ago
         var command = new UpdateUserProfileCommand(
-            UserId: 1,
+            UserId: Guid.NewGuid(),
             Request: new UpdateUserProfileRequest("Valid Name", null, veryOldDate, null)
         );
 
@@ -186,7 +183,7 @@ public class UpdateUserProfileCommandValidatorTests
     {
         // Arrange
         var command = new UpdateUserProfileCommand(
-            UserId: 1,
+            UserId: Guid.NewGuid(),
             Request: new UpdateUserProfileRequest("Valid Name", null, null, null)
         );
 
@@ -204,7 +201,7 @@ public class UpdateUserProfileCommandValidatorTests
         // Arrange
         var validDate = new DateTime(1990, 5, 15);
         var command = new UpdateUserProfileCommand(
-            UserId: 1,
+            UserId: Guid.NewGuid(),
             Request: new UpdateUserProfileRequest("Valid Name", null, validDate, null)
         );
 
@@ -225,7 +222,7 @@ public class UpdateUserProfileCommandValidatorTests
     {
         // Arrange
         var command = new UpdateUserProfileCommand(
-            UserId: 1,
+            UserId: Guid.NewGuid(),
             Request: new UpdateUserProfileRequest("Valid Name", gender, null, null)
         );
 
@@ -244,7 +241,7 @@ public class UpdateUserProfileCommandValidatorTests
     {
         // Arrange
         var command = new UpdateUserProfileCommand(
-            UserId: 1,
+            UserId: Guid.NewGuid(),
             Request: new UpdateUserProfileRequest("Valid Name", null, null, unitPreference)
         );
 

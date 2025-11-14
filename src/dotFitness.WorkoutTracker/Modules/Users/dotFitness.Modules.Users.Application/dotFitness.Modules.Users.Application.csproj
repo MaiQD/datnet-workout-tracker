@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\dotFitness.SharedKernel\dotFitness.SharedKernel.csproj" />
+    <ProjectReference Include="..\..\..\dotFitness.Common\dotFitness.Common.csproj" />
     <ProjectReference Include="..\dotFitness.Modules.Users.Domain\dotFitness.Modules.Users.Domain.csproj" />
   </ItemGroup>
 

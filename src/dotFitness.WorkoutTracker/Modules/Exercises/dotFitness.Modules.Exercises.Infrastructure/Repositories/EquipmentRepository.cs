@@ -1,8 +1,8 @@
+using dotFitness.Common.Results;
 using MongoDB.Driver;
 using Microsoft.Extensions.Logging;
 using dotFitness.Modules.Exercises.Domain.Entities;
 using dotFitness.Modules.Exercises.Domain.Repositories;
-using dotFitness.SharedKernel.Results;
 
 namespace dotFitness.Modules.Exercises.Infrastructure.Repositories;
 
@@ -46,7 +46,7 @@ public class EquipmentRepository : IEquipmentRepository
         }
     }
 
-    public async Task<Result<IEnumerable<Equipment>>> GetByUserIdAsync(int userId,
+    public async Task<Result<IEnumerable<Equipment>>> GetByUserIdAsync(Guid userId,
         CancellationToken cancellationToken = default)
     {
         try
@@ -81,7 +81,7 @@ public class EquipmentRepository : IEquipmentRepository
         }
     }
 
-    public async Task<Result<IEnumerable<Equipment>>> GetAllForUserAsync(int userId,
+    public async Task<Result<IEnumerable<Equipment>>> GetAllForUserAsync(Guid userId,
         CancellationToken cancellationToken = default)
     {
         try
@@ -168,7 +168,7 @@ public class EquipmentRepository : IEquipmentRepository
         }
     }
 
-    public async Task<Result<Equipment?>> GetByNameAsync(string name, int? userId = null,
+    public async Task<Result<Equipment?>> GetByNameAsync(string name, Guid? userId = null,
         CancellationToken cancellationToken = default)
     {
         try
@@ -204,7 +204,7 @@ public class EquipmentRepository : IEquipmentRepository
         }
     }
 
-    public async Task<Result<bool>> UserOwnsEquipmentAsync(string equipmentId, int userId,
+    public async Task<Result<bool>> UserOwnsEquipmentAsync(string equipmentId, Guid userId,
         CancellationToken cancellationToken = default)
     {
         try

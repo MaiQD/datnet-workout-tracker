@@ -1,3 +1,4 @@
+using dotFitness.Common.Results;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -17,15 +18,16 @@ public class UpdateExerciseCommandHandlerTests
     [Trait("Category", "Unit")]
     public async Task Should_Update_When_User_Owns_Exercise()
     {
-        var existing = new Exercise { Id = "ex1", UserId = 1, Name = "Old" };
+        var userId = Guid.NewGuid();
+        var existing = new Exercise { Id = "ex1", UserId = userId, Name = "Old" };
         _repo.Setup(r => r.GetByIdAsync("ex1", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(dotFitness.SharedKernel.Results.Result.Success<Exercise?>(existing));
+            .ReturnsAsync(Result.Success<Exercise?>(existing));
         _repo.Setup(r => r.UpdateAsync(existing, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(dotFitness.SharedKernel.Results.Result.Success(existing));
+            .ReturnsAsync(Result.Success(existing));
 
         var cmd = new UpdateExerciseCommand(
             ExerciseId: "ex1",
-            UserId: 1,
+            UserId: userId,
             Name: "New",
             Description: null,
             MuscleGroups: [],
@@ -49,11 +51,11 @@ public class UpdateExerciseCommandHandlerTests
     public async Task Should_Return_Failure_When_Not_Found()
     {
         _repo.Setup(r => r.GetByIdAsync("ex1", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(dotFitness.SharedKernel.Results.Result.Success<Exercise?>(null));
+            .ReturnsAsync(Result.Success<Exercise?>(null));
 
         var cmd = new UpdateExerciseCommand(
             ExerciseId: "ex1",
-            UserId: 1,
+            UserId: Guid.NewGuid(),
             Name: "New",
             Description: null,
             MuscleGroups: [],
@@ -76,13 +78,15 @@ public class UpdateExerciseCommandHandlerTests
     [Trait("Category", "Unit")]
     public async Task Should_Return_Failure_When_User_Not_Owner()
     {
-        var existing = new Exercise { Id = "ex1", UserId = -1, Name = "Old" };
+        var userId = Guid.NewGuid();
+        var otherUserId = Guid.NewGuid();
+        var existing = new Exercise { Id = "ex1", UserId = otherUserId, Name = "Old" };
         _repo.Setup(r => r.GetByIdAsync("ex1", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(dotFitness.SharedKernel.Results.Result.Success<Exercise?>(existing));
+            .ReturnsAsync(Result.Success<Exercise?>(existing));
 
         var cmd = new UpdateExerciseCommand(
             ExerciseId: "ex1",
-            UserId: 1,
+            UserId: userId,
             Name: "New",
             Description: null,
             MuscleGroups: [],

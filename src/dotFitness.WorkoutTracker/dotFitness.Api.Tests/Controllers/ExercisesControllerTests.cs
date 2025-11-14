@@ -8,8 +8,8 @@ using dotFitness.Modules.Exercises.Application.Commands;
 using dotFitness.Modules.Exercises.Application.DTOs;
 using dotFitness.Modules.Exercises.Application.Queries;
 using dotFitness.Modules.Exercises.Domain.Entities;
-using dotFitness.SharedKernel.Results;
 using System.Security.Claims;
+using dotFitness.Common.Results;
 
 namespace dotFitness.Api.Tests.Controllers;
 
@@ -26,9 +26,11 @@ public class ExercisesControllerTests
         _controller = new ExercisesController(_mediatorMock.Object, _loggerMock.Object);
         
         // Setup user claims
+        var userId = Guid.NewGuid();
         var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.NameIdentifier, "1")
+            new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+            new Claim(ClaimTypes.Role, "User")
         };
         var identity = new ClaimsIdentity(claims, "test");
         var principal = new ClaimsPrincipal(identity);
@@ -126,7 +128,7 @@ public class ExercisesControllerTests
         var createdExercise = new ExerciseDto("1", "Push Up", "Basic push up exercise", 
             new List<string> { "Chest" }, new List<string> { "Bodyweight" }, 
             new List<string> { "Step 1", "Step 2" }, ExerciseDifficulty.Beginner, 
-            null, null, false, 1, new List<string> { "strength" }, fixedDate, fixedDate);
+            null, null, false, Guid.NewGuid(), new List<string> { "strength" }, fixedDate, fixedDate);
 
         _mediatorMock
             .Setup(m => m.Send(It.IsAny<CreateExerciseCommand>(), It.IsAny<CancellationToken>()))

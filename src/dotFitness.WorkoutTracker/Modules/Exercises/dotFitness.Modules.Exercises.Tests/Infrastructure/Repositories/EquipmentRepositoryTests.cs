@@ -4,7 +4,7 @@ using MongoDB.Driver;
 using Moq;
 using dotFitness.Modules.Exercises.Domain.Entities;
 using dotFitness.Modules.Exercises.Infrastructure.Repositories;
-using dotFitness.SharedKernel.Tests.MongoDB;
+using dotFitness.Common.Tests.MongoDB;
 
 namespace dotFitness.Modules.Exercises.Tests.Infrastructure.Repositories;
 
@@ -32,7 +32,7 @@ public class EquipmentRepositoryTests(MongoDbFixture fixture) : IAsyncLifetime
     [Fact]
     public async Task Should_Create_And_Get_By_Id()
     {
-        var eq = new Equipment { Name = "Dumbbell", UserId = 1 };
+        var eq = new Equipment { Name = "Dumbbell", UserId = Guid.NewGuid() };
         var created = await _repository.CreateAsync(eq);
         var fetched = await _repository.GetByIdAsync(created.Value!.Id);
         fetched.Value!.Name.Should().Be("Dumbbell");
@@ -41,11 +41,12 @@ public class EquipmentRepositoryTests(MongoDbFixture fixture) : IAsyncLifetime
     [Fact]
     public async Task Should_Get_All_For_User_Including_Global()
     {
+        var userId = Guid.NewGuid();
         await _repository.CreateAsync(new Equipment { Name = "Global", IsGlobal = true });
-        await _repository.CreateAsync(new Equipment { Name = "My Eq", UserId = 1 });
-        await _repository.CreateAsync(new Equipment { Name = "Other", UserId = 2 });
+        await _repository.CreateAsync(new Equipment { Name = "My Eq", UserId = userId });
+        await _repository.CreateAsync(new Equipment { Name = "Other", UserId = Guid.NewGuid() });
 
-        var all = await _repository.GetAllForUserAsync(1);
+        var all = await _repository.GetAllForUserAsync(userId);
 
         all.Value!.Select(x => x.Name).Should().Contain(["Global","My Eq"]);
         all.Value!.Select(x => x.Name).Should().NotContain("Other");
@@ -54,7 +55,7 @@ public class EquipmentRepositoryTests(MongoDbFixture fixture) : IAsyncLifetime
     [Fact]
     public async Task Should_Update_And_Delete()
     {
-        var eq = new Equipment { Name = "Dumbbell", UserId = 1 };
+        var eq = new Equipment { Name = "Dumbbell", UserId = Guid.NewGuid() };
         var created = await _repository.CreateAsync(eq);
 
         var toUpdate = created.Value!;
@@ -69,14 +70,14 @@ public class EquipmentRepositoryTests(MongoDbFixture fixture) : IAsyncLifetime
     [Fact]
     public async Task Should_Check_Name_Exists_And_Get_By_Name()
     {
-        await _repository.CreateAsync(new Equipment { Name = "Dumbbell", UserId = 1 });
+        await _repository.CreateAsync(new Equipment { Name = "Dumbbell", UserId = Guid.NewGuid() });
         var exists = await _repository.NameExistsAsync("Dumbbell");
         exists.Value.Should().BeTrue();
 
         var byNameGlobal = await _repository.GetByNameAsync("Dumbbell");
         byNameGlobal.Value.Should().BeNull();
 
-        var byNameUser = await _repository.GetByNameAsync("Dumbbell", userId: 1);
+        var byNameUser = await _repository.GetByNameAsync("Dumbbell", userId: Guid.NewGuid());
         byNameUser.Value.Should().NotBeNull();
     }
 }

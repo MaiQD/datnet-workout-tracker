@@ -7,8 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\dotFitness.SharedKernel\dotFitness.SharedKernel.csproj" />
-    <ProjectReference Include="..\dotFitness.Bootstrap\dotFitness.Bootstrap.csproj" />
+    <ProjectReference Include="..\dotFitness.Common\dotFitness.Common.csproj" />
     <ProjectReference Include="..\dotFitness.ModuleContracts\dotFitness.ModuleContracts.csproj" />
     <ProjectReference Include="..\dotFitness.Aspire.ServiceDefaults\dotFitness.Aspire.ServiceDefaults.csproj" />
     <PackageReference Include="FluentValidation.AspNetCore" />
@@ -23,8 +22,9 @@
     <PackageReference Include="Swashbuckle.AspNetCore" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" />
-    <ProjectReference Include="..\Modules\Users\dotFitness.Modules.Users.Application\dotFitness.Modules.Users.Application.csproj" />
-    <ProjectReference Include="..\Modules\Exercises\dotFitness.Modules.Exercises.Application\dotFitness.Modules.Exercises.Application.csproj" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
+    <ProjectReference Include="..\Modules\Exercises\dotFitness.Modules.Exercises.Infrastructure\dotFitness.Modules.Exercises.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Users\dotFitness.Modules.Users.Infrastructure\dotFitness.Modules.Users.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,12 +1,12 @@
+using dotFitness.Common.Results;
 using dotFitness.Modules.Exercises.Application.DTOs;
 using dotFitness.Modules.Exercises.Domain.Entities;
-using dotFitness.SharedKernel.Results;
 using MediatR;
 
 namespace dotFitness.Modules.Exercises.Application.Commands;
 
 public record CreateExerciseCommand(
-    int UserId,
+    Guid UserId,
     string Name,
     string? Description,
     List<string> MuscleGroups,

@@ -3,7 +3,7 @@ using MongoDB.Driver;
 using MongoDB.Bson;
 using dotFitness.Modules.Exercises.Domain.Entities;
 using dotFitness.Modules.Exercises.Infrastructure.Repositories;
-using dotFitness.SharedKernel.Tests.MongoDB;
+using dotFitness.Common.Tests.MongoDB;
 
 namespace dotFitness.Modules.Exercises.Tests.Infrastructure.Repositories;
 
@@ -30,7 +30,7 @@ public class UserPreferencesProjectionRepositoryTests(MongoDbFixture fixture) : 
     [Fact]
     public async Task Should_Return_Null_When_Not_Found()
     {
-        var userId = 1;
+        var userId = Guid.NewGuid();
         var result = await _repository.GetByUserIdAsync(userId);
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().BeNull();
@@ -39,7 +39,7 @@ public class UserPreferencesProjectionRepositoryTests(MongoDbFixture fixture) : 
     [Fact]
     public async Task Should_Return_Preferences_When_Found()
     {
-        var userId = 1;
+        var userId = Guid.NewGuid();
         var pref = new UserPreferencesProjection
         {
             UserId = userId,

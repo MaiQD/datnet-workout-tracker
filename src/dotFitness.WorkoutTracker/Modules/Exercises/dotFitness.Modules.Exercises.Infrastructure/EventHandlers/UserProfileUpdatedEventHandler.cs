@@ -1,7 +1,7 @@
+using dotFitness.Common.Events;
+using dotFitness.Common.Inbox;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
-using dotFitness.SharedKernel.Events;
-using dotFitness.SharedKernel.Inbox;
 using dotFitness.Modules.Exercises.Domain.Entities;
 
 namespace dotFitness.Modules.Exercises.Infrastructure.EventHandlers;

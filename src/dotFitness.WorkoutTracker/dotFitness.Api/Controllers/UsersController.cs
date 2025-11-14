@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using MediatR;
 using dotFitness.Api.Infrastructure.Extensions;
+using dotFitness.Common.Authorization;
 using dotFitness.Modules.Users.Application.Commands;
 using dotFitness.Modules.Users.Application.DTOs;
 using dotFitness.Modules.Users.Application.Queries;
@@ -67,6 +68,7 @@ public class UsersController : ControllerBase
     /// <param name="request">The profile update data</param>
     /// <returns>Updated user profile</returns>
     [HttpPut("profile")]
+    [Authorize(Policy = AuthorizationPolicies.SelfOrAdmin)]
     [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
