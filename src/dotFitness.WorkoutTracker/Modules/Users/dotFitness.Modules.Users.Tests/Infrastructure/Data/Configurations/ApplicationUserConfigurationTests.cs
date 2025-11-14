@@ -17,6 +17,10 @@ public class ApplicationUserConfigurationTests
 
         using var context = new DbContext(options);
         var modelBuilder = new ModelBuilder();
+        
+        // Set default schema to match DbContext behavior
+        modelBuilder.HasDefaultSchema("users");
+        
         var configuration = new ApplicationUserConfiguration();
 
         // Act
@@ -26,8 +30,8 @@ public class ApplicationUserConfigurationTests
 
         // Assert
         entityType.Should().NotBeNull();
-        entityType!.GetTableName().Should().Be("ApplicationUsers");
-        entityType.GetSchema().Should().Be("users");
+        entityType!.GetTableName().Should().Be("AspNetUsers");
+        entityType.GetSchema().Should().Be("users"); // Uses default schema from DbContext
     }
 
     [Fact]

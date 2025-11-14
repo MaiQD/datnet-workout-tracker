@@ -2,11 +2,13 @@ using dotFitness.Common.Authorization;
 using dotFitness.Common.Results;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Identity;
 using dotFitness.Modules.Users.Application.Commands;
 using dotFitness.Modules.Users.Application.DTOs;
 using dotFitness.Modules.Users.Application.Services;
 using dotFitness.Modules.Users.Domain.Entities;
+using dotFitness.Modules.Users.Infrastructure.Settings;
 
 namespace dotFitness.Modules.Users.Infrastructure.Handlers;
 
@@ -15,17 +17,20 @@ public class LoginWithGoogleCommandHandler : IRequestHandler<LoginWithGoogleComm
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly IGoogleAuthService _googleAuthService;
+    private readonly AdminSettings _adminSettings;
     private readonly ILogger<LoginWithGoogleCommandHandler> _logger;
 
     public LoginWithGoogleCommandHandler(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
         IGoogleAuthService googleAuthService,
+        IOptions<AdminSettings> adminSettings,
         ILogger<LoginWithGoogleCommandHandler> logger)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _googleAuthService = googleAuthService;
+        _adminSettings = adminSettings.Value;
         _logger = logger;
     }
 
@@ -61,7 +66,15 @@ public class LoginWithGoogleCommandHandler : IRequestHandler<LoginWithGoogleComm
                     return Result.Failure<LoginResponseDto>($"Failed to create user: {errors}");
                 }
 
+                // Assign default User role
                 await _userManager.AddToRoleAsync(user, Roles.User);
+                
+                // Check if user should be admin based on email whitelist (UM-008 requirement)
+                if (_adminSettings.AdminEmails.Contains(googleUser.Email, StringComparer.OrdinalIgnoreCase))
+                {
+                    await _userManager.AddToRoleAsync(user, Roles.Admin);
+                    _logger.LogInformation("Admin role assigned to user: {Email}", googleUser.Email);
+                }
             }
 
             // 3. Sign in and get tokens using Identity's token generation

@@ -30,6 +30,9 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
             .HasConversion<string>()
             .HasMaxLength(50);
         
+        builder.Property(e => e.DateOfBirth)
+            .HasColumnType("date");
+        
         builder.Property(e => e.UnitPreference)
             .HasConversion<string>()
             .HasMaxLength(50);
