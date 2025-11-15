@@ -19,14 +19,6 @@ public class MongoDbInitializationService(
 {
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        var autoInitializeEnabled = configuration.GetValue<bool>("Database:AutoInitialize", defaultValue: true);
-        
-        if (!autoInitializeEnabled)
-        {
-            logger.LogInformation("Auto-initialization is disabled for Exercises module");
-            return;
-        }
-
         logger.LogInformation("Starting Exercises module MongoDB initialization service...");
 
         try
@@ -91,12 +83,7 @@ public class MongoDbInitializationService(
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to initialize MongoDB for Exercises module: {ErrorMessage}", ex.Message);
-            
-            var failOnInitializationError = configuration.GetValue<bool>("Database:FailOnInitializationError", defaultValue: true);
-            if (failOnInitializationError)
-            {
-                throw; // Re-throw to fail fast if initialization fails
-            }
+            throw;
         }
     }
 

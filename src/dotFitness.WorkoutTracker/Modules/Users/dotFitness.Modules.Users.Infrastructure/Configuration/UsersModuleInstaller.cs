@@ -59,9 +59,7 @@ public class UsersModuleInstaller : IModuleInstaller
         // Configure PostgreSQL DbContext for Users module
         services.AddDbContext<UsersDbContext>(options =>
         {
-            // Try Aspire connection first, then fallback to manual configuration
-            var connectionString = configuration.GetConnectionString("dotFitnessDb-pg") 
-                                   ?? configuration.GetConnectionString("PostgreSQL");
+            var connectionString = configuration.GetConnectionString("UsersModuleConnectionString");
             options.UseNpgsql(connectionString, npgsqlOptions =>
             {
                 npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "users");

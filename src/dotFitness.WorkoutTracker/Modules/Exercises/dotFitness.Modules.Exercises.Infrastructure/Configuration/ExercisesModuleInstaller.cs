@@ -26,6 +26,24 @@ public class ExercisesModuleInstaller : IModuleInstaller
     {
         assemblies.Add(typeof(ExercisesModuleInstaller).Assembly);
 
+        services.AddSingleton<IMongoClient>(sp =>
+        {
+            var connectionString = configuration.GetConnectionString("ExercisesModuleConnectionString")
+                                   ?? throw new InvalidOperationException("MongoDB connection string not found. Configure one of: ExercisesModuleConnectionString, dotFitnessDb-mongo, or MongoDB");
+            return new MongoClient(connectionString);
+        });
+
+        services.AddSingleton<IMongoDatabase>(sp =>
+        {
+            var client = sp.GetRequiredService<IMongoClient>();
+            var connectionString = configuration.GetConnectionString("ExercisesModuleConnectionString")
+                                   ?? throw new InvalidOperationException("MongoDB connection string not found");
+            
+            var mongoUrl = new MongoUrl(connectionString);
+            var dbName = mongoUrl.DatabaseName ?? "dotFitness";
+            return client.GetDatabase(dbName);
+        });
+
         // Register MongoDB collections specific to Exercises module
         services.AddSingleton(sp =>
         {

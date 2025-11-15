@@ -79,10 +79,15 @@ dotFitness.Modules.{ModuleName}/
    cd src/dotFitness.WorkoutTracker
    ```
 
-3. **Start MongoDB** (using Docker)
+3. **Start databases** (using Docker Compose)
    ```bash
    docker-compose up -d
    ```
+   
+   This will start:
+   - PostgreSQL on port 5432
+   - MongoDB on port 27017
+   - Mongo Express (MongoDB admin UI) on port 8081
 
 4. **Restore dependencies**
    ```bash
@@ -112,7 +117,8 @@ Update `dotFitness.Api/appsettings.Development.json`:
 ```json
 {
   "ConnectionStrings": {
-    "MongoDB": "mongodb://admin:password@localhost:27017/dotFitnessDb?authSource=admin"
+    "UsersModuleConnectionString": "Host=localhost;Database=dotFitnessDb;Username=postgres;Password=password;Port=5432",
+    "ExercisesModuleConnectionString": "mongodb://admin:password@localhost:27017/dotFitnessDb?authSource=admin"
   },
   "AdminSettings": {
     "AdminEmails": ["your.admin.email@gmail.com"]
@@ -131,8 +137,61 @@ Update `dotFitness.Api/appsettings.Development.json`:
 }
 ```
 
+**Note:** The connection strings match the Docker Compose database configuration. If you change database credentials in `docker-compose.yml`, update the connection strings accordingly.
+
 **Note**: For Google OAuth integration, follow the [Google OAuth Setup Guide](doc/GOOGLE_OAUTH_SWAGGER_SETUP.md) to configure your Google Cloud Console credentials.
+
+### Database Setup
+
+The application uses Docker Compose to run PostgreSQL and MongoDB databases locally. This approach allows for:
+- Manual database migrations without Aspire interference
+- Module-specific connection string keys
+- Persistent data storage via Docker volumes
+
+**Start databases:**
+```bash
+cd src/dotFitness.WorkoutTracker
+docker-compose up -d
 ```
+
+**Stop databases:**
+```bash
+docker-compose down
+```
+
+**View database data:**
+- PostgreSQL: Connect using any PostgreSQL client (e.g., pgAdmin, DBeaver) to `localhost:5432`
+- MongoDB: Access Mongo Express at http://localhost:8081
+
+### Database Migrations
+
+**For PostgreSQL (Users Module):**
+
+The application uses Entity Framework Core migrations for the Users module. Migrations can be run manually:
+
+```bash
+cd src/dotFitness.WorkoutTracker/Modules/Users/dotFitness.Modules.Users.Infrastructure
+
+# Create a new migration
+dotnet ef migrations add <MigrationName> --project . --startup-project ../../../../dotFitness.Api/dotFitness.Api.csproj --context UsersDbContext
+
+# Apply migrations
+dotnet ef database update --project . --startup-project ../../../../dotFitness.Api/dotFitness.Api.csproj --context UsersDbContext
+```
+
+**Connection String Priority:**
+1. `UsersModuleConnectionString` (module-specific, recommended)
+2. `dotFitnessDb-pg` (Aspire-generated, if using Aspire)
+3. `PostgreSQL` (generic fallback)
+
+**For MongoDB (Exercises Module):**
+
+MongoDB uses schema-less collections. Indexes and seed data are automatically configured on application startup via `MongoDbInitializationService`.
+
+**Connection String Priority:**
+1. `ExercisesModuleConnectionString` (module-specific, recommended)
+2. `dotFitnessDb-mongo` (Aspire-generated, if using Aspire)
+3. `MongoDB` (generic fallback)
 
 ## 📚 Documentation
 
