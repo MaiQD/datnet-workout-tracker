@@ -47,11 +47,6 @@ builder.AddServiceDefaults();
 
 var app = builder.Build();
 
-// Configure MongoDB indexes
-// await MongoDbIndexConfigurator.ConfigureIndexesAsync(app.Services);
-// // Seed MongoDB data
-// await MongoDbSeeder.ConfigureSeedsAsync(app.Services);
-
 // Map Identity API endpoints (includes /login, /refresh, /register, etc.)
 app.MapGroup("/api/v1/auth")
     .MapIdentityApi<dotFitness.Modules.Users.Domain.Entities.ApplicationUser>();

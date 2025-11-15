@@ -1,10 +1,8 @@
 using System.Reflection;
-using dotFitness.Common.Outbox;
 using dotFitness.ModuleContracts;
 using dotFitness.Modules.Exercises.Infrastructure.Configuration;
 using dotFitness.Modules.Users.Infrastructure.Configuration;
 using FluentValidation;
-using MongoDB.Driver;
 
 namespace dotFitness.Api.Infrastructure;
 
@@ -57,24 +55,4 @@ public static class ModuleRegistry
         // FluentValidation 
         services.AddValidatorsFromAssemblies(assemblies.ToArray());
     }
-
-    // public static void ConfigureAllModuleIndexes(this IServiceProvider provider, ILogger logger)
-    // {
-    //     var database = provider.GetRequiredService<IMongoDatabase>();
-    //     var installers = provider.GetRequiredService<IEnumerable<IModuleInstaller>>();
-    //     foreach (var i in installers)
-    //     {
-    //         i.ConfigureIndexes(database);
-    //     }
-    // }
-    //
-    // public static void SeedAllModuleData(this IServiceProvider provider, ILogger logger)
-    // {
-    //     var database = provider.GetRequiredService<IMongoDatabase>();
-    //     var installers = provider.GetRequiredService<IEnumerable<IModuleInstaller>>();
-    //     foreach (var i in installers)
-    //     {
-    //         i.SeedData(database);
-    //     }
-    // }
 }
