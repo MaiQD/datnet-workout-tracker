@@ -12,20 +12,18 @@ public class UserMetricEntityConfiguration : IEntityTypeConfiguration<UserMetric
     public void Configure(EntityTypeBuilder<UserMetric> builder)
     {
         // Table configuration
-        builder.ToTable("UserMetrics", "users");
+        builder.ToTable("UserMetrics");
         
         // Primary key - integer auto-increment
         builder.HasKey(um => um.Id);
         builder.Property(um => um.Id)
             .HasColumnName("Id")
-            .HasColumnType("integer")
             .ValueGeneratedOnAdd()
             .IsRequired();
 
         // User ID foreign key - changed to Guid
         builder.Property(um => um.UserId)
             .HasColumnName("UserId")
-            .HasColumnType("uuid")
             .IsRequired();
 
         // Create index on UserId for performance
@@ -35,7 +33,6 @@ public class UserMetricEntityConfiguration : IEntityTypeConfiguration<UserMetric
         // Date configuration
         builder.Property(um => um.Date)
             .HasColumnName("Date")
-            .HasColumnType("date")
             .IsRequired();
 
         // Unique constraint on UserId + Date (one metric per user per day)

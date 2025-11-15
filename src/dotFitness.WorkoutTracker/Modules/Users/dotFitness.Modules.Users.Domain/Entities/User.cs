@@ -13,7 +13,7 @@ public class ApplicationUser : IdentityUser<Guid>
     public UnitPreference UnitPreference { get; set; } = UnitPreference.Metric;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-    public bool IsOnboarded { get; set; } = false;
+    public bool IsOnboarded { get; set; }
     public DateTime? OnboardingCompletedAt { get; set; }
     public List<string> AvailableEquipmentIds { get; set; } = [];
     public List<string> FocusMuscleGroupIds { get; set; } = [];

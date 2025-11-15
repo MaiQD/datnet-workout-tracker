@@ -1,10 +1,9 @@
 using dotFitness.Common.Results;
+using dotFitness.Modules.Exercises.Domain.Repositories;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using dotFitness.Modules.Exercises.Application.Commands;
-using dotFitness.Modules.Exercises.Domain.Repositories;
 
-namespace dotFitness.Modules.Exercises.Infrastructure.Handlers;
+namespace dotFitness.Modules.Exercises.Application.Commands;
 
 public class DeleteExerciseCommandHandler : IRequestHandler<DeleteExerciseCommand, Result>
 {

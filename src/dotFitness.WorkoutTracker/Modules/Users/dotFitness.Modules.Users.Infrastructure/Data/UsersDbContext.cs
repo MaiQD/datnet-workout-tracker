@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using dotFitness.Modules.Users.Domain.Entities;
 using dotFitness.Modules.Users.Infrastructure.Data.Entities;
-using dotFitness.Modules.Users.Infrastructure.Data.Configurations;
 
 namespace dotFitness.Modules.Users.Infrastructure.Data;
 
@@ -18,12 +17,10 @@ public class UsersDbContext(DbContextOptions<UsersDbContext> options)
         base.OnModelCreating(modelBuilder); // Critical: Call base first for Identity
         
         // Set default schema
-        modelBuilder.HasDefaultSchema("users");
+        modelBuilder.HasDefaultSchema(Schemas.Users);
         
         // Apply all entity configurations
-        modelBuilder.ApplyConfiguration(new ApplicationUserConfiguration());
-        modelBuilder.ApplyConfiguration(new UserMetricEntityConfiguration());
-        modelBuilder.ApplyConfiguration(new OutboxMessageConfiguration());
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(UsersDbContext).Assembly);
     }
     
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

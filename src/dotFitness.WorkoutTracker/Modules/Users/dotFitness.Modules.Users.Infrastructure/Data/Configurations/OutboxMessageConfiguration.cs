@@ -27,6 +27,14 @@ public class OutboxMessageConfiguration : IEntityTypeConfiguration<OutboxMessage
         builder.Property(e => e.CreatedAt)
             .HasDefaultValueSql("CURRENT_TIMESTAMP");
         
+        builder.Property(e => e.CorrelationId)
+            .HasMaxLength(36);
+        
+        builder.Property(e => e.TraceId)
+            .HasMaxLength(36);
+        
+        builder.Property(e => e.LastError)
+            .HasMaxLength(2000);
         // Indexes
         builder.HasIndex(e => e.EventId)
             .IsUnique()

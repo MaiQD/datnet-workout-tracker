@@ -1,10 +1,11 @@
-namespace dotFitness.Api.Infrastructure.Settings;
+namespace dotFitness.Common.Application.Settings;
 
 /// <summary>
 /// Configuration settings for the Outbox Processor Service
 /// </summary>
 public class OutboxProcessorSettings
 {
+    public static string OutboxProcessorSettingsSection => nameof(OutboxProcessorSettings);
     /// <summary>
     /// Processing interval in seconds. Default is 10 seconds.
     /// </summary>

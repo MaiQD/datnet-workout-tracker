@@ -1,6 +1,5 @@
 using Moq;
 using MediatR;
-using FluentAssertions;
 using dotFitness.Common.Results;
 using dotFitness.Modules.Users.API.Endpoints.Auth;
 using dotFitness.Modules.Users.Application.Commands;

@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Models;
 using FluentValidation.AspNetCore;
-using dotFitness.Api.Infrastructure.Settings;
 using dotFitness.Api.Infrastructure.Swagger;
 using dotFitness.Api.Infrastructure.Services;
+using dotFitness.Common.Application.Settings;
 using dotFitness.Common.Configuration;
 using Microsoft.Extensions.Options;
 

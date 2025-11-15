@@ -26,7 +26,7 @@ public static class AuthorizationConfiguration
                 policy.Requirements.Add(new OwnerOrPTOrAdminRequirement()));
 
         // Register security audit service
-        services.AddScoped<ISecurityAuditService, dotFitness.Api.Infrastructure.Services.SecurityAuditService>();
+        services.AddScoped<ISecurityAuditService, SecurityAuditService>();
 
         // Register authorization handlers
         services.AddScoped<IAuthorizationHandler, SelfOrAdminHandler>();

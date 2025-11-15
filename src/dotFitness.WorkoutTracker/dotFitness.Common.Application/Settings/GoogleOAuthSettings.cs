@@ -1,10 +1,11 @@
-namespace dotFitness.Api.Infrastructure.Settings;
+namespace dotFitness.Common.Application.Settings;
 
 /// <summary>
 /// Google OAuth configuration settings for Swagger integration
 /// </summary>
 public class GoogleOAuthSettings
 {
+    public static string GoogleOAuthSettingsSection => nameof(GoogleOAuthSettings);
     /// <summary>
     /// Google OAuth Client ID
     /// </summary>

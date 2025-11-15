@@ -1,37 +1,19 @@
 using System.Net;
-using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using FluentValidation;
+using Microsoft.AspNetCore.Diagnostics;
 
 namespace dotFitness.Api.Infrastructure.Middleware;
 
-public class GlobalErrorHandlerMiddleware
+public class GlobalErrorHandler(ILogger<GlobalErrorHandler> logger) : IExceptionHandler
 {
-    private readonly RequestDelegate _next;
-    private readonly ILogger<GlobalErrorHandlerMiddleware> _logger;
-    private readonly IWebHostEnvironment _environment;
-
-    public GlobalErrorHandlerMiddleware(
-        RequestDelegate next,
-        ILogger<GlobalErrorHandlerMiddleware> logger,
-        IWebHostEnvironment environment)
+    public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception,
+        CancellationToken cancellationToken)
     {
-        _next = next;
-        _logger = logger;
-        _environment = environment;
-    }
+        logger.LogError(exception, "Unhandled exception occurred");
+        await HandleExceptionAsync(httpContext, exception);
 
-    public async Task InvokeAsync(HttpContext context)
-    {
-        try
-        {
-            await _next(context);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "An unhandled exception occurred during request processing");
-            await HandleExceptionAsync(context, ex);
-        }
+        return true;
     }
 
     private async Task HandleExceptionAsync(HttpContext context, Exception exception)
@@ -39,10 +21,10 @@ public class GlobalErrorHandlerMiddleware
         context.Response.ContentType = "application/json";
 
         // Log additional context
-        _logger.LogError(exception, 
+        logger.LogError(exception,
             "Exception occurred during request to {RequestPath} with method {RequestMethod}. " +
-            "TraceId: {TraceId}, User: {User}", 
-            context.Request.Path, 
+            "TraceId: {TraceId}, User: {User}",
+            context.Request.Path,
             context.Request.Method,
             context.TraceIdentifier,
             context.User?.Identity?.Name ?? "Anonymous");
@@ -96,25 +78,17 @@ public class GlobalErrorHandlerMiddleware
             _ => CreateErrorResponse(
                 HttpStatusCode.InternalServerError,
                 "Internal Server Error",
-                _environment.IsDevelopment() 
-                    ? exception.Message 
-                    : "An internal server error occurred",
+                "An internal server error occurred",
                 context.TraceIdentifier)
         };
 
         context.Response.StatusCode = (int)errorResponse.StatusCode;
 
-        var options = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = true
-        };
-
-        var jsonResponse = JsonSerializer.Serialize(errorResponse.Body, options);
-        await context.Response.WriteAsync(jsonResponse);
+        await context.Response.WriteAsJsonAsync(errorResponse.Body);
     }
 
-    private static ErrorResponse CreateErrorResponse(HttpStatusCode statusCode, string title, string detail, string? traceId = null)
+    private static ErrorResponse CreateErrorResponse(HttpStatusCode statusCode, string title, string detail,
+        string? traceId = null)
     {
         var problemDetails = new ProblemDetails
         {
@@ -136,7 +110,8 @@ public class GlobalErrorHandlerMiddleware
         };
     }
 
-    private static ErrorResponse CreateValidationErrorResponse(ValidationException validationException, string? traceId = null)
+    private static ErrorResponse CreateValidationErrorResponse(ValidationException validationException,
+        string? traceId = null)
     {
         var problemDetails = new ValidationProblemDetails();
         problemDetails.Status = (int)HttpStatusCode.BadRequest;

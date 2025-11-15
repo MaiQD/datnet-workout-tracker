@@ -1,5 +1,4 @@
 using dotFitness.Modules.Users.Application.Commands;
-using dotFitness.Modules.Users.Application.DTOs;
 using dotFitness.Modules.Users.Application.Validators;
 using dotFitness.Modules.Users.Domain.Entities;
 using FluentAssertions;

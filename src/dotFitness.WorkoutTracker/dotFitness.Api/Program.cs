@@ -1,10 +1,11 @@
+using dotFitness.Api.Extensions;
 using Serilog;
 using FastEndpoints;
-using dotFitness.Api.Infrastructure;
 using dotFitness.Api.Infrastructure.Configuration;
 using dotFitness.Api.Infrastructure.Extensions;
-using dotFitness.Api.Infrastructure.Settings;
+using dotFitness.Api.Infrastructure.Middleware;
 using dotFitness.Aspire.ServiceDefaults;
+using dotFitness.Common.Application.Settings;
 
 var builder = WebApplication.CreateBuilder(args);
 // Configure Serilog
@@ -14,11 +15,14 @@ Log.Logger = new LoggerConfiguration()
 
 // Use Serilog as the logging provider
 builder.Host.UseSerilog();
+builder.Services.AddExceptionHandler<GlobalErrorHandler>();
+builder.Services.AddProblemDetails();
 
 // Configure application settings
-builder.Services.Configure<GoogleOAuthSettings>(builder.Configuration.GetSection("GoogleOAuth"));
-builder.Services.Configure<CorsSettings>(builder.Configuration.GetSection("CorsSettings"));
-builder.Services.Configure<OutboxProcessorSettings>(builder.Configuration.GetSection("OutboxProcessor"));
+builder.Configuration.AddModuleConfiguration(["users", "exercises"]);
+builder.Services.Configure<GoogleOAuthSettings>(builder.Configuration.GetSection(GoogleOAuthSettings.GoogleOAuthSettingsSection));
+builder.Services.Configure<CorsSettings>(builder.Configuration.GetSection(CorsSettings.CorsSettingsSection));
+builder.Services.Configure<OutboxProcessorSettings>(builder.Configuration.GetSection(OutboxProcessorSettings.OutboxProcessorSettingsSection));
 
 // Add core API services
 builder.Services.AddCoreApiServices();
@@ -39,36 +43,27 @@ builder.Services.AddApiAuthorization(); // Add API-level authorization policies
 
 // Add FastEndpoints
 builder.Services.AddFastEndpoints();
-
 builder.AddServiceDefaults();
 
 var app = builder.Build();
 
 // Configure MongoDB indexes
-await MongoDbIndexConfigurator.ConfigureIndexesAsync(app.Services);
-// Seed MongoDB data
-await MongoDbSeeder.ConfigureSeedsAsync(app.Services);
+// await MongoDbIndexConfigurator.ConfigureIndexesAsync(app.Services);
+// // Seed MongoDB data
+// await MongoDbSeeder.ConfigureSeedsAsync(app.Services);
 
 // Map Identity API endpoints (includes /login, /refresh, /register, etc.)
 app.MapGroup("/api/v1/auth")
     .MapIdentityApi<dotFitness.Modules.Users.Domain.Entities.ApplicationUser>();
 
 // Configure the application pipeline
-app.UseGlobalErrorHandler()
-   .ConfigureSwaggerUi()
+app.ConfigureSwaggerUi()
    .ConfigureCoreMiddleware()
    .ConfigureHealthChecks()
    .ConfigureEndpoints()
-   .MapDefaultEndpoints();
+   .MapDefaultEndpoints()
+   .UseExceptionHandler();
 
 Log.Information("dotFitness API starting up...");
 
 app.Run();
-
-// Make Program class accessible for testing
-namespace dotFitness.Api
-{
-    public partial class Program
-    {
-    }
-}

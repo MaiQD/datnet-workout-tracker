@@ -1,6 +1,5 @@
 using dotFitness.Common.Results;
 using dotFitness.Modules.Users.Application.Commands;
-using dotFitness.Modules.Users.Application.DTOs;
 using dotFitness.Modules.Users.Application.Services;
 using dotFitness.Modules.Users.Application.Settings;
 using dotFitness.Modules.Users.Domain.Entities;

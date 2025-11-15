@@ -1,10 +1,10 @@
+using System.Reflection;
 using dotFitness.Common.Authorization;
 using dotFitness.Common.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
-using MongoDB.Driver;
 using dotFitness.ModuleContracts;
 using dotFitness.Modules.Users.Domain.Entities;
 using dotFitness.Modules.Users.Infrastructure.Services;
@@ -22,10 +22,12 @@ namespace dotFitness.Modules.Users.Infrastructure.Configuration;
 /// </summary>
 public class UsersModuleInstaller : IModuleInstaller
 {
-    public void InstallServices(IServiceCollection services, IConfiguration configuration)
+    public void InstallServices(IServiceCollection services, IConfiguration configuration, List<Assembly> assemblies)
     {
+        assemblies.Add(typeof(UsersModuleInstaller).Assembly);
+        
         // Configure User Module Settings
-        services.Configure<AdminSettings>(configuration.GetSection("AdminSettings"));
+        services.Configure<AdminSettings>(configuration.GetSection(AdminSettings.AdminSettingsSection));
 
         // Add Identity
         services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
@@ -107,17 +109,5 @@ public class UsersModuleInstaller : IModuleInstaller
 
         // Register database migration service for auto-applying migrations
         services.AddHostedService<DatabaseMigrationService>();
-    }
-
-    public void ConfigureIndexes(IMongoDatabase database)
-    {
-        // Users module uses PostgreSQL - no MongoDB indexes to configure
-        // This method is required by IModuleInstaller interface but not used for Users module
-    }
-
-    public void SeedData(IMongoDatabase database)
-    {
-        // Users module uses PostgreSQL - no MongoDB data to seed
-        // This method is required by IModuleInstaller interface but not used for Users module
     }
 }

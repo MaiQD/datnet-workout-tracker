@@ -1,3 +1,4 @@
+using System.Reflection;
 using dotFitness.Common.Outbox;
 using dotFitness.ModuleContracts;
 using dotFitness.Modules.Exercises.Infrastructure.Configuration;
@@ -18,64 +19,62 @@ public static class ModuleRegistry
         };
 
         services.AddSingleton<IEnumerable<IModuleInstaller>>(installers);
-
+        var assemblies = new List<Assembly>();
         foreach (var installer in installers)
         {
-            installer.InstallServices(services, configuration);
+            installer.InstallServices(services, configuration, assemblies);
         }
 
         // Shared infra
-        services.AddSingleton<IMongoClient>(sp =>
-        {
-            var conn = configuration.GetConnectionString("dotFitnessDb-mongo");
-            return new MongoClient(conn);
-        });
-
-        services.AddSingleton<IMongoDatabase>(sp =>
-        {
-            var client = sp.GetRequiredService<IMongoClient>();
-            var connectionString = configuration.GetConnectionString("dotFitnessDb-mongo");
-            var mongoUrl = new MongoUrl(connectionString);
-            var dbName = mongoUrl.DatabaseName ?? "dotFitness";
-            return client.GetDatabase(dbName);
-        });
+        // services.AddSingleton<IMongoClient>(sp =>
+        // {
+        //     var conn = configuration.GetConnectionString("dotFitnessDb-mongo");
+        //     return new MongoClient(conn);
+        // });
+        //
+        // services.AddSingleton<IMongoDatabase>(sp =>
+        // {
+        //     var client = sp.GetRequiredService<IMongoClient>();
+        //     var connectionString = configuration.GetConnectionString("dotFitnessDb-mongo");
+        //     var mongoUrl = new MongoUrl(connectionString);
+        //     var dbName = mongoUrl.DatabaseName ?? "dotFitness";
+        //     return client.GetDatabase(dbName);
+        // });
         
         // Register base MongoDB Collections for shared types
-        services.AddSingleton(sp =>
-        {
-            var database = sp.GetRequiredService<IMongoDatabase>();
-            return database.GetCollection<OutboxMessage>("outboxMessages");
-        });
+        // services.AddSingleton(sp =>
+        // {
+        //     var database = sp.GetRequiredService<IMongoDatabase>();
+        //     return database.GetCollection<OutboxMessage>("outboxMessages");
+        // });
         
         // MediatR handlers
         services.AddMediatR(cfg =>
         {
-            cfg.RegisterServicesFromAssemblyContaining<UsersModuleInstaller>();
-            cfg.RegisterServicesFromAssemblyContaining<ExercisesModuleInstaller>();
+            cfg.RegisterServicesFromAssemblies(assemblies.ToArray());
         });
 
-        // FluentValidation validators
-        services.AddValidatorsFromAssemblyContaining<UsersModuleInstaller>();
-        services.AddValidatorsFromAssemblyContaining<ExercisesModuleInstaller>();
+        // FluentValidation 
+        services.AddValidatorsFromAssemblies(assemblies.ToArray());
     }
 
-    public static void ConfigureAllModuleIndexes(this IServiceProvider provider, ILogger logger)
-    {
-        var database = provider.GetRequiredService<IMongoDatabase>();
-        var installers = provider.GetRequiredService<IEnumerable<IModuleInstaller>>();
-        foreach (var i in installers)
-        {
-            i.ConfigureIndexes(database);
-        }
-    }
-
-    public static void SeedAllModuleData(this IServiceProvider provider, ILogger logger)
-    {
-        var database = provider.GetRequiredService<IMongoDatabase>();
-        var installers = provider.GetRequiredService<IEnumerable<IModuleInstaller>>();
-        foreach (var i in installers)
-        {
-            i.SeedData(database);
-        }
-    }
+    // public static void ConfigureAllModuleIndexes(this IServiceProvider provider, ILogger logger)
+    // {
+    //     var database = provider.GetRequiredService<IMongoDatabase>();
+    //     var installers = provider.GetRequiredService<IEnumerable<IModuleInstaller>>();
+    //     foreach (var i in installers)
+    //     {
+    //         i.ConfigureIndexes(database);
+    //     }
+    // }
+    //
+    // public static void SeedAllModuleData(this IServiceProvider provider, ILogger logger)
+    // {
+    //     var database = provider.GetRequiredService<IMongoDatabase>();
+    //     var installers = provider.GetRequiredService<IEnumerable<IModuleInstaller>>();
+    //     foreach (var i in installers)
+    //     {
+    //         i.SeedData(database);
+    //     }
+    // }
 }

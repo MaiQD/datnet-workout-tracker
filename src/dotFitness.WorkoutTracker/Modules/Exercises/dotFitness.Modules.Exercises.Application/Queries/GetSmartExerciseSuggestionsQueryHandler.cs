@@ -1,11 +1,10 @@
 using dotFitness.Common.Results;
-using MediatR;
 using dotFitness.Modules.Exercises.Application.DTOs;
 using dotFitness.Modules.Exercises.Application.Mappers;
-using dotFitness.Modules.Exercises.Application.Queries;
 using dotFitness.Modules.Exercises.Domain.Repositories;
+using MediatR;
 
-namespace dotFitness.Modules.Exercises.Infrastructure.Handlers;
+namespace dotFitness.Modules.Exercises.Application.Queries;
 
 public class GetSmartExerciseSuggestionsQueryHandler : IRequestHandler<GetSmartExerciseSuggestionsQuery, Result<IEnumerable<ExerciseDto>>>
 {

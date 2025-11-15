@@ -1,8 +1,7 @@
 using FastEndpoints;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
-using dotFitness.Api.Infrastructure.Settings;
-using dotFitness.Api.Infrastructure.Middleware;
+using dotFitness.Common.Application.Settings;
 
 namespace dotFitness.Api.Infrastructure.Extensions;
 
@@ -16,24 +15,22 @@ public static class ApplicationBuilderExtensions
     /// </summary>
     public static WebApplication ConfigureSwaggerUi(this WebApplication app)
     {
-        if (app.Environment.IsDevelopment())
+        if (!app.Environment.IsDevelopment()) return app;
+        app.UseSwagger();
+        app.UseSwaggerUI(c =>
         {
-            app.UseSwagger();
-            app.UseSwaggerUI(c =>
-            {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "dotFitness API v1");
-                c.RoutePrefix = string.Empty; // Serve Swagger UI at root URL
+            c.SwaggerEndpoint("/swagger/v1/swagger.json", "dotFitness API v1");
+            c.RoutePrefix = string.Empty; // Serve Swagger UI at root URL
                 
-                // Configure OAuth2 settings for Google
-                var googleOAuthSettings = app.Services.GetRequiredService<IOptions<GoogleOAuthSettings>>().Value;
-                c.OAuthClientId(googleOAuthSettings.ClientId);
-                c.OAuthClientSecret(googleOAuthSettings.ClientSecret);
-                c.OAuthRealm("dotFitness");
-                c.OAuthAppName("dotFitness API");
-                c.OAuthScopeSeparator(" ");
-                c.OAuthUsePkce();
-            });
-        }
+            // Configure OAuth2 settings for Google
+            var googleOAuthSettings = app.Services.GetRequiredService<IOptions<GoogleOAuthSettings>>().Value;
+            c.OAuthClientId(googleOAuthSettings.ClientId);
+            c.OAuthClientSecret(googleOAuthSettings.ClientSecret);
+            c.OAuthRealm("dotFitness");
+            c.OAuthAppName("dotFitness API");
+            c.OAuthScopeSeparator(" ");
+            c.OAuthUsePkce();
+        });
 
         return app;
     }
@@ -130,19 +127,10 @@ public static class ApplicationBuilderExtensions
                             data = e.Value.Data
                         })
                 };
-                await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(response, new JsonSerializerOptions { WriteIndented = true }));
+                await context.Response.WriteAsync(JsonSerializer.Serialize(response, new JsonSerializerOptions { WriteIndented = true }));
             }
         });
 
-        return app;
-    }
-
-    /// <summary>
-    /// Configures global error handling middleware
-    /// </summary>
-    public static WebApplication UseGlobalErrorHandler(this WebApplication app)
-    {
-        app.UseMiddleware<GlobalErrorHandlerMiddleware>();
         return app;
     }
 

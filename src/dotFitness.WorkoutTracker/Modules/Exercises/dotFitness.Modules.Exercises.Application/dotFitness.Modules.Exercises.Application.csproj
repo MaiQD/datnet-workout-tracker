@@ -5,11 +5,39 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="MediatR" />
     <PackageReference Include="MediatR.Contracts" />
     <PackageReference Include="FluentValidation" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
     <PackageReference Include="Riok.Mapperly" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Commands\CreateExerciseCommand.cs">
+      <DependentUpon>CreateExerciseCommandHandler.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Commands\DeleteExerciseCommand.cs">
+      <DependentUpon>DeleteExerciseCommandHandler.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Commands\UpdateExerciseCommand.cs">
+      <DependentUpon>UpdateExerciseCommandHandler.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Queries\GetAllEquipmentQuery.cs">
+      <DependentUpon>GetAllEquipmentQueryHandler.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Queries\GetAllExercisesQuery.cs">
+      <DependentUpon>GetAllExercisesQueryHandler.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Queries\GetAllMuscleGroupsQuery.cs">
+      <DependentUpon>GetAllMuscleGroupsQueryHandler.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Queries\GetExerciseByIdQuery.cs">
+      <DependentUpon>GetExerciseByIdQueryHandler.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Queries\GetSmartExerciseSuggestionsQuery.cs">
+      <DependentUpon>GetSmartExerciseSuggestionsQueryHandler.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 
   <PropertyGroup>

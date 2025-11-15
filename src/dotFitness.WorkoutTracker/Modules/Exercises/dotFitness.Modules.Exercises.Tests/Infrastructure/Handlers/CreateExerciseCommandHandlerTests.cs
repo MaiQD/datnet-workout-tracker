@@ -5,7 +5,6 @@ using Moq;
 using dotFitness.Modules.Exercises.Application.Commands;
 using dotFitness.Modules.Exercises.Domain.Entities;
 using dotFitness.Modules.Exercises.Domain.Repositories;
-using dotFitness.Modules.Exercises.Infrastructure.Handlers;
 
 namespace dotFitness.Modules.Exercises.Tests.Infrastructure.Handlers;
 

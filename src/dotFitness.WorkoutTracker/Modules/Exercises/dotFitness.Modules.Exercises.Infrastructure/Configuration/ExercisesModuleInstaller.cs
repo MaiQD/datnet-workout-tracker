@@ -1,3 +1,4 @@
+using System.Reflection;
 using dotFitness.Common.Configuration;
 using dotFitness.Common.Events;
 using dotFitness.Common.Inbox;
@@ -18,8 +19,12 @@ namespace dotFitness.Modules.Exercises.Infrastructure.Configuration;
 /// </summary>
 public class ExercisesModuleInstaller : IModuleInstaller
 {
-    public void InstallServices(IServiceCollection services, IConfiguration configuration)
+    public static string ModuleName = "exercises";
+
+    public void InstallServices(IServiceCollection services, IConfiguration configuration, List<Assembly> assemblies)
     {
+        assemblies.Add(typeof(ExercisesModuleInstaller).Assembly);
+
         // Register MongoDB collections specific to Exercises module
         services.AddSingleton(sp =>
         {
@@ -62,16 +67,14 @@ public class ExercisesModuleInstaller : IModuleInstaller
         // Register event handlers for cross-module communication
         services.AddScoped<IEventHandler<UserProfileUpdatedEvent>, UserProfileUpdatedEventHandler>();
 
-        // Register MediatR handlers (auto-registered in Bootstrap) - removed
-
-        // Register validators (auto-registered in Bootstrap) - removed
-
         // Register Exercises module health check
         services.AddHealthChecks()
             .AddCheck<ExercisesModuleHealthCheck>("exercises-module", tags: ["module", "exercises", "live"]);
 
         // Register Exercises module configuration validator
         services.AddScoped<IModuleConfigurationValidator, ExercisesConfigurationValidator>();
+        
+        services.
     }
 
     public void ConfigureIndexes(IMongoDatabase database)
@@ -94,33 +97,106 @@ public class ExercisesModuleInstaller : IModuleInstaller
         var globalMuscleGroups = new List<MuscleGroup>
         {
             // Upper Body
-            new MuscleGroup { Name = "Chest", Description = "Pectoral muscles", BodyRegion = BodyRegion.Upper, IsGlobal = true, UserId = null, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-            new MuscleGroup { Name = "Back", Description = "Back muscles including lats, traps, and rhomboids", BodyRegion = BodyRegion.Upper, IsGlobal = true, UserId = null, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-            new MuscleGroup { Name = "Shoulders", Description = "Deltoid muscles", BodyRegion = BodyRegion.Upper, IsGlobal = true, UserId = null, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-            new MuscleGroup { Name = "Biceps", Description = "Biceps brachii", BodyRegion = BodyRegion.Upper, IsGlobal = true, UserId = null, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-            new MuscleGroup { Name = "Triceps", Description = "Triceps brachii", BodyRegion = BodyRegion.Upper, IsGlobal = true, UserId = null, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-            new MuscleGroup { Name = "Forearms", Description = "Forearm muscles", BodyRegion = BodyRegion.Upper, IsGlobal = true, UserId = null, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
+            new()
+            {
+                Name = "Chest", Description = "Pectoral muscles", BodyRegion = BodyRegion.Upper, IsGlobal = true,
+                UserId = null, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
+            },
+            new()
+            {
+                Name = "Back", Description = "Back muscles including lats, traps, and rhomboids",
+                BodyRegion = BodyRegion.Upper, IsGlobal = true, UserId = null, CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            },
+            new()
+            {
+                Name = "Shoulders", Description = "Deltoid muscles", BodyRegion = BodyRegion.Upper, IsGlobal = true,
+                UserId = null, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
+            },
+            new()
+            {
+                Name = "Biceps", Description = "Biceps brachii", BodyRegion = BodyRegion.Upper, IsGlobal = true,
+                UserId = null, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
+            },
+            new()
+            {
+                Name = "Triceps", Description = "Triceps brachii", BodyRegion = BodyRegion.Upper, IsGlobal = true,
+                UserId = null, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
+            },
+            new()
+            {
+                Name = "Forearms", Description = "Forearm muscles", BodyRegion = BodyRegion.Upper, IsGlobal = true,
+                UserId = null, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
+            },
 
             // Lower Body
-            new MuscleGroup { Name = "Quadriceps", Description = "Front thigh muscles", BodyRegion = BodyRegion.Lower, IsGlobal = true, UserId = null, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-            new MuscleGroup { Name = "Hamstrings", Description = "Back thigh muscles", BodyRegion = BodyRegion.Lower, IsGlobal = true, UserId = null, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-            new MuscleGroup { Name = "Glutes", Description = "Buttock muscles", BodyRegion = BodyRegion.Lower, IsGlobal = true, UserId = null, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-            new MuscleGroup { Name = "Calves", Description = "Calf muscles", BodyRegion = BodyRegion.Lower, IsGlobal = true, UserId = null, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
+            new()
+            {
+                Name = "Quadriceps", Description = "Front thigh muscles", BodyRegion = BodyRegion.Lower,
+                IsGlobal = true, UserId = null, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
+            },
+            new()
+            {
+                Name = "Hamstrings", Description = "Back thigh muscles", BodyRegion = BodyRegion.Lower, IsGlobal = true,
+                UserId = null, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
+            },
+            new()
+            {
+                Name = "Glutes", Description = "Buttock muscles", BodyRegion = BodyRegion.Lower, IsGlobal = true,
+                UserId = null, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
+            },
+            new()
+            {
+                Name = "Calves", Description = "Calf muscles", BodyRegion = BodyRegion.Lower, IsGlobal = true,
+                UserId = null, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
+            },
 
             // Core
-            new MuscleGroup { Name = "Abs", Description = "Abdominal muscles", BodyRegion = BodyRegion.Core, IsGlobal = true, UserId = null, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-            new MuscleGroup { Name = "Obliques", Description = "Side abdominal muscles", BodyRegion = BodyRegion.Core, IsGlobal = true, UserId = null, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-            new MuscleGroup { Name = "Lower Back", Description = "Lower back muscles", BodyRegion = BodyRegion.Core, IsGlobal = true, UserId = null, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
+            new()
+            {
+                Name = "Abs", Description = "Abdominal muscles", BodyRegion = BodyRegion.Core, IsGlobal = true,
+                UserId = null, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
+            },
+            new()
+            {
+                Name = "Obliques", Description = "Side abdominal muscles", BodyRegion = BodyRegion.Core,
+                IsGlobal = true, UserId = null, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
+            },
+            new()
+            {
+                Name = "Lower Back", Description = "Lower back muscles", BodyRegion = BodyRegion.Core, IsGlobal = true,
+                UserId = null, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
+            }
         };
 
         // Seed global equipment
         var globalEquipment = new List<Equipment>
         {
-            new Equipment { Name = "Barbell", Description = "Standard Olympic barbell", Category = "FreeWeights", IsGlobal = true, UserId = null, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-            new Equipment { Name = "Dumbbells", Description = "Adjustable or fixed weight dumbbells", Category = "FreeWeights", IsGlobal = true, UserId = null, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-            new Equipment { Name = "Pull-up Bar", Description = "Bar for pull-ups and chin-ups", Category = "Bodyweight", IsGlobal = true, UserId = null, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-            new Equipment { Name = "Resistance Bands", Description = "Elastic resistance bands", Category = "Resistance", IsGlobal = true, UserId = null, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-            new Equipment { Name = "Yoga Mat", Description = "Exercise mat for floor work", Category = "Bodyweight", IsGlobal = true, UserId = null, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
+            new()
+            {
+                Name = "Barbell", Description = "Standard Olympic barbell", Category = "FreeWeights", IsGlobal = true,
+                UserId = null, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
+            },
+            new()
+            {
+                Name = "Dumbbells", Description = "Adjustable or fixed weight dumbbells", Category = "FreeWeights",
+                IsGlobal = true, UserId = null, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
+            },
+            new()
+            {
+                Name = "Pull-up Bar", Description = "Bar for pull-ups and chin-ups", Category = "Bodyweight",
+                IsGlobal = true, UserId = null, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
+            },
+            new()
+            {
+                Name = "Resistance Bands", Description = "Elastic resistance bands", Category = "Resistance",
+                IsGlobal = true, UserId = null, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
+            },
+            new()
+            {
+                Name = "Yoga Mat", Description = "Exercise mat for floor work", Category = "Bodyweight",
+                IsGlobal = true, UserId = null, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
+            }
         };
 
         // Insert the data

@@ -1,12 +1,11 @@
 using dotFitness.Common.Results;
-using MediatR;
-using Microsoft.Extensions.Logging;
 using dotFitness.Modules.Exercises.Application.DTOs;
 using dotFitness.Modules.Exercises.Application.Mappers;
-using dotFitness.Modules.Exercises.Application.Queries;
 using dotFitness.Modules.Exercises.Domain.Repositories;
+using MediatR;
+using Microsoft.Extensions.Logging;
 
-namespace dotFitness.Modules.Exercises.Infrastructure.Handlers;
+namespace dotFitness.Modules.Exercises.Application.Queries;
 
 public class GetExerciseByIdQueryHandler : IRequestHandler<GetExerciseByIdQuery, Result<ExerciseDto?>>
 {

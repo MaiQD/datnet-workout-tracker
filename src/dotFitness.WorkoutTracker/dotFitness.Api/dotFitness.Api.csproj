@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\dotFitness.Common.Application\dotFitness.Common.Application.csproj" />
     <ProjectReference Include="..\dotFitness.Common\dotFitness.Common.csproj" />
     <ProjectReference Include="..\dotFitness.ModuleContracts\dotFitness.ModuleContracts.csproj" />
     <ProjectReference Include="..\dotFitness.Aspire.ServiceDefaults\dotFitness.Aspire.ServiceDefaults.csproj" />
@@ -27,6 +28,21 @@
     <ProjectReference Include="..\Modules\Exercises\dotFitness.Modules.Exercises.Infrastructure\dotFitness.Modules.Exercises.Infrastructure.csproj" />
     <ProjectReference Include="..\Modules\Users\dotFitness.Modules.Users.Infrastructure\dotFitness.Modules.Users.Infrastructure.csproj" />
     <ProjectReference Include="..\Modules\Users\dotFitness.Modules.Users.API\dotFitness.Modules.Users.API.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Infrastructure\Authorization\SelfOrAdminRequirement.cs">
+      <DependentUpon>SelfOrAdminHandler.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Infrastructure\Authorization\ResourceOwnerRequirement.cs">
+      <DependentUpon>ResourceOwnerHandler.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Infrastructure\Authorization\PTClientAccessRequirement.cs">
+      <DependentUpon>PTClientAccessHandler.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Infrastructure\Authorization\OwnerOrPTOrAdminRequirement.cs">
+      <DependentUpon>OwnerOrPTOrAdminHandler.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 
 </Project>
