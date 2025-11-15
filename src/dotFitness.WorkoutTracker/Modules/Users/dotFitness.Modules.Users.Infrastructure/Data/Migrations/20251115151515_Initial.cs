@@ -5,10 +5,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace dotFitness.Modules.Users.Infrastructure.Migrations
+namespace dotFitness.Modules.Users.Infrastructure.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class Init : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -48,8 +48,8 @@ namespace dotFitness.Modules.Users.Infrastructure.Migrations
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     IsOnboarded = table.Column<bool>(type: "boolean", nullable: false),
                     OnboardingCompletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    AvailableEquipmentIds = table.Column<List<string>>(type: "jsonb", nullable: false),
-                    FocusMuscleGroupIds = table.Column<List<string>>(type: "jsonb", nullable: false),
+                    AvailableEquipmentIds = table.Column<List<string>>(type: "text[]", nullable: false),
+                    FocusMuscleGroupIds = table.Column<List<string>>(type: "text[]", nullable: false),
                     AssignedPtId = table.Column<Guid>(type: "uuid", nullable: true),
                     UserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),

@@ -15,7 +15,6 @@ public class AddUserMetricEndpoint(IMediator mediator) : Endpoint<AddUserMetricR
     {
         Post("/api/v1/users/metrics");
         Policies("UserOnly");
-        Version(1);
         Summary(s =>
         {
             s.Summary = "Adds a new body metric entry for the current user";

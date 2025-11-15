@@ -15,7 +15,6 @@ public class GetUserMetricsEndpoint(IMediator mediator) : Endpoint<GetUserMetric
     {
         Get("/api/v1/users/metrics");
         Policies("UserOnly");
-        Version(1);
         Summary(s =>
         {
             s.Summary = "Gets all metrics for the current user with optional filtering and pagination";

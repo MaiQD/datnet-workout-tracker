@@ -15,7 +15,6 @@ public class GetLatestUserMetricEndpoint(IMediator mediator) : Endpoint<EmptyReq
     {
         Get("/api/v1/users/metrics/latest");
         Policies("UserOnly");
-        Version(1);
         Summary(s =>
         {
             s.Summary = "Gets the most recent metric entry for the current user";

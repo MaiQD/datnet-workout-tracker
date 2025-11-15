@@ -10,11 +10,11 @@ using dotFitness.Modules.Users.Infrastructure.Data;
 
 #nullable disable
 
-namespace dotFitness.Modules.Users.Infrastructure.Migrations
+namespace dotFitness.Modules.Users.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(UsersDbContext))]
-    [Migration("20251115143559_Init")]
-    partial class Init
+    [Migration("20251115151515_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -171,7 +171,7 @@ namespace dotFitness.Modules.Users.Infrastructure.Migrations
 
                     b.PrimitiveCollection<List<string>>("AvailableEquipmentIds")
                         .IsRequired()
-                        .HasColumnType("jsonb");
+                        .HasColumnType("text[]");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -197,7 +197,7 @@ namespace dotFitness.Modules.Users.Infrastructure.Migrations
 
                     b.PrimitiveCollection<List<string>>("FocusMuscleGroupIds")
                         .IsRequired()
-                        .HasColumnType("jsonb");
+                        .HasColumnType("text[]");
 
                     b.Property<string>("Gender")
                         .HasMaxLength(50)

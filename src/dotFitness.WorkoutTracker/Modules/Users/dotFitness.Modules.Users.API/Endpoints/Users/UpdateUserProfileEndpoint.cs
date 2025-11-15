@@ -16,7 +16,6 @@ public class UpdateUserProfileEndpoint(IMediator mediator) : Endpoint<UpdateUser
     {
         Put("/api/v1/users/profile");
         Policies(AuthorizationPolicies.SelfOrAdmin);
-        Version(1);
         Summary(s =>
         {
             s.Summary = "Updates the current user's profile information";

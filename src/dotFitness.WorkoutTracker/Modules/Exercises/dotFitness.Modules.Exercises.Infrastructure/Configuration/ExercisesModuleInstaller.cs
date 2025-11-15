@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 using dotFitness.ModuleContracts;
+using dotFitness.Modules.Exercises.Application.Commands;
 using dotFitness.Modules.Exercises.Domain.Entities;
 using dotFitness.Modules.Exercises.Domain.Repositories;
 using dotFitness.Modules.Exercises.Infrastructure.Repositories;
@@ -25,6 +26,7 @@ public class ExercisesModuleInstaller : IModuleInstaller
     public void InstallServices(IServiceCollection services, IConfiguration configuration, List<Assembly> assemblies)
     {
         assemblies.Add(typeof(ExercisesModuleInstaller).Assembly);
+        assemblies.Add(typeof(CreateExerciseCommandHandler).Assembly); // Application assembly for handlers and validators
 
         services.AddSingleton<IMongoClient>(sp =>
         {

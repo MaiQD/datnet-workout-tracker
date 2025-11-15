@@ -45,12 +45,12 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
         builder.HasIndex(e => e.Email)
             .IsUnique();
         
-        // Collections stored as JSON (PostgreSQL supports JSON columns)
+        // Collections stored as PostgreSQL native arrays (more efficient than JSONB for simple lists)
         builder.Property(e => e.AvailableEquipmentIds)
-            .HasColumnType("jsonb");
+            .HasColumnType("text[]");
         
         builder.Property(e => e.FocusMuscleGroupIds)
-            .HasColumnType("jsonb");
+            .HasColumnType("text[]");
         
         // PT relationship configuration
         builder.HasOne(e => e.AssignedPt)

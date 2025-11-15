@@ -15,7 +15,6 @@ public class LoginWithGoogleEndpoint(IMediator mediator) : Endpoint<LoginWithGoo
     {
         Post("/api/v1/auth/google-login");
         AllowAnonymous();
-        Version(1);
         Summary(s =>
         {
             s.Summary = "Authenticates a user with Google OAuth token";

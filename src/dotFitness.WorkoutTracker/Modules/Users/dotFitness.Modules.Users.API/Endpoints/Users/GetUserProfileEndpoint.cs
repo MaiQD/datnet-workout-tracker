@@ -15,7 +15,6 @@ public class GetUserProfileEndpoint(IMediator mediator) : Endpoint<EmptyRequest,
     {
         Get("/api/v1/users/profile");
         Policies("UserOnly");
-        Version(1);
         Summary(s =>
         {
             s.Summary = "Gets the current user's profile information";
